@@ -12,9 +12,10 @@ and Šimík
 The experiment was run on [LRex](https://www.l-rex.de/), so your raw
 data can be different if you use a different platform.
 
-There are two files with the script – rmd and md. The first one is a raw
-RMarkdown script from RStudio, the second one is a pretty version for
-GitHub, which is easier to follow online.
+The csv file is available in this repo. There are also two files with
+the script – rmd and md. The first one is a raw RMarkdown script from
+RStudio, the second one is a pretty version for GitHub, which is easier
+to follow online.
 
 ``` r
 library(tidyverse) # THE package, it contains ggplot2, tidyr, dplyr, readr and more
@@ -49,7 +50,8 @@ all_df <-
                                              show_col_types = FALSE)
 
 # removing example items
-main_df <- all_df[-which(all_df$materials=="1_examples"),]
+main_df <- all_df %>%
+  filter(materials != "1_examples")
 ```
 
 ## 2. Fillers and unreliable participants
@@ -97,7 +99,8 @@ had to assess 3 items as ‘bad’ or 1-4 and the rest as ‘good’ 5-7.
 
 ``` r
 # creating a new df with the filler items only 
-fillers_only <- main_df[which(grepl("f9_filler", main_df$materials)),]
+fillers_only <- main_df %>%
+  filter(materials == "f9_filler")
 
 # creating a new column for checking if fillers are good or not 
 fillers_only$filler_answer <- 0 
@@ -164,7 +167,7 @@ threshold but 68 participants is still fine.
 
 ``` r
 unreliable_participants <- filler_results %>% 
-  filter(filler_results$Mean < 0.8) # I have 27 unreliable participants
+  filter(Mean < 0.8) # I have 27 unreliable participants
 ```
 
 Then I remove unreliable participants from reliable ones.
@@ -177,3 +180,5 @@ mean(fillers_only_reliable$Mean) # testing by applying mean to the reliable df
 ```
 
     ## [1] 0.9235294
+
+## 3. Data sets

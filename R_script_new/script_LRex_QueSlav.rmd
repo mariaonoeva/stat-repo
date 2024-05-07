@@ -7,7 +7,7 @@ date: "2024-05-07"
 
 Hi! This R notebook describes the steps that are required for the analysis of naturalness/acceptability judgment linguistic experiments. I use the experiment that I did with Radek Šimík testing Russian negated polar questions in different contexts as the example data (see [Onoeva and Šimík 2023](https://mariaonoeva.github.io/assets/pdf/FDSL16_RuNPQs_Onoeva_Simik.pdf)). The experiment was run on [LRex](https://www.l-rex.de/), so your raw data can be different if you use a different platform. 
 
-There are two files with the script -- rmd and md. The first one is a raw RMarkdown script from RStudio, the second one is a pretty version for GitHub, which is easier to follow online.
+The csv file is available in this repo. There are also two files with the script -- rmd and md. The first one is a raw RMarkdown script from RStudio, the second one is a pretty version for GitHub, which is easier to follow online.
 
 ```{r}
 library(tidyverse) # THE package, it contains ggplot2, tidyr, dplyr, readr and more
@@ -30,7 +30,8 @@ all_df <-
                                              show_col_types = FALSE)
 
 # removing example items
-main_df <- all_df[-which(all_df$materials=="1_examples"),]
+main_df <- all_df %>%
+  filter(materials != "1_examples")
 
 ```
 
@@ -55,7 +56,8 @@ The next step is to extract all filler items. These items are used to test relia
 
 ```{r}
 # creating a new df with the filler items only 
-fillers_only <- main_df[which(grepl("f9_filler", main_df$materials)),]
+fillers_only <- main_df %>%
+  filter(materials == "f9_filler")
 
 # creating a new column for checking if fillers are good or not 
 fillers_only$filler_answer <- 0 
@@ -93,7 +95,7 @@ mean(filler_results$Mean)
 Now I need to find unreliable participants. This is done quickly, just to find the people who have means lower than 0.8. This is quite a high threshold but 68 participants is still fine. 
 ```{r}
 unreliable_participants <- filler_results %>% 
-  filter(filler_results$Mean < 0.8) # I have 27 unreliable participants
+  filter(Mean < 0.8) # I have 27 unreliable participants
 
 ```
 Then I remove unreliable participants from reliable ones. 
@@ -103,4 +105,8 @@ fillers_only_reliable <- anti_join(filler_results, unreliable_participants,
 
 mean(fillers_only_reliable$Mean) # testing by applying mean to the reliable df
 ```
+
+## 3. Data sets 
+
+
 
