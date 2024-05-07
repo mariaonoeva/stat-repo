@@ -1,6 +1,6 @@
 ---
 title: "R Notebook for naturalness/acceptability judgments linguistic experiments"
-output: html_notebook
+output: github_document
 author: "Masha Onoeva"
 date: "2024-05-07"
 ---
