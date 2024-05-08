@@ -1,20 +1,26 @@
 ---
 title: "R Notebook for naturalness/acceptability judgment experiments"
-output: github_document
+output: 
+  github_document:
+    toc: true
+    toc_depth: 2
 author: "Masha Onoeva"
 date: "2024-05-07"
 ---
+### Info 
 
 Hi! This R notebook describes the steps that are required for the analysis of naturalness/acceptability judgment linguistic experiments. I use the experiment that I did with Radek Šimík testing Russian negated polar questions in different contexts as the example data (see [Onoeva and Šimík 2023](https://mariaonoeva.github.io/assets/pdf/FDSL16_RuNPQs_Onoeva_Simik.pdf)). The experiment was run on [LRex](https://www.l-rex.de/), so your raw data can be different if you use a different platform. 
 
+### Files 
+
 The csv file is available in this repo. There are also two files with the script -- rmd and md. The first one is a raw RMarkdown script from RStudio, the second one is a pretty version for GitHub, which is easier to follow online.
+
+## 1. Loading data
 
 ```{r}
 library(tidyverse) # THE package, it contains ggplot2, tidyr, dplyr, readr and more
 
 ```
-
-## 1. Loading data
 
 Here I'm setting the working directory and loading data. There is an option to download a version without abandoned trials from LRex and I load it here. Then I remove the unnecessary example items.
 
@@ -85,8 +91,6 @@ So now I have the column which tells me how each participant assessed each fille
 filler_results <- fillers_only %>% 
   group_by(participant) %>%
   summarize(Mean = mean(filler_answer, na.rm=TRUE))
-
-filler_results
 
 # how in general the participants went through fillers 
 mean(filler_results$Mean)

@@ -8,8 +8,6 @@ Masha Onoeva
   participants](#2-fillers-and-unreliable-participants)
 - [3. Data sets](#3-data-sets)
 
-### Info
-
 Hi! This R notebook describes the steps that are required for the
 analysis of naturalness/acceptability judgment linguistic experiments. I
 use the experiment that I did with Radek Šimík testing Russian negated
@@ -19,14 +17,10 @@ and Šimík
 The experiment was run on [LRex](https://www.l-rex.de/), so your raw
 data can be different if you use a different platform.
 
-### Files
-
 The csv file is available in this repo. There are also two files with
 the script – rmd and md. The first one is a raw RMarkdown script from
 RStudio, the second one is a pretty version for GitHub, which is easier
 to follow online.
-
-## 1. Loading data
 
 ``` r
 library(tidyverse) # THE package, it contains ggplot2, tidyr, dplyr, readr and more
@@ -42,6 +36,8 @@ library(tidyverse) # THE package, it contains ggplot2, tidyr, dplyr, readr and m
     ## ✖ dplyr::filter() masks stats::filter()
     ## ✖ dplyr::lag()    masks stats::lag()
     ## ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+
+## 1. Loading data
 
 Here I’m setting the working directory and loading data. There is an
 option to download a version without abandoned trials from LRex and I
@@ -145,6 +141,25 @@ filler_results <- fillers_only %>%
   group_by(participant) %>%
   summarize(Mean = mean(filler_answer, na.rm=TRUE))
 
+filler_results
+```
+
+    ## # A tibble: 95 × 2
+    ##    participant  Mean
+    ##          <dbl> <dbl>
+    ##  1           1   1  
+    ##  2           2   0.9
+    ##  3           3   0.8
+    ##  4           4   0.6
+    ##  5           5   0.6
+    ##  6           6   0.6
+    ##  7           7   0.9
+    ##  8           8   0.7
+    ##  9           9   0.9
+    ## 10          10   0.9
+    ## # ℹ 85 more rows
+
+``` r
 # how in general the participants went through fillers 
 mean(filler_results$Mean)
 ```
