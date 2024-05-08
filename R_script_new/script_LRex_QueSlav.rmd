@@ -15,6 +15,10 @@ Hi! This R notebook describes the steps that are required for the analysis of na
 
 The csv file with raw results is available in this repo (perhaps I can also load a spreadsheet with all conditions that I used for LRex?). There are also two files with the script -- rmd and md. The first one is a raw RMarkdown script from RStudio, the second one is a pretty version for GitHub, which is easier to follow online.
 
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
 ## 1. Loading data
 
 ```{r}
@@ -152,7 +156,7 @@ The design for this experiment was 2 x 2 x 2.
 | V1 li | neutral  | ni         |
 | V2    | negative | nibud      |
 
-The conditions were coded as letters in the spreadsheet for LRex, so first, I assign new comprehensible conditions, so it's easier to read the results. Not sure if it can be done in a more sophisticated way. 
+The conditions were coded as letters in the spreadsheet for LRex, so first, I assign new comprehensible conditions, so it's easier to read the results. Not sure if it can be done in a more sophisticated way (ChatGPT says otherwise :unamused:). 
 ```{r}
 # accessing the first experiment from the groups  
 e1_df <- split_main_df1[[1]]
@@ -173,4 +177,66 @@ e1_df$indef <- 0
 e1_df$indef[e1_df$condition %in% c("a", "b", "e", "f")] <- "ni"
 e1_df$indef[e1_df$indef != "ni"] <- "nibud"
 
+# ChatGPT version: idk case_when function 
+# e1_df <- e1_df %>%
+#   mutate(
+#     indef = case_when(
+#       condition %in% c("a", "b", "e", "f") ~ "ni",
+#       TRUE ~ "nibud"
+#     )
+#   )
+
 ```
+
+Now I can create one big column and check mean and medians for each condition. The most acceptable were conditions with nibud-indefinites. The least acceptable were ni-indefinites in V1 li questions. 
+```{r}
+# creating one mega condition 
+e1_df <- e1_df %>%
+  mutate(condition1 = paste(context, verb, indef))
+
+formattable(e1_df %>%
+  group_by(condition1) %>%
+  summarize(Mean = mean(rating1), Median = median(rating1)))
+```
+The next step is to plot the results. Before I do that I need to refactor and relevel ratings, so they are displayed properly (not upside-down).  
+```{r}
+
+# have to make as factor, otherwise error
+e1_df$rating1 <- as.factor(e1_df$rating1)
+
+# releveling ratings 
+e1_df_relevel <- e1_df %>%
+  mutate(rating1 = fct_relevel(rating1,"7","6","5","4","3","2","1")) 
+
+e1_df_relevel1 <- e1_df_relevel %>%
+  mutate(verb = fct_relevel(verb,"V1 li", "V2"))
+
+```
+
+Creating a stacked bar diagram for the results. 
+
+```{r}
+e1_main_plot <- ggplot(e1_df_relevel, aes(fill=rating1, x=context)) + 
+    geom_bar(position = "fill") +
+    geom_hline(aes(yintercept=0.5), size=0.5) +
+    facet_wrap(~verb+indef) +
+  # coloring
+    theme_bw() +
+    scale_fill_brewer(palette = "RdPu", direction=-1) +
+    theme(legend.position = "right") +
+          # legend.text = element_text(size=20),
+          # legend.key.size = unit(1, 'cm'), 
+          # legend.title = element_text(size=20),
+          # axis.text = element_text(size = 25),
+          # axis.title = element_text(size = 25),
+          # =element_text(size=25) element_blank()
+          # axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+          # axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
+#    ggtitle("Main plot (68 participants)")
+    xlab("Context") +
+    ylab("Proportions of raiting")
+
+e1_main_plot
+
+```
+

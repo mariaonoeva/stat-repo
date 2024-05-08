@@ -31,20 +31,6 @@ for GitHub, which is easier to follow online.
 
 ``` r
 library(tidyverse) # THE package, it contains ggplot2, tidyr, dplyr, readr and more
-```
-
-    ## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-    ## ✔ dplyr     1.1.4     ✔ readr     2.1.4
-    ## ✔ forcats   1.0.0     ✔ stringr   1.5.1
-    ## ✔ ggplot2   3.4.4     ✔ tibble    3.2.1
-    ## ✔ lubridate 1.9.3     ✔ tidyr     1.3.0
-    ## ✔ purrr     1.0.2     
-    ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-    ## ✖ dplyr::filter() masks stats::filter()
-    ## ✖ dplyr::lag()    masks stats::lag()
-    ## ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
-
-``` r
 library(formattable) # for pretty tables 
 ```
 
@@ -260,7 +246,8 @@ The design for this experiment was 2 x 2 x 2.
 
 The conditions were coded as letters in the spreadsheet for LRex, so
 first, I assign new comprehensible conditions, so it’s easier to read
-the results. Not sure if it can be done in a more sophisticated way.
+the results. Not sure if it can be done in a more sophisticated way
+(ChatGPT says otherwise :unamused:).
 
 ``` r
 # accessing the first experiment from the groups  
@@ -281,4 +268,177 @@ e1_df$context[e1_df$context != "neutral"] <- "negative"
 e1_df$indef <- 0 
 e1_df$indef[e1_df$condition %in% c("a", "b", "e", "f")] <- "ni"
 e1_df$indef[e1_df$indef != "ni"] <- "nibud"
+
+# ChatGPT version: idk case_when function 
+# e1_df <- e1_df %>%
+#   mutate(
+#     indef = case_when(
+#       condition %in% c("a", "b", "e", "f") ~ "ni",
+#       TRUE ~ "nibud"
+#     )
+#   )
 ```
+
+Now I can create one big column and check mean and medians for each
+condition. The most acceptable were conditions with nibud-indefinites.
+The least acceptable were ni-indefinites in V1 li questions.
+
+``` r
+# creating one mega condition 
+e1_df <- e1_df %>%
+  mutate(condition1 = paste(context, verb, indef))
+
+formattable(e1_df %>%
+  group_by(condition1) %>%
+  summarize(Mean = mean(rating1), Median = median(rating1)))
+```
+
+<table class="table table-condensed">
+<thead>
+<tr>
+<th style="text-align:right;">
+condition1
+</th>
+<th style="text-align:right;">
+Mean
+</th>
+<th style="text-align:right;">
+Median
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+negative V1 li ni
+</td>
+<td style="text-align:right;">
+2.757353
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+negative V1 li nibud
+</td>
+<td style="text-align:right;">
+5.007353
+</td>
+<td style="text-align:right;">
+6
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+negative V2 ni
+</td>
+<td style="text-align:right;">
+4.172794
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+negative V2 nibud
+</td>
+<td style="text-align:right;">
+4.852941
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+neutral V1 li ni
+</td>
+<td style="text-align:right;">
+3.334559
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+neutral V1 li nibud
+</td>
+<td style="text-align:right;">
+5.889706
+</td>
+<td style="text-align:right;">
+6
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+neutral V2 ni
+</td>
+<td style="text-align:right;">
+4.360294
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+neutral V2 nibud
+</td>
+<td style="text-align:right;">
+5.279412
+</td>
+<td style="text-align:right;">
+6
+</td>
+</tr>
+</tbody>
+</table>
+
+The next step is to plot the results. Before I do that I need to
+refactor and relevel ratings, so they are displayed properly (not
+upside-down).
+
+``` r
+# have to make as factor, otherwise error
+e1_df$rating1 <- as.factor(e1_df$rating1)
+
+# releveling ratings 
+e1_df_relevel <- e1_df %>%
+  mutate(rating1 = fct_relevel(rating1,"7","6","5","4","3","2","1")) 
+
+e1_df_relevel1 <- e1_df_relevel %>%
+  mutate(verb = fct_relevel(verb,"V1 li", "V2"))
+```
+
+Creating a stacked bar diagram for the results.
+
+``` r
+e1_main_plot <- ggplot(e1_df_relevel, aes(fill=rating1, x=context)) + 
+    geom_bar(position = "fill") +
+    geom_hline(aes(yintercept=0.5), size=0.5) +
+    facet_wrap(~verb+indef) +
+  # coloring
+    theme_bw() +
+    scale_fill_brewer(palette = "RdPu", direction=-1) +
+    theme(legend.position = "right") +
+          # legend.text = element_text(size=20),
+          # legend.key.size = unit(1, 'cm'), 
+          # legend.title = element_text(size=20),
+          # axis.text = element_text(size = 25),
+          # axis.title = element_text(size = 25),
+          # =element_text(size=25) element_blank()
+          # axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+          # axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
+#    ggtitle("Main plot (68 participants)")
+    xlab("Context") +
+    ylab("Proportions of raiting")
+
+e1_main_plot
+```
+
+![](script_LRex_QueSlav_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
