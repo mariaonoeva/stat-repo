@@ -21,10 +21,11 @@ data can be different if you use a different platform.
 
 ### Files
 
-The csv file is available in this repo. There are also two files with
-the script – rmd and md. The first one is a raw RMarkdown script from
-RStudio, the second one is a pretty version for GitHub, which is easier
-to follow online.
+The csv file with raw results is available in this repo (perhaps I can
+also load a spreadsheet with all conditions that I used for LRex?).
+There are also two files with the script – rmd and md. The first one is
+a raw RMarkdown script from RStudio, the second one is a pretty version
+for GitHub, which is easier to follow online.
 
 ## 1. Loading data
 
@@ -178,8 +179,9 @@ mean(fillers_only_reliable$Mean) # testing by applying mean to the reliable df
 ## 3. Data sets
 
 In this experiment, we had one big experiment and several smaller, see
-summary of the materilas column. I’m going to separate them into several
-data frames. But first, it’s necessary to remove the filler items.
+summary of the materials column. I’m going to separate them into several
+data frames. But first, it’s necessary to remove the filler items and
+unreliable participants.
 
 ``` r
 main_df %>%
@@ -205,64 +207,78 @@ main_df %>%
 main_df1 <- main_df %>%
   filter(materials != "f9_filler")
 
-formattable(main_df1 %>% # no filler in the summary 
+main_df1 %>% 
   group_by(materials) %>%
-  summarise())
+  summarise() # no filler in the summary 
 ```
 
-<table class="table table-condensed">
-<thead>
-<tr>
-<th style="text-align:right;">
-materials
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-e1_main
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-f1_nibud
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-f2_razve_pos
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-f3_razve_neg
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-f4_slucajno_neg
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-f5_slucajno_pos
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-f6_ctoli_neg
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-f7_ctoli_pos
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-f8_repetitive
-</td>
-</tr>
-</tbody>
-</table>
+    ## # A tibble: 9 × 1
+    ##   materials      
+    ##   <chr>          
+    ## 1 e1_main        
+    ## 2 f1_nibud       
+    ## 3 f2_razve_pos   
+    ## 4 f3_razve_neg   
+    ## 5 f4_slucajno_neg
+    ## 6 f5_slucajno_pos
+    ## 7 f6_ctoli_neg   
+    ## 8 f7_ctoli_pos   
+    ## 9 f8_repetitive
+
+Removing unreliable participants and checking the number.
+
+``` r
+main_df2 <- anti_join(main_df1, unreliable_participants, 
+                          by = "participant")
+
+main_df2 %>%
+  distinct(participant) %>%
+  summarize(total_part = n())
+```
+
+    ## # A tibble: 1 × 1
+    ##   total_part
+    ##        <int>
+    ## 1         68
+
+Now I need to create a separate df for each materials set, they are
+stored in split_main_df1. It can be done using filter() but I try here
+group_split(). I can access each group later.
+
+``` r
+split_main_df1 <- main_df2 %>% group_split(materials)
+```
+
+### Experiment 1
+
+The design for this experiment was 2 x 2 x 2.
+
+| verb  | context  | indefinite |
+|-------|----------|------------|
+| V1 li | neutral  | ni         |
+| V2    | negative | nibud      |
+
+The conditions were coded as letters in the spreadsheet for LRex, so
+first, I assign new comprehensible conditions, so it’s easier to read
+the results. Not sure if it can be done in a more sophisticated way.
+
+``` r
+# accessing the first experiment from the groups  
+e1_df <- split_main_df1[[1]]
+
+# creating a new column for the first variable 'verb' and recoding to the readable form
+# 4 conditions were V1 li, 4 -- V2 
+e1_df$verb <- 0 
+e1_df$verb[e1_df$condition %in% c("a", "c", "e", "g")] <- "V1 li"
+e1_df$verb[e1_df$verb != "V1 li"] <- "V2"
+
+# the same as above for the second variable 'context'
+e1_df$context <- 0 
+e1_df$context[e1_df$condition %in% c("a", "b", "c", "d")] <- "neutral"
+e1_df$context[e1_df$context != "neutral"] <- "negative"
+
+# the same as above for the third variable 'indefinite'
+e1_df$indef <- 0 
+e1_df$indef[e1_df$condition %in% c("a", "b", "e", "f")] <- "ni"
+e1_df$indef[e1_df$indef != "ni"] <- "nibud"
+```
