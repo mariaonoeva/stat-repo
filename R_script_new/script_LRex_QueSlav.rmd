@@ -19,6 +19,7 @@ The csv file is available in this repo. There are also two files with the script
 
 ```{r}
 library(tidyverse) # THE package, it contains ggplot2, tidyr, dplyr, readr and more
+library(formattable) # for pretty tables 
 
 ```
 
@@ -112,5 +113,18 @@ mean(fillers_only_reliable$Mean) # testing by applying mean to the reliable df
 
 ## 3. Data sets 
 
+In this experiment, we had one big experiment and several smaller, see summary of the materilas column. I'm going to separate them into several data frames. But first, it's necessary to remove the filler items. 
+```{r}
+main_df %>%
+  group_by(materials) %>%
+  summarise()
 
+main_df1 <- main_df %>%
+  filter(materials != "f9_filler")
+
+formattable(main_df1 %>% # no filler in the summary 
+  group_by(materials) %>%
+  summarise())
+
+```
 

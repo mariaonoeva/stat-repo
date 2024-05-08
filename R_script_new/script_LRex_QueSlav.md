@@ -43,6 +43,10 @@ library(tidyverse) # THE package, it contains ggplot2, tidyr, dplyr, readr and m
     ## ✖ dplyr::lag()    masks stats::lag()
     ## ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
 
+``` r
+library(formattable) # for pretty tables 
+```
+
 Here I’m setting the working directory and loading data. There is an
 option to download a version without abandoned trials from LRex and I
 load it here. Then I remove the unnecessary example items.
@@ -172,3 +176,93 @@ mean(fillers_only_reliable$Mean) # testing by applying mean to the reliable df
     ## [1] 0.9235294
 
 ## 3. Data sets
+
+In this experiment, we had one big experiment and several smaller, see
+summary of the materilas column. I’m going to separate them into several
+data frames. But first, it’s necessary to remove the filler items.
+
+``` r
+main_df %>%
+  group_by(materials) %>%
+  summarise()
+```
+
+    ## # A tibble: 10 × 1
+    ##    materials      
+    ##    <chr>          
+    ##  1 e1_main        
+    ##  2 f1_nibud       
+    ##  3 f2_razve_pos   
+    ##  4 f3_razve_neg   
+    ##  5 f4_slucajno_neg
+    ##  6 f5_slucajno_pos
+    ##  7 f6_ctoli_neg   
+    ##  8 f7_ctoli_pos   
+    ##  9 f8_repetitive  
+    ## 10 f9_filler
+
+``` r
+main_df1 <- main_df %>%
+  filter(materials != "f9_filler")
+
+formattable(main_df1 %>% # no filler in the summary 
+  group_by(materials) %>%
+  summarise())
+```
+
+<table class="table table-condensed">
+<thead>
+<tr>
+<th style="text-align:right;">
+materials
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+e1_main
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+f1_nibud
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+f2_razve_pos
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+f3_razve_neg
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+f4_slucajno_neg
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+f5_slucajno_pos
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+f6_ctoli_neg
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+f7_ctoli_pos
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+f8_repetitive
+</td>
+</tr>
+</tbody>
+</table>
