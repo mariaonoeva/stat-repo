@@ -295,117 +295,209 @@ Now I can create one big column and check mean and medians for each
 condition. The most acceptable were conditions with nibud-indefinites.
 The least acceptable were ni-indefinites in V1 li questions.
 
+(Counting mode just for fun :grin:)
+
+Can I count the difference scores for items and conditions?
+
 ``` r
-# creating one mega condition 
+# creating one mega condition
 e1_df <- e1_df %>%
   mutate(condition1 = paste(context, verb, indef))
 
+library(DescTools) # for Mode() 
+
 formattable(e1_df %>%
   group_by(condition1) %>%
-  summarize(Mean = mean(rating1), Median = median(rating1)))
+  summarize(Mean = mean(rating1), 
+            Median = median(rating1),
+            Variance = var(rating1),
+            SD = sd(rating1), # sd = sqrt(var(rating1))
+            Mode = Mode(rating1)), 
+  align = "c")
 ```
 
 <table class="table table-condensed">
 <thead>
 <tr>
-<th style="text-align:right;">
+<th style="text-align:center;">
 condition1
 </th>
-<th style="text-align:right;">
+<th style="text-align:center;">
 Mean
 </th>
-<th style="text-align:right;">
+<th style="text-align:center;">
 Median
+</th>
+<th style="text-align:center;">
+Variance
+</th>
+<th style="text-align:center;">
+SD
+</th>
+<th style="text-align:center;">
+Mode
 </th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align:right;">
+<td style="text-align:center;">
 negative V1 li ni
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 2.757353
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 2
 </td>
+<td style="text-align:center;">
+3.557141
+</td>
+<td style="text-align:center;">
+1.886039
+</td>
+<td style="text-align:center;">
+1
+</td>
 </tr>
 <tr>
-<td style="text-align:right;">
+<td style="text-align:center;">
 negative V1 li nibud
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 5.007353
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 6
+</td>
+<td style="text-align:center;">
+3.904005
+</td>
+<td style="text-align:center;">
+1.975855
+</td>
+<td style="text-align:center;">
+7
 </td>
 </tr>
 <tr>
-<td style="text-align:right;">
+<td style="text-align:center;">
 negative V2 ni
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 4.172794
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 4
 </td>
+<td style="text-align:center;">
+4.475567
+</td>
+<td style="text-align:center;">
+2.115554
+</td>
+<td style="text-align:center;">
+7
+</td>
 </tr>
 <tr>
-<td style="text-align:right;">
+<td style="text-align:center;">
 negative V2 nibud
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 4.852941
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 5
+</td>
+<td style="text-align:center;">
+3.646191
+</td>
+<td style="text-align:center;">
+1.909500
+</td>
+<td style="text-align:center;">
+7
 </td>
 </tr>
 <tr>
-<td style="text-align:right;">
+<td style="text-align:center;">
 neutral V1 li ni
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 3.334559
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 3
 </td>
+<td style="text-align:center;">
+4.850757
+</td>
+<td style="text-align:center;">
+2.202443
+</td>
+<td style="text-align:center;">
+1
+</td>
 </tr>
 <tr>
-<td style="text-align:right;">
+<td style="text-align:center;">
 neutral V1 li nibud
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 5.889706
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 6
+</td>
+<td style="text-align:center;">
+2.098491
+</td>
+<td style="text-align:center;">
+1.448617
+</td>
+<td style="text-align:center;">
+7
 </td>
 </tr>
 <tr>
-<td style="text-align:right;">
+<td style="text-align:center;">
 neutral V2 ni
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 4.360294
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 5
+</td>
+<td style="text-align:center;">
+4.925060
+</td>
+<td style="text-align:center;">
+2.219248
+</td>
+<td style="text-align:center;">
+7
 </td>
 </tr>
 <tr>
-<td style="text-align:right;">
+<td style="text-align:center;">
 neutral V2 nibud
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 5.279412
 </td>
-<td style="text-align:right;">
+<td style="text-align:center;">
 6
+</td>
+<td style="text-align:center;">
+3.072932
+</td>
+<td style="text-align:center;">
+1.752978
+</td>
+<td style="text-align:center;">
+7
 </td>
 </tr>
 </tbody>
@@ -527,6 +619,30 @@ inter_plot
 
 ![](script_LRex_QueSlav_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
+#### Geom_smooth plot for all items in all conditions
+
+``` r
+e1_df$rating1 <- as.numeric(e1_df$rating1)
+
+all_summary <- e1_df %>%
+  group_by(item, verb, indef, context) %>%
+  summarize(Mean = mean(rating1), 
+            Median = median(rating1),
+            SD = sd(rating1)) 
+
+sd_plot <- ggplot(e1_df) + 
+  geom_smooth(aes(x=item, y=rating1, color = indef)) +
+  facet_wrap(~verb+context) +
+  theme(legend.title=element_blank()) +
+  theme_bw() +
+  guides(colour = guide_legend(reverse=TRUE))  +
+  scale_color_brewer(palette = "Set2")
+
+sd_plot
+```
+
+![](script_LRex_QueSlav_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+
 ### Inferential stat
 
 I’ll come back with description :v: :sparkles:
@@ -543,41 +659,6 @@ stat_E1 <- clmm(rating1 ~ verb * indef * context +
 
 summary(stat_E1)
 ```
-
-    ## Cumulative Link Mixed Model fitted with the Laplace approximation
-    ## 
-    ## formula: rating1 ~ verb * indef * context + (1 | participant) + (1 | item)
-    ## data:    e1_df
-    ## 
-    ##  link  threshold nobs logLik   AIC     niter       max.grad cond.H 
-    ##  logit flexible  2176 -3681.28 7392.57 2723(10896) 1.71e-03 2.8e+02
-    ## 
-    ## Random effects:
-    ##  Groups      Name        Variance Std.Dev.
-    ##  participant (Intercept) 0.9402   0.9696  
-    ##  item        (Intercept) 0.2584   0.5083  
-    ## Number of groups:  participant 68,  item 32 
-    ## 
-    ## Coefficients:
-    ##                       Estimate Std. Error z value Pr(>|z|)    
-    ## verb1                 -0.17954    0.03967  -4.526 6.02e-06 ***
-    ## indef1                -0.81423    0.04227 -19.264  < 2e-16 ***
-    ## context1              -0.24396    0.04007  -6.088 1.14e-09 ***
-    ## verb1:indef1          -0.40599    0.04041 -10.046  < 2e-16 ***
-    ## verb1:context1        -0.11304    0.03960  -2.855  0.00431 ** 
-    ## indef1:context1        0.06737    0.03980   1.693  0.09053 .  
-    ## verb1:indef1:context1  0.02148    0.03957   0.543  0.58727    
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## Threshold coefficients:
-    ##     Estimate Std. Error z value
-    ## 1|2  -2.3749     0.1652 -14.374
-    ## 2|3  -1.5293     0.1599  -9.567
-    ## 3|4  -0.8854     0.1576  -5.617
-    ## 4|5  -0.2660     0.1566  -1.699
-    ## 5|6   0.4581     0.1566   2.925
-    ## 6|7   1.4638     0.1592   9.193
 
 ## Experiment 2 (for later)
 

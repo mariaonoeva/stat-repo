@@ -21,7 +21,7 @@ Hi! This R notebook describes the steps that are required for the analysis of na
 The csv file with raw results is available in this repo (perhaps I can also load a spreadsheet with all conditions that I used for LRex?). There are also two files with the script -- rmd and md. The first one is a raw RMarkdown script from RStudio, the second one is a pretty version for GitHub, which is easier to follow online.
 
 ```{r setup, include=FALSE} 
-knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, cache = FALSE) 
 ```
 
 ## Loading data
@@ -195,16 +195,30 @@ e1_df$indef[e1_df$indef != "ni"] <- "nibud"
 
 ```
 
-Now I can create one big column and check mean and medians for each condition. The most acceptable were conditions with nibud-indefinites. The least acceptable were ni-indefinites in V1 li questions. 
+Now I can create one big column and check mean and medians for each condition. The most acceptable were conditions with nibud-indefinites. The least acceptable were ni-indefinites in V1 li questions.
+
+(Counting mode just for fun :grin:)
+
+Can I count the difference scores for items and conditions? 
+
 ```{r}
-# creating one mega condition 
+# creating one mega condition
 e1_df <- e1_df %>%
   mutate(condition1 = paste(context, verb, indef))
 
+library(DescTools) # for Mode() 
+
 formattable(e1_df %>%
   group_by(condition1) %>%
-  summarize(Mean = mean(rating1), Median = median(rating1)))
+  summarize(Mean = mean(rating1), 
+            Median = median(rating1),
+            Variance = var(rating1),
+            SD = sd(rating1), # sd = sqrt(var(rating1))
+            Mode = Mode(rating1)), 
+  align = "c")
 ```
+
+
 #### Stacked bar plot 
 
 The next step is to plot the results. Before I do that I need to refactor and relevel ratings, so they are displayed properly (not upside-down).  
@@ -311,9 +325,32 @@ inter_plot <- ggplot(tab_inter, aes(x=context, y=rating1, colour=indef, group=in
 inter_plot
 ```
 
+#### Geom_smooth plot for all items in all conditions 
+
+```{r}
+
+e1_df$rating1 <- as.numeric(e1_df$rating1)
+
+all_summary <- e1_df %>%
+  group_by(item, verb, indef, context) %>%
+  summarize(Mean = mean(rating1), 
+            Median = median(rating1),
+            SD = sd(rating1)) 
+
+sd_plot <- ggplot(e1_df) + 
+  geom_smooth(aes(x=item, y=rating1, color = indef)) +
+  facet_wrap(~verb+context) +
+  theme(legend.title=element_blank()) +
+  theme_bw() +
+  guides(colour = guide_legend(reverse=TRUE))  +
+  scale_color_brewer(palette = "Set2")
+
+sd_plot
+```
+
 ### Inferential stat 
 I'll come back with description :v: :sparkles:
-```{r}
+```{r eval=FALSE}
 library(lmerTest)
 library(ordinal)
 library(gtsummary)
