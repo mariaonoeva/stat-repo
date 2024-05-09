@@ -7,6 +7,7 @@ Masha Onoeva
 - [2. Fillers and unreliable
   participants](#2-fillers-and-unreliable-participants)
 - [3. Data sets](#3-data-sets)
+- [4. Experiment 1](#4-experiment-1)
 
 ### Info
 
@@ -31,7 +32,7 @@ for GitHub, which is easier to follow online.
 
 ``` r
 library(tidyverse) # THE package, it contains ggplot2, tidyr, dplyr, readr and more
-library(formattable) # for pretty tables 
+library(formattable) # for pretty markdown tables 
 ```
 
 Here I’m setting the working directory and loading data. There is an
@@ -62,14 +63,24 @@ it I’ll run a couple of lines here as well.
 ``` r
 # counts all participants 
 main_df %>%
-  distinct(participant) %>%
+  group_by(participant) %>%
   summarize(total_part = n())
 ```
 
-    ## # A tibble: 1 × 1
-    ##   total_part
-    ##        <int>
-    ## 1         95
+    ## # A tibble: 95 × 2
+    ##    participant total_part
+    ##          <dbl>      <int>
+    ##  1           1         82
+    ##  2           2         82
+    ##  3           3         82
+    ##  4           4         82
+    ##  5           5         82
+    ##  6           6         82
+    ##  7           7         82
+    ##  8           8         82
+    ##  9           9         82
+    ## 10          10         82
+    ## # ℹ 85 more rows
 
 ``` r
 # summarizes items for all participants 
@@ -107,6 +118,7 @@ fillers_only$filler_answer <- 0
 fillers_only$filler_answer <- as.numeric(fillers_only$filler_answer)
 
 # rename filler items: the first three items were bad, the rest were good
+# this step can be skipped but it's easier for me to check and manipulate the results with it
 fillers_only$condition[fillers_only$item %in% c("1", "2", "3")] <- 'bad'
 fillers_only$condition[fillers_only$condition != "bad"] <- 'good'
 ```
@@ -235,7 +247,7 @@ group_split(). I can access each group later.
 split_main_df1 <- main_df2 %>% group_split(materials)
 ```
 
-### Experiment 1
+## 4. Experiment 1
 
 The design for this experiment was 2 x 2 x 2.
 
@@ -399,6 +411,8 @@ neutral V2 nibud
 </tbody>
 </table>
 
+#### Stacked bar plot
+
 The next step is to plot the results. Before I do that I need to
 refactor and relevel ratings, so they are displayed properly (not
 upside-down).
@@ -407,34 +421,41 @@ upside-down).
 # have to make as factor, otherwise error
 e1_df$rating1 <- as.factor(e1_df$rating1)
 
-# releveling ratings 
+# re-leveling ratings
 e1_df_relevel <- e1_df %>%
   mutate(rating1 = fct_relevel(rating1,"7","6","5","4","3","2","1")) 
 
+# re-leveling verbs so they are showed differently in the plot
 e1_df_relevel1 <- e1_df_relevel %>%
   mutate(verb = fct_relevel(verb,"V1 li", "V2"))
 ```
 
-Creating a stacked bar diagram for the results.
+On the x axis, there are contexts, on the y axis – proportions of
+ratings. The darkness of the bars indicates naturalness (dark means more
+natural). The black line that strikes through the plots is median.
+
+I have commented out some lines for the plot but they are mostly
+cosmetics that change size of text, etc. These might be useful for
+specific cases but here I don’t need them.
 
 ``` r
-e1_main_plot <- ggplot(e1_df_relevel, aes(fill=rating1, x=context)) + 
+e1_main_plot <- ggplot(e1_df_relevel1, aes(fill=rating1, x=context)) + 
     geom_bar(position = "fill") +
     geom_hline(aes(yintercept=0.5), size=0.5) +
     facet_wrap(~verb+indef) +
   # coloring
     theme_bw() +
     scale_fill_brewer(palette = "RdPu", direction=-1) +
-    theme(legend.position = "right") +
+    theme(legend.position = "right",
+          text = element_text(size = 12),
           # legend.text = element_text(size=20),
           # legend.key.size = unit(1, 'cm'), 
-          # legend.title = element_text(size=20),
+          legend.title = element_blank())+
           # axis.text = element_text(size = 25),
           # axis.title = element_text(size = 25),
-          # =element_text(size=25) element_blank()
           # axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
           # axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
-#    ggtitle("Main plot (68 participants)")
+   # ggtitle("Stacked bar plot E1 (68 participants)") +
     xlab("Context") +
     ylab("Proportions of raiting")
 
@@ -442,3 +463,65 @@ e1_main_plot
 ```
 
 ![](script_LRex_QueSlav_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
+It is also possible to save the plots using this code:
+
+``` r
+ggsave(e1_main_plot, file="e1_main1.eps", 
+       width = 35, height = 37, units = "cm", device="eps")
+ggsave(e1_main_plot, file="e1_main1_pdf.pdf", 
+       width = 20, height = 20, units = "cm", device="pdf")
+```
+
+#### Interaction plot
+
+The next step is to create an interaction plot. First, I do the
+calculations and then plot the results.
+
+:exclamation: I use here the results **before re-leveling**.
+
+``` r
+library(Rmisc) # for summarySE 
+
+# I load the df to inter_df
+inter_df <- e1_df
+
+# changing rating1 to numeric 
+inter_df$rating1 <- as.numeric(inter_df$rating1)
+
+# calculating interactions 
+tab_inter <- summarySE(inter_df, measurevar="rating1", 
+                         groupvars = c("context", "verb", "indef"))
+```
+
+The plot code might look crazy, but I’ve commented things out and most
+of the lines are cosmetics.
+
+``` r
+# plotting 
+inter_plot <- ggplot(tab_inter, aes(x=context, y=rating1, colour=indef, group=indef)) + 
+    geom_errorbar(aes(ymin=rating1-se, ymax=rating1+se), width=.1) +
+    facet_wrap(~verb) +
+    theme_bw() +
+    geom_line(size = 1) +
+    theme(
+        text = element_text(size = 15),
+        # legend.text = element_text(size=30),
+        # legend.key.size = unit(1, 'cm'),
+        legend.title=element_blank())+
+        # legend.position = c(0.8, 0.15),
+        # axis.text = element_text(size = 25),
+        # axis.title = element_text(size = 25),
+        # axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+        # axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
+    geom_point() + 
+    xlab("Context") +
+    ylab("Naturalness (SE)") +
+    coord_cartesian(ylim = c(1, 7)) +
+    #scale_y_continuous(breaks = pretty_breaks(4)) +
+    guides(colour = guide_legend(reverse=TRUE))  
+
+inter_plot
+```
+
+![](script_LRex_QueSlav_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
