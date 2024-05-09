@@ -3,18 +3,20 @@ title: "R Notebook for naturalness/acceptability judgment experiments"
 output: 
   github_document:
     toc: true
-    toc_depth: 2
+    toc_depth: 3
     fig_width: 5
     fig_height: 5
     dev: png
 author: "Masha Onoeva"
 date: "2024-05-07"
 ---
-### Info 
+## Info 
 
-Hi! This R notebook describes the steps that are required for the analysis of naturalness/acceptability judgment linguistic experiments. I use the experiment that I did with Radek Šimík testing Russian negated polar questions in different contexts as the example data (see [Onoeva and Šimík 2023](https://mariaonoeva.github.io/assets/pdf/FDSL16_RuNPQs_Onoeva_Simik.pdf)). The experiment was run on [LRex](https://www.l-rex.de/), so your raw data can be different if you use a different platform. 
+Hi! This R notebook describes the steps that are required for the analysis of naturalness/acceptability judgment linguistic experiments. I use the experiment that I did with Radek Šimík testing Russian negated polar questions in different contexts as the example data (see [Onoeva and Šimík 2023](https://mariaonoeva.github.io/assets/pdf/FDSL16_RuNPQs_Onoeva_Simik.pdf)). The experiment was run on [LRex](https://www.l-rex.de/), so your raw data can be different if you use a different platform. We had several sub-experiments, here I report on two because code is the same for all of them. 
 
-### Files 
+#### Design 
+
+#### Files 
 
 The csv file with raw results is available in this repo (perhaps I can also load a spreadsheet with all conditions that I used for LRex?). There are also two files with the script -- rmd and md. The first one is a raw RMarkdown script from RStudio, the second one is a pretty version for GitHub, which is easier to follow online.
 
@@ -22,7 +24,7 @@ The csv file with raw results is available in this repo (perhaps I can also load
 knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
 ```
 
-## 1. Loading data
+## Loading data
 
 ```{r}
 library(tidyverse) # THE package, it contains ggplot2, tidyr, dplyr, readr and more
@@ -49,7 +51,7 @@ main_df <- all_df %>%
 
 ```
 
-## 2. Fillers and unreliable participants
+## Fillers and unreliable participants
 
 You can see the number of participants on LRex but just to double-check it I'll run a couple of lines here as well.
 
@@ -57,7 +59,7 @@ You can see the number of participants on LRex but just to double-check it I'll 
 
 # counts all participants 
 main_df %>%
-  group_by(participant) %>%
+  distinct(participant) %>%
   summarize(total_part = n())
 
 # summarizes items for all participants 
@@ -119,7 +121,7 @@ fillers_only_reliable <- anti_join(filler_results, unreliable_participants,
 mean(fillers_only_reliable$Mean) # testing by applying mean to the reliable df
 ```
 
-## 3. Data sets 
+## Data sets 
 
 In this experiment, we had one big experiment and several smaller, see summary of the materials column. I'm going to separate them into several data frames. But first, it's necessary to remove the filler items and unreliable participants. 
 ```{r}
@@ -151,7 +153,8 @@ Now I need to create a separate df for each materials set, they are stored in sp
 split_main_df1 <- main_df2 %>% group_split(materials)
 
 ```
-## 4. Experiment 1
+## Experiment 1
+### Descriptive stat
 
 The design for this experiment was 2 x 2 x 2. 
 
@@ -160,7 +163,7 @@ The design for this experiment was 2 x 2 x 2.
 | V1 li | neutral  | ni         |
 | V2    | negative | nibud      |
 
-The conditions were coded as letters in the spreadsheet for LRex, so first, I assign new comprehensible conditions, so it's easier to read the results. Not sure if it can be done in a more sophisticated way (ChatGPT says otherwise :unamused:). 
+The conditions were coded as letters in the spreadsheet for LRex, so first, I assign new comprehensible conditions, so it's easier to read the results. Not sure if it can be done in a more sophisticated way (ChatGPT says otherwise :unamused: :expressionless:). 
 ```{r}
 # accessing the first experiment from the groups  
 e1_df <- split_main_df1[[1]]
@@ -302,7 +305,26 @@ inter_plot <- ggplot(tab_inter, aes(x=context, y=rating1, colour=indef, group=in
     ylab("Naturalness (SE)") +
     coord_cartesian(ylim = c(1, 7)) +
     #scale_y_continuous(breaks = pretty_breaks(4)) +
-    guides(colour = guide_legend(reverse=TRUE))  
+    guides(colour = guide_legend(reverse=TRUE))  +
+    scale_color_brewer(palette = "Set2")
 
 inter_plot
 ```
+
+### Inferential stat 
+I'll come back with description :v: :sparkles:
+```{r}
+library(lmerTest)
+library(ordinal)
+library(gtsummary)
+
+stat_E1 <- clmm(rating1 ~ verb * indef * context + 
+  (1 | participant) + (1 | item), 
+  contrasts = list(verb="contr.sum",indef="contr.sum", context="contr.sum"), 
+  data=e1_df)
+
+summary(stat_E1)
+```
+
+## Experiment 2 (for later)
+I am not commenting the steps in detail here because they are the same as for the first experiment. 

@@ -3,13 +3,17 @@ R Notebook for naturalness/acceptability judgment experiments
 Masha Onoeva
 2024-05-07
 
-- [1. Loading data](#1-loading-data)
-- [2. Fillers and unreliable
-  participants](#2-fillers-and-unreliable-participants)
-- [3. Data sets](#3-data-sets)
-- [4. Experiment 1](#4-experiment-1)
+- [Info](#info)
+- [Loading data](#loading-data)
+- [Fillers and unreliable
+  participants](#fillers-and-unreliable-participants)
+- [Data sets](#data-sets)
+- [Experiment 1](#experiment-1)
+  - [Descriptive stat](#descriptive-stat)
+  - [Inferential stat](#inferential-stat)
+- [Experiment 2 (for later)](#experiment-2-for-later)
 
-### Info
+## Info
 
 Hi! This R notebook describes the steps that are required for the
 analysis of naturalness/acceptability judgment linguistic experiments. I
@@ -18,9 +22,13 @@ polar questions in different contexts as the example data (see [Onoeva
 and Šimík
 2023](https://mariaonoeva.github.io/assets/pdf/FDSL16_RuNPQs_Onoeva_Simik.pdf)).
 The experiment was run on [LRex](https://www.l-rex.de/), so your raw
-data can be different if you use a different platform.
+data can be different if you use a different platform. We had several
+sub-experiments, here I report on two because code is the same for all
+of them.
 
-### Files
+#### Design
+
+#### Files
 
 The csv file with raw results is available in this repo (perhaps I can
 also load a spreadsheet with all conditions that I used for LRex?).
@@ -28,7 +36,7 @@ There are also two files with the script – rmd and md. The first one is
 a raw RMarkdown script from RStudio, the second one is a pretty version
 for GitHub, which is easier to follow online.
 
-## 1. Loading data
+## Loading data
 
 ``` r
 library(tidyverse) # THE package, it contains ggplot2, tidyr, dplyr, readr and more
@@ -55,7 +63,7 @@ main_df <- all_df %>%
   filter(materials != "1_examples")
 ```
 
-## 2. Fillers and unreliable participants
+## Fillers and unreliable participants
 
 You can see the number of participants on LRex but just to double-check
 it I’ll run a couple of lines here as well.
@@ -63,24 +71,14 @@ it I’ll run a couple of lines here as well.
 ``` r
 # counts all participants 
 main_df %>%
-  group_by(participant) %>%
+  distinct(participant) %>%
   summarize(total_part = n())
 ```
 
-    ## # A tibble: 95 × 2
-    ##    participant total_part
-    ##          <dbl>      <int>
-    ##  1           1         82
-    ##  2           2         82
-    ##  3           3         82
-    ##  4           4         82
-    ##  5           5         82
-    ##  6           6         82
-    ##  7           7         82
-    ##  8           8         82
-    ##  9           9         82
-    ## 10          10         82
-    ## # ℹ 85 more rows
+    ## # A tibble: 1 × 1
+    ##   total_part
+    ##        <int>
+    ## 1         95
 
 ``` r
 # summarizes items for all participants 
@@ -174,7 +172,7 @@ mean(fillers_only_reliable$Mean) # testing by applying mean to the reliable df
 
     ## [1] 0.9235294
 
-## 3. Data sets
+## Data sets
 
 In this experiment, we had one big experiment and several smaller, see
 summary of the materials column. I’m going to separate them into several
@@ -247,7 +245,9 @@ group_split(). I can access each group later.
 split_main_df1 <- main_df2 %>% group_split(materials)
 ```
 
-## 4. Experiment 1
+## Experiment 1
+
+### Descriptive stat
 
 The design for this experiment was 2 x 2 x 2.
 
@@ -259,7 +259,7 @@ The design for this experiment was 2 x 2 x 2.
 The conditions were coded as letters in the spreadsheet for LRex, so
 first, I assign new comprehensible conditions, so it’s easier to read
 the results. Not sure if it can be done in a more sophisticated way
-(ChatGPT says otherwise :unamused:).
+(ChatGPT says otherwise :unamused: :expressionless:).
 
 ``` r
 # accessing the first experiment from the groups  
@@ -519,9 +519,67 @@ inter_plot <- ggplot(tab_inter, aes(x=context, y=rating1, colour=indef, group=in
     ylab("Naturalness (SE)") +
     coord_cartesian(ylim = c(1, 7)) +
     #scale_y_continuous(breaks = pretty_breaks(4)) +
-    guides(colour = guide_legend(reverse=TRUE))  
+    guides(colour = guide_legend(reverse=TRUE))  +
+    scale_color_brewer(palette = "Set2")
 
 inter_plot
 ```
 
 ![](script_LRex_QueSlav_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+### Inferential stat
+
+I’ll come back with description :v: :sparkles:
+
+``` r
+library(lmerTest)
+library(ordinal)
+library(gtsummary)
+
+stat_E1 <- clmm(rating1 ~ verb * indef * context + 
+  (1 | participant) + (1 | item), 
+  contrasts = list(verb="contr.sum",indef="contr.sum", context="contr.sum"), 
+  data=e1_df)
+
+summary(stat_E1)
+```
+
+    ## Cumulative Link Mixed Model fitted with the Laplace approximation
+    ## 
+    ## formula: rating1 ~ verb * indef * context + (1 | participant) + (1 | item)
+    ## data:    e1_df
+    ## 
+    ##  link  threshold nobs logLik   AIC     niter       max.grad cond.H 
+    ##  logit flexible  2176 -3681.28 7392.57 2723(10896) 1.71e-03 2.8e+02
+    ## 
+    ## Random effects:
+    ##  Groups      Name        Variance Std.Dev.
+    ##  participant (Intercept) 0.9402   0.9696  
+    ##  item        (Intercept) 0.2584   0.5083  
+    ## Number of groups:  participant 68,  item 32 
+    ## 
+    ## Coefficients:
+    ##                       Estimate Std. Error z value Pr(>|z|)    
+    ## verb1                 -0.17954    0.03967  -4.526 6.02e-06 ***
+    ## indef1                -0.81423    0.04227 -19.264  < 2e-16 ***
+    ## context1              -0.24396    0.04007  -6.088 1.14e-09 ***
+    ## verb1:indef1          -0.40599    0.04041 -10.046  < 2e-16 ***
+    ## verb1:context1        -0.11304    0.03960  -2.855  0.00431 ** 
+    ## indef1:context1        0.06737    0.03980   1.693  0.09053 .  
+    ## verb1:indef1:context1  0.02148    0.03957   0.543  0.58727    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Threshold coefficients:
+    ##     Estimate Std. Error z value
+    ## 1|2  -2.3749     0.1652 -14.374
+    ## 2|3  -1.5293     0.1599  -9.567
+    ## 3|4  -0.8854     0.1576  -5.617
+    ## 4|5  -0.2660     0.1566  -1.699
+    ## 5|6   0.4581     0.1566   2.925
+    ## 6|7   1.4638     0.1592   9.193
+
+## Experiment 2 (for later)
+
+I am not commenting the steps in detail here because they are the same
+as for the first experiment.
