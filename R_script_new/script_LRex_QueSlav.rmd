@@ -327,7 +327,7 @@ inter_plot
 
 #### Geom_smooth plot for all items in all conditions 
 
-```{r}
+```{r fig.height=4, fig.width=7}
 
 e1_df$rating1 <- as.numeric(e1_df$rating1)
 
@@ -339,7 +339,7 @@ all_summary <- e1_df %>%
 
 sd_plot <- ggplot(e1_df) + 
   geom_smooth(aes(x=item, y=rating1, color = indef)) +
-  facet_wrap(~verb+context) +
+  facet_grid(vars(verb),  rows = vars(context)) +
   theme(legend.title=element_blank()) +
   theme_bw() +
   guides(colour = guide_legend(reverse=TRUE))  +

@@ -632,7 +632,7 @@ all_summary <- e1_df %>%
 
 sd_plot <- ggplot(e1_df) + 
   geom_smooth(aes(x=item, y=rating1, color = indef)) +
-  facet_wrap(~verb+context) +
+  facet_grid(vars(verb),  rows = vars(context)) +
   theme(legend.title=element_blank()) +
   theme_bw() +
   guides(colour = guide_legend(reverse=TRUE))  +
