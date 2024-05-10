@@ -1,7 +1,7 @@
 R Notebook for naturalness/acceptability judgment experiments
 ================
 Masha Onoeva
-2024-05-07
+(May 2024)
 
 - [Info](#info)
 - [Loading data](#loading-data)
@@ -146,11 +146,30 @@ filler_results <- fillers_only %>%
   group_by(participant) %>%
   summarize(Mean = mean(filler_answer, na.rm=TRUE))
 
+filler_results
+```
+
+    ## # A tibble: 95 × 2
+    ##    participant  Mean
+    ##          <dbl> <dbl>
+    ##  1           1   1  
+    ##  2           2   0.9
+    ##  3           3   0.8
+    ##  4           4   0.6
+    ##  5           5   0.6
+    ##  6           6   0.6
+    ##  7           7   0.9
+    ##  8           8   0.7
+    ##  9           9   0.9
+    ## 10          10   0.9
+    ## # ℹ 85 more rows
+
+``` r
 # how in general the participants went through fillers 
 mean(filler_results$Mean)
 ```
 
-    ## [1] 0.8442105
+    ## [1] 0.844
 
 Now I need to find unreliable participants. This is done quickly, just
 to find the people who have means lower than 0.8. This is quite a high
@@ -170,7 +189,7 @@ fillers_only_reliable <- anti_join(filler_results, unreliable_participants,
 mean(fillers_only_reliable$Mean) # testing by applying mean to the reliable df
 ```
 
-    ## [1] 0.9235294
+    ## [1] 0.924
 
 ## Data sets
 
@@ -291,28 +310,26 @@ e1_df$indef[e1_df$indef != "ni"] <- "nibud"
 #   )
 ```
 
-Now I can create one big column and check mean and medians for each
-condition. The most acceptable were conditions with nibud-indefinites.
-The least acceptable were ni-indefinites in V1 li questions.
-
-(Counting mode just for fun :grin:)
-
-Can I count the difference scores for items and conditions?
+There are two ways how to look at my data: check how they are similar
+and how they are different. For the first, I need measures of central
+tendency – mode, mean, median, for the second variability values –
+range, variance, standard deviation.
 
 ``` r
-# creating one mega condition
-e1_df <- e1_df %>%
-  mutate(condition1 = paste(context, verb, indef))
+# creating one mega condition, not necessary though, group_by() works just fine
+# e1_df <- e1_df %>%
+#  mutate(condition1 = paste(context, verb, indef))
 
 library(DescTools) # for Mode() 
 
 formattable(e1_df %>%
-  group_by(condition1) %>%
-  summarize(Mean = mean(rating1), 
+  group_by(indef, verb, context) %>%
+  summarize(Mode = Mode(rating1),
             Median = median(rating1),
+            Mean = mean(rating1),
+            Range = paste(range(rating1), collapse = "-"),
             Variance = var(rating1),
-            SD = sd(rating1), # sd = sqrt(var(rating1))
-            Mode = Mode(rating1)), 
+            SD = sd(rating1)), # sd = sqrt(var(rating1))
   align = "c")
 ```
 
@@ -320,13 +337,25 @@ formattable(e1_df %>%
 <thead>
 <tr>
 <th style="text-align:center;">
-condition1
+indef
+</th>
+<th style="text-align:center;">
+verb
+</th>
+<th style="text-align:center;">
+context
+</th>
+<th style="text-align:center;">
+Mode
+</th>
+<th style="text-align:center;">
+Median
 </th>
 <th style="text-align:center;">
 Mean
 </th>
 <th style="text-align:center;">
-Median
+Range
 </th>
 <th style="text-align:center;">
 Variance
@@ -334,174 +363,267 @@ Variance
 <th style="text-align:center;">
 SD
 </th>
-<th style="text-align:center;">
-Mode
-</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td style="text-align:center;">
-negative V1 li ni
+ni
 </td>
 <td style="text-align:center;">
-2.757353
+V1 li
+</td>
+<td style="text-align:center;">
+negative
+</td>
+<td style="text-align:center;">
+1
 </td>
 <td style="text-align:center;">
 2
 </td>
 <td style="text-align:center;">
-3.557141
+2.76
 </td>
 <td style="text-align:center;">
-1.886039
+1-7
+</td>
+<td style="text-align:center;">
+3.56
+</td>
+<td style="text-align:center;">
+1.89
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+ni
+</td>
+<td style="text-align:center;">
+V1 li
+</td>
+<td style="text-align:center;">
+neutral
 </td>
 <td style="text-align:center;">
 1
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-negative V1 li nibud
-</td>
-<td style="text-align:center;">
-5.007353
-</td>
-<td style="text-align:center;">
-6
-</td>
-<td style="text-align:center;">
-3.904005
-</td>
-<td style="text-align:center;">
-1.975855
-</td>
-<td style="text-align:center;">
-7
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-negative V2 ni
-</td>
-<td style="text-align:center;">
-4.172794
-</td>
-<td style="text-align:center;">
-4
-</td>
-<td style="text-align:center;">
-4.475567
-</td>
-<td style="text-align:center;">
-2.115554
-</td>
-<td style="text-align:center;">
-7
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-negative V2 nibud
-</td>
-<td style="text-align:center;">
-4.852941
-</td>
-<td style="text-align:center;">
-5
-</td>
-<td style="text-align:center;">
-3.646191
-</td>
-<td style="text-align:center;">
-1.909500
-</td>
-<td style="text-align:center;">
-7
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-neutral V1 li ni
-</td>
-<td style="text-align:center;">
-3.334559
 </td>
 <td style="text-align:center;">
 3
 </td>
 <td style="text-align:center;">
-4.850757
+3.33
 </td>
 <td style="text-align:center;">
-2.202443
+1-7
 </td>
 <td style="text-align:center;">
-1
+4.85
+</td>
+<td style="text-align:center;">
+2.20
 </td>
 </tr>
 <tr>
 <td style="text-align:center;">
-neutral V1 li nibud
+ni
 </td>
 <td style="text-align:center;">
-5.889706
+V2
 </td>
 <td style="text-align:center;">
-6
-</td>
-<td style="text-align:center;">
-2.098491
-</td>
-<td style="text-align:center;">
-1.448617
+negative
 </td>
 <td style="text-align:center;">
 7
 </td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+4.17
+</td>
+<td style="text-align:center;">
+1-7
+</td>
+<td style="text-align:center;">
+4.48
+</td>
+<td style="text-align:center;">
+2.12
+</td>
 </tr>
 <tr>
 <td style="text-align:center;">
-neutral V2 ni
+ni
 </td>
 <td style="text-align:center;">
-4.360294
+V2
+</td>
+<td style="text-align:center;">
+neutral
+</td>
+<td style="text-align:center;">
+7
 </td>
 <td style="text-align:center;">
 5
 </td>
 <td style="text-align:center;">
-4.925060
+4.36
 </td>
 <td style="text-align:center;">
-2.219248
+1-7
 </td>
 <td style="text-align:center;">
-7
+4.93
+</td>
+<td style="text-align:center;">
+2.22
 </td>
 </tr>
 <tr>
 <td style="text-align:center;">
-neutral V2 nibud
+nibud
 </td>
 <td style="text-align:center;">
-5.279412
+V1 li
+</td>
+<td style="text-align:center;">
+negative
+</td>
+<td style="text-align:center;">
+7
 </td>
 <td style="text-align:center;">
 6
 </td>
 <td style="text-align:center;">
-3.072932
+5.01
 </td>
 <td style="text-align:center;">
-1.752978
+1-7
+</td>
+<td style="text-align:center;">
+3.90
+</td>
+<td style="text-align:center;">
+1.98
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+nibud
+</td>
+<td style="text-align:center;">
+V1 li
+</td>
+<td style="text-align:center;">
+neutral
 </td>
 <td style="text-align:center;">
 7
 </td>
+<td style="text-align:center;">
+6
+</td>
+<td style="text-align:center;">
+5.89
+</td>
+<td style="text-align:center;">
+1-7
+</td>
+<td style="text-align:center;">
+2.10
+</td>
+<td style="text-align:center;">
+1.45
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+nibud
+</td>
+<td style="text-align:center;">
+V2
+</td>
+<td style="text-align:center;">
+negative
+</td>
+<td style="text-align:center;">
+7
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+4.85
+</td>
+<td style="text-align:center;">
+1-7
+</td>
+<td style="text-align:center;">
+3.65
+</td>
+<td style="text-align:center;">
+1.91
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+nibud
+</td>
+<td style="text-align:center;">
+V2
+</td>
+<td style="text-align:center;">
+neutral
+</td>
+<td style="text-align:center;">
+7
+</td>
+<td style="text-align:center;">
+6
+</td>
+<td style="text-align:center;">
+5.28
+</td>
+<td style="text-align:center;">
+1-7
+</td>
+<td style="text-align:center;">
+3.07
+</td>
+<td style="text-align:center;">
+1.75
+</td>
 </tr>
 </tbody>
 </table>
+
+- **Mode** is the most popular ~~dude~~ number in the set. It’s usually
+  not a very useful value but here why not :grin:
+- **Median** is a true central tendency value as it’s in the middle but
+  it’s necessary to order the values first. It’s resilient to outliers
+  which can be good and bad at the same time.
+- **Mean** is also known as average. It’s like a parent that loves their
+  kids equally, or ideal socialism, it shows the sum of all values
+  divided by their number, so if everybody should get the same, they get
+  mean.
+- **Range** is min and max values, not super telling here but can be
+  useful with different data.
+- For **variance** mean is required. To calculate that one, each
+  observed value has to be compared to the mean, then this difference
+  must be squared (because it can be negative), after the sum of all of
+  these squared differences should be divided by the number of observed
+  values (there is n and n-1 stuff, but there is no space for that.). So
+  it’s average for squared differences from the mean. It’s possible to
+  do from median, I guess, but here it’s calculated from mean.
+- **Standard deviation (SD)** is the easiest, it’s a square root from
+  variance. Since differences from the mean were squared in the previous
+  step, one needs to ‘unsquare’ that result. Perhaps my SDs are too high
+  in some cases but this is what I’m going to investigate in my
+  dissertation.
 
 #### Stacked bar plot
 

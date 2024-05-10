@@ -8,7 +8,7 @@ output:
     fig_height: 5
     dev: png
 author: "Masha Onoeva"
-date: "2024-05-07"
+date: "(May 2024)"
 ---
 ## Info 
 
@@ -21,7 +21,8 @@ Hi! This R notebook describes the steps that are required for the analysis of na
 The csv file with raw results is available in this repo (perhaps I can also load a spreadsheet with all conditions that I used for LRex?). There are also two files with the script -- rmd and md. The first one is a raw RMarkdown script from RStudio, the second one is a pretty version for GitHub, which is easier to follow online.
 
 ```{r setup, include=FALSE} 
-knitr::opts_chunk$set(warning = FALSE, message = FALSE, cache = FALSE) 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, cache = FALSE, 
+                      options(digits=3)) 
 ```
 
 ## Loading data
@@ -102,6 +103,8 @@ So now I have the column which tells me how each participant assessed each fille
 filler_results <- fillers_only %>% 
   group_by(participant) %>%
   summarize(Mean = mean(filler_answer, na.rm=TRUE))
+
+filler_results
 
 # how in general the participants went through fillers 
 mean(filler_results$Mean)
@@ -195,29 +198,32 @@ e1_df$indef[e1_df$indef != "ni"] <- "nibud"
 
 ```
 
-Now I can create one big column and check mean and medians for each condition. The most acceptable were conditions with nibud-indefinites. The least acceptable were ni-indefinites in V1 li questions.
-
-(Counting mode just for fun :grin:)
-
-Can I count the difference scores for items and conditions? 
+There are two ways how to look at my data: check how they are similar and how they are different. For the first, I need measures of central tendency -- mode, mean, median, for the second variability values -- range, variance, standard deviation. 
 
 ```{r}
-# creating one mega condition
-e1_df <- e1_df %>%
-  mutate(condition1 = paste(context, verb, indef))
+# creating one mega condition, not necessary though, group_by() works just fine
+# e1_df <- e1_df %>%
+#  mutate(condition1 = paste(context, verb, indef))
 
 library(DescTools) # for Mode() 
 
 formattable(e1_df %>%
-  group_by(condition1) %>%
-  summarize(Mean = mean(rating1), 
+  group_by(indef, verb, context) %>%
+  summarize(Mode = Mode(rating1),
             Median = median(rating1),
+            Mean = mean(rating1),
+            Range = paste(range(rating1), collapse = "-"),
             Variance = var(rating1),
-            SD = sd(rating1), # sd = sqrt(var(rating1))
-            Mode = Mode(rating1)), 
+            SD = sd(rating1)), # sd = sqrt(var(rating1))
   align = "c")
 ```
 
+- **Mode** is the most popular ~~dude~~ number in the set. It's usually not a very useful value but here why not :grin:
+- **Median** is a true central tendency value as it's in the middle but it's necessary to order the values first. It's resilient to outliers which can be good and bad at the same time. 
+- **Mean** is also known as average. It's like a parent that loves their kids equally, or ideal socialism, it shows the sum of all values divided by their number, so if everybody should get the same, they get mean. 
+- **Range** is min and max values, not super telling here but can be useful with different data. 
+- For **variance** mean is required. To calculate that one, each observed value has to be compared to the mean, then this difference must be squared (because it can be negative), after the sum of all of these squared differences should be divided by the number of observed values (there is n and n-1 stuff, but there is no space for that.). So it's average for squared differences from the mean. It's possible to do from median, I guess, but here it's calculated from mean.
+- **Standard deviation (SD)** is the easiest, it's a square root from variance. Since differences from the mean were squared in the previous step, one needs to 'unsquare' that result. Perhaps my SDs are too high in some cases but this is what I'm going to investigate in my dissertation.  
 
 #### Stacked bar plot 
 
