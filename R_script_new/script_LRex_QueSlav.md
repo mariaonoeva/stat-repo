@@ -616,14 +616,16 @@ neutral
   observed value has to be compared to the mean, then this difference
   must be squared (because it can be negative), after the sum of all of
   these squared differences should be divided by the number of observed
-  values (there is n and n-1 stuff, but there is no space for that.). So
-  it’s average for squared differences from the mean. It’s possible to
-  do from median, I guess, but here it’s calculated from mean.
+  values (I’m aware about n and n-1 stuff, but there is no space for
+  that). So it’s average for squared differences from the mean. It’s
+  possible to do from median, I guess, but here it’s calculated from
+  mean.
 - **Standard deviation (SD)** is the easiest, it’s a square root from
   variance. Since differences from the mean were squared in the previous
   step, one needs to ‘unsquare’ that result. Perhaps my SDs are too high
   in some cases but this is what I’m going to investigate in my
-  dissertation.
+  dissertation (Masha Razguliaeva’s comment: for naturalness judgments
+  SD might be higher than for grammaticality).
 
 #### Stacked bar plot
 
@@ -632,10 +634,10 @@ refactor and relevel ratings, so they are displayed properly (not
 upside-down).
 
 ``` r
-# have to make as factor, otherwise error
+# have to make as factor, otherwise error 
 e1_df$rating1 <- as.factor(e1_df$rating1)
 
-# re-leveling ratings
+# re-leveling ratings (I have this code from Anička Staňková)
 e1_df_relevel <- e1_df %>%
   mutate(rating1 = fct_relevel(rating1,"7","6","5","4","3","2","1")) 
 
@@ -752,18 +754,23 @@ all_summary <- e1_df %>%
             Median = median(rating1),
             SD = sd(rating1)) 
 
-sd_plot <- ggplot(e1_df) + 
-  geom_smooth(aes(x=item, y=rating1, color = indef)) +
-  facet_grid(vars(verb),  rows = vars(context)) +
-  theme(legend.title=element_blank()) +
-  theme_bw() +
-  guides(colour = guide_legend(reverse=TRUE))  +
-  scale_color_brewer(palette = "Set2")
-
-sd_plot
+all_summary
 ```
 
-![](script_LRex_QueSlav_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+    ##   Mean Median   SD
+    ## 1 4.46      5 2.18
+
+``` r
+# sd_plot <- ggplot(all_summary) + 
+#   geom_point(aes(x=item, y=Mean, color = indef)) +
+#   facet_grid(vars(verb),  rows = vars(context)) +
+#   theme(legend.title=element_blank()) +
+#   theme_bw() +
+#   guides(colour = guide_legend(reverse=TRUE))  +
+#   scale_color_brewer(palette = "Set2")
+# 
+# sd_plot
+```
 
 ### Inferential stat
 

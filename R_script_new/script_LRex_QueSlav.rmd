@@ -222,8 +222,8 @@ formattable(e1_df %>%
 - **Median** is a true central tendency value as it's in the middle but it's necessary to order the values first. It's resilient to outliers which can be good and bad at the same time. 
 - **Mean** is also known as average. It's like a parent that loves their kids equally, or ideal socialism, it shows the sum of all values divided by their number, so if everybody should get the same, they get mean. 
 - **Range** is min and max values, not super telling here but can be useful with different data. 
-- For **variance** mean is required. To calculate that one, each observed value has to be compared to the mean, then this difference must be squared (because it can be negative), after the sum of all of these squared differences should be divided by the number of observed values (there is n and n-1 stuff, but there is no space for that.). So it's average for squared differences from the mean. It's possible to do from median, I guess, but here it's calculated from mean.
-- **Standard deviation (SD)** is the easiest, it's a square root from variance. Since differences from the mean were squared in the previous step, one needs to 'unsquare' that result. Perhaps my SDs are too high in some cases but this is what I'm going to investigate in my dissertation.  
+- For **variance** mean is required. To calculate that one, each observed value has to be compared to the mean, then this difference must be squared (because it can be negative), after the sum of all of these squared differences should be divided by the number of observed values (I'm aware about n and n-1 stuff, but there is no space for that). So it's average for squared differences from the mean. It's possible to do from median, I guess, but here it's calculated from mean.
+- **Standard deviation (SD)** is the easiest, it's a square root from variance. Since differences from the mean were squared in the previous step, one needs to 'unsquare' that result. Perhaps my SDs are too high in some cases  but this is what I'm going to investigate in my dissertation (Masha Razguliaeva's comment: for naturalness judgments SD might be higher than for grammaticality).  
 
 #### Stacked bar plot 
 
@@ -231,10 +231,10 @@ The next step is to plot the results. Before I do that I need to refactor and re
 
 ```{r}
 
-# have to make as factor, otherwise error
+# have to make as factor, otherwise error 
 e1_df$rating1 <- as.factor(e1_df$rating1)
 
-# re-leveling ratings
+# re-leveling ratings (I have this code from Anička Staňková)
 e1_df_relevel <- e1_df %>%
   mutate(rating1 = fct_relevel(rating1,"7","6","5","4","3","2","1")) 
 
@@ -343,15 +343,17 @@ all_summary <- e1_df %>%
             Median = median(rating1),
             SD = sd(rating1)) 
 
-sd_plot <- ggplot(e1_df) + 
-  geom_smooth(aes(x=item, y=rating1, color = indef)) +
-  facet_grid(vars(verb),  rows = vars(context)) +
-  theme(legend.title=element_blank()) +
-  theme_bw() +
-  guides(colour = guide_legend(reverse=TRUE))  +
-  scale_color_brewer(palette = "Set2")
+all_summary
 
-sd_plot
+# sd_plot <- ggplot(all_summary) + 
+#   geom_point(aes(x=item, y=Mean, color = indef)) +
+#   facet_grid(vars(verb),  rows = vars(context)) +
+#   theme(legend.title=element_blank()) +
+#   theme_bw() +
+#   guides(colour = guide_legend(reverse=TRUE))  +
+#   scale_color_brewer(palette = "Set2")
+# 
+# sd_plot
 ```
 
 ### Inferential stat 
