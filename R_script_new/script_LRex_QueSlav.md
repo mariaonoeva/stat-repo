@@ -8,10 +8,10 @@ Masha Onoeva
 - [Fillers and unreliable
   participants](#fillers-and-unreliable-participants)
 - [Data sets](#data-sets)
-- [Experiment 1](#experiment-1)
-  - [Descriptive stat](#descriptive-stat)
-  - [Inferential stat](#inferential-stat)
-- [Experiment 2 (for later)](#experiment-2-for-later)
+- [Descriptive stat](#descriptive-stat)
+  - [Stacked bar plot](#stacked-bar-plot)
+  - [Interaction plot](#interaction-plot)
+- [Inferential stat](#inferential-stat)
 
 ## Info
 
@@ -23,7 +23,7 @@ and Šimík
 2023](https://mariaonoeva.github.io/assets/pdf/FDSL16_RuNPQs_Onoeva_Simik.pdf)).
 The experiment was run on [LRex](https://www.l-rex.de/), so your raw
 data can be different if you use a different platform. We had several
-sub-experiments, here I report on two because code is the same for all
+sub-experiments, here I report on one because code is the same for all
 of them.
 
 #### Design
@@ -264,9 +264,7 @@ group_split(). I can access each group later.
 split_main_df1 <- main_df2 %>% group_split(materials)
 ```
 
-## Experiment 1
-
-### Descriptive stat
+## Descriptive stat
 
 The design for this experiment was 2 x 2 x 2.
 
@@ -627,7 +625,7 @@ neutral
   dissertation (Masha Razguliaeva’s comment: for naturalness judgments
   SD might be higher than for grammaticality).
 
-#### Stacked bar plot
+### Stacked bar plot
 
 The next step is to plot the results. Before I do that I need to
 refactor and relevel ratings, so they are displayed properly (not
@@ -689,7 +687,7 @@ ggsave(e1_main_plot, file="e1_main1_pdf.pdf",
        width = 20, height = 20, units = "cm", device="pdf")
 ```
 
-#### Interaction plot
+### Interaction plot
 
 The next step is to create an interaction plot. First, I do the
 calculations and then plot the results.
@@ -697,6 +695,8 @@ calculations and then plot the results.
 :exclamation: I use here the results **before re-leveling**.
 
 ``` r
+# This code is based on Radek Šimík's code.
+
 library(Rmisc) # for summarySE 
 
 # I load the df to inter_df
@@ -743,24 +743,57 @@ inter_plot
 
 ![](script_LRex_QueSlav_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
+The same plot as above but for each item. (Perhaps I can use conditions
+as color?)
+
+``` r
+tab_inter_items <- summarySE(inter_df, measurevar="rating1", 
+                         groupvars = c("item", "context", "verb", "indef"))
+
+# plotting 
+inter_plot_items <- ggplot(tab_inter_items, aes(x=item, y=rating1, colour=indef, group=indef)) + 
+    geom_errorbar(aes(ymin=rating1-se, ymax=rating1+se), width=.1) +
+    #facet_wrap(~verb+context) +
+    facet_grid(vars(verb),  rows = vars(context)) +
+    theme_bw() +
+    geom_line() +
+    theme(
+        text = element_text(size = 15),
+        # legend.text = element_text(size=30),
+        # legend.key.size = unit(1, 'cm'),
+        legend.title=element_blank())+
+        # legend.position = c(0.8, 0.15),
+        # axis.text = element_text(size = 25),
+        # axis.title = element_text(size = 25),
+        # axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+        # axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
+    geom_point() + 
+    xlab("Context") +
+    ylab("Naturalness (SE)") +
+    coord_cartesian(ylim = c(1, 7)) +
+    #scale_y_continuous(breaks = pretty_breaks(4)) +
+    guides(colour = guide_legend(reverse=TRUE))  +
+    scale_color_brewer(palette = "Set2") +
+    scale_x_continuous(breaks=seq(1, 32, by = 2))
+
+inter_plot_items
+```
+
+![](script_LRex_QueSlav_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+
 #### Geom_smooth plot for all items in all conditions
 
 ``` r
 e1_df$rating1 <- as.numeric(e1_df$rating1)
 
-all_summary <- e1_df %>%
-  group_by(item, verb, indef, context) %>%
-  summarize(Mean = mean(rating1), 
-            Median = median(rating1),
-            SD = sd(rating1)) 
+all_summary %>%
+  group_by(item, indef, verb, context) %>%
+  summarize(Median = median(rating1),
+            Mean = mean(rating1),
+            Variance = var(rating1),
+            SD = sd(rating1)) # sd = sqrt(var(rating1))
 
-all_summary
-```
 
-    ##   Mean Median   SD
-    ## 1 4.46      5 2.18
-
-``` r
 # sd_plot <- ggplot(all_summary) + 
 #   geom_point(aes(x=item, y=Mean, color = indef)) +
 #   facet_grid(vars(verb),  rows = vars(context)) +
@@ -772,7 +805,7 @@ all_summary
 # sd_plot
 ```
 
-### Inferential stat
+## Inferential stat
 
 I’ll come back with description :v: :sparkles:
 
@@ -788,8 +821,3 @@ stat_E1 <- clmm(rating1 ~ verb * indef * context +
 
 summary(stat_E1)
 ```
-
-## Experiment 2 (for later)
-
-I am not commenting the steps in detail here because they are the same
-as for the first experiment.
