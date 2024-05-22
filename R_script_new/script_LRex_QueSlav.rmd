@@ -395,7 +395,7 @@ all_summary %>%
 
 ## Inferential stat 
 I'll come back with description :v: :sparkles:
-```{r eval=FALSE}
+```{r}
 library(lmerTest)
 library(ordinal)
 library(gtsummary)

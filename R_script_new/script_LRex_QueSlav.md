@@ -821,3 +821,38 @@ stat_E1 <- clmm(rating1 ~ verb * indef * context +
 
 summary(stat_E1)
 ```
+
+    ## Cumulative Link Mixed Model fitted with the Laplace approximation
+    ## 
+    ## formula: rating1 ~ verb * indef * context + (1 | participant) + (1 | item)
+    ## data:    e1_df
+    ## 
+    ##  link  threshold nobs logLik   AIC     niter       max.grad cond.H 
+    ##  logit flexible  2176 -3681.28 7392.57 2723(10896) 1.71e-03 2.8e+02
+    ## 
+    ## Random effects:
+    ##  Groups      Name        Variance Std.Dev.
+    ##  participant (Intercept) 0.940    0.970   
+    ##  item        (Intercept) 0.258    0.508   
+    ## Number of groups:  participant 68,  item 32 
+    ## 
+    ## Coefficients:
+    ##                       Estimate Std. Error z value Pr(>|z|)    
+    ## verb1                  -0.1795     0.0397   -4.53  6.0e-06 ***
+    ## indef1                 -0.8142     0.0423  -19.26  < 2e-16 ***
+    ## context1               -0.2440     0.0401   -6.09  1.1e-09 ***
+    ## verb1:indef1           -0.4060     0.0404  -10.05  < 2e-16 ***
+    ## verb1:context1         -0.1130     0.0396   -2.85   0.0043 ** 
+    ## indef1:context1         0.0674     0.0398    1.69   0.0905 .  
+    ## verb1:indef1:context1   0.0215     0.0396    0.54   0.5873    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Threshold coefficients:
+    ##     Estimate Std. Error z value
+    ## 1|2   -2.375      0.165  -14.37
+    ## 2|3   -1.529      0.160   -9.57
+    ## 3|4   -0.885      0.158   -5.62
+    ## 4|5   -0.266      0.157   -1.70
+    ## 5|6    0.458      0.157    2.93
+    ## 6|7    1.464      0.159    9.19
