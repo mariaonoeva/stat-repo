@@ -395,7 +395,10 @@ all_summary %>%
 
 ## Inferential stat 
 I'll come back with description :v: :sparkles:
+Drawing inferences about population (all Russian speakers) from sample (68 people). 
+Sampling strategy -- convenience sampling. 
 ```{r}
+library(modelsummary)
 library(lmerTest)
 library(ordinal)
 library(gtsummary)
@@ -406,5 +409,12 @@ stat_E1 <- clmm(rating1 ~ verb * indef * context +
   data=e1_df)
 
 summary(stat_E1)
+```
+
+
+```{r}
+
+datasummary_balance(e1_df)
+
 ```
 
