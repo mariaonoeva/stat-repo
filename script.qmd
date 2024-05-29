@@ -1,7 +1,7 @@
 ---
 title: "R Notebook for naturalness/acceptability judgment experiments"
-output: 
-  github_document:
+format: 
+  gfm:
     toc: true
     dev: png
 author: "Masha Onoeva"
