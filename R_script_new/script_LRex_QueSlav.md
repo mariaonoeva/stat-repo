@@ -808,7 +808,8 @@ all_summary %>%
 ## Inferential stat
 
 I’ll come back with description :v: :sparkles: Drawing inferences about
-population (all Russian speakers) from sample (68 people).
+population (all Russian speakers) from sample (68 people). Sampling
+strategy – convenience sampling.
 
 ``` r
 library(modelsummary)
@@ -821,150 +822,40 @@ stat_E1 <- clmm(rating1 ~ verb * indef * context +
   contrasts = list(verb="contr.sum",indef="contr.sum", context="contr.sum"), 
   data=e1_df)
 
-modelsummary(stat_E1, output = "markdown")
+summary(stat_E1)
 ```
 
-<table style="width:54%;">
-<colgroup>
-<col style="width: 40%" />
-<col style="width: 13%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th></th>
-<th><ol type="1">
-<li></li>
-</ol></th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>1|2</td>
-<td>-2.375</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.165)</td>
-</tr>
-<tr class="odd">
-<td>2|3</td>
-<td>-1.529</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.160)</td>
-</tr>
-<tr class="odd">
-<td>3|4</td>
-<td>-0.885</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.158)</td>
-</tr>
-<tr class="odd">
-<td>4|5</td>
-<td>-0.266</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.157)</td>
-</tr>
-<tr class="odd">
-<td>5|6</td>
-<td>0.458</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.157)</td>
-</tr>
-<tr class="odd">
-<td>6|7</td>
-<td>1.464</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.159)</td>
-</tr>
-<tr class="odd">
-<td>verb1</td>
-<td>-0.180</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.040)</td>
-</tr>
-<tr class="odd">
-<td>indef1</td>
-<td>-0.814</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.042)</td>
-</tr>
-<tr class="odd">
-<td>context1</td>
-<td>-0.244</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.040)</td>
-</tr>
-<tr class="odd">
-<td>verb1 × indef1</td>
-<td>-0.406</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.040)</td>
-</tr>
-<tr class="odd">
-<td>verb1 × context1</td>
-<td>-0.113</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.040)</td>
-</tr>
-<tr class="odd">
-<td>indef1 × context1</td>
-<td>0.067</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.040)</td>
-</tr>
-<tr class="odd">
-<td>verb1 × indef1 × context1</td>
-<td>0.021</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.040)</td>
-</tr>
-<tr class="odd">
-<td>SD (Intercept participant)</td>
-<td>0.970</td>
-</tr>
-<tr class="even">
-<td>SD (Intercept item)</td>
-<td>0.508</td>
-</tr>
-<tr class="odd">
-<td>Num.Obs.</td>
-<td>2176</td>
-</tr>
-<tr class="even">
-<td>AIC</td>
-<td>7392.6</td>
-</tr>
-<tr class="odd">
-<td>BIC</td>
-<td>7477.8</td>
-</tr>
-<tr class="even">
-<td>RMSE</td>
-<td>4.71</td>
-</tr>
-</tbody>
-</table>
+    ## Cumulative Link Mixed Model fitted with the Laplace approximation
+    ## 
+    ## formula: rating1 ~ verb * indef * context + (1 | participant) + (1 | item)
+    ## data:    e1_df
+    ## 
+    ##  link  threshold nobs logLik   AIC     niter       max.grad cond.H 
+    ##  logit flexible  2176 -3681.28 7392.57 2723(10896) 1.71e-03 2.8e+02
+    ## 
+    ## Random effects:
+    ##  Groups      Name        Variance Std.Dev.
+    ##  participant (Intercept) 0.940    0.970   
+    ##  item        (Intercept) 0.258    0.508   
+    ## Number of groups:  participant 68,  item 32 
+    ## 
+    ## Coefficients:
+    ##                       Estimate Std. Error z value Pr(>|z|)    
+    ## verb1                  -0.1795     0.0397   -4.53  6.0e-06 ***
+    ## indef1                 -0.8142     0.0423  -19.26  < 2e-16 ***
+    ## context1               -0.2440     0.0401   -6.09  1.1e-09 ***
+    ## verb1:indef1           -0.4060     0.0404  -10.05  < 2e-16 ***
+    ## verb1:context1         -0.1130     0.0396   -2.85   0.0043 ** 
+    ## indef1:context1         0.0674     0.0398    1.69   0.0905 .  
+    ## verb1:indef1:context1   0.0215     0.0396    0.54   0.5873    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Threshold coefficients:
+    ##     Estimate Std. Error z value
+    ## 1|2   -2.375      0.165  -14.37
+    ## 2|3   -1.529      0.160   -9.57
+    ## 3|4   -0.885      0.158   -5.62
+    ## 4|5   -0.266      0.157   -1.70
+    ## 5|6    0.458      0.157    2.93
+    ## 6|7    1.464      0.159    9.19

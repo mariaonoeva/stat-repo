@@ -3,24 +3,21 @@ title: "R Notebook for naturalness/acceptability judgment experiments"
 output: 
   github_document:
     toc: true
-    toc_depth: 3
-    fig_width: 5
-    fig_height: 5
     dev: png
 author: "Masha Onoeva"
-date: "(May 2024)"
 ---
-## Info 
 
-Hi! This R notebook describes the steps that are required for the analysis of naturalness/acceptability judgment linguistic experiments. I use the experiment that I did with Radek Šimík testing Russian negated polar questions in different contexts as the example data (see [Onoeva and Šimík 2023](https://mariaonoeva.github.io/assets/pdf/FDSL16_RuNPQs_Onoeva_Simik.pdf)). The experiment was run on [LRex](https://www.l-rex.de/), so your raw data can be different if you use a different platform. We had several sub-experiments, here I report on one because code is the same for all of them. 
+## Info
 
-#### Design 
+Hi! This R notebook describes the steps that are required for the analysis of naturalness/acceptability judgment linguistic experiments. I use the experiment that I did with Radek Šimík testing Russian negated polar questions in different contexts as the example data (see [Onoeva and Šimík 2023](https://mariaonoeva.github.io/assets/pdf/FDSL16_RuNPQs_Onoeva_Simik.pdf)). The experiment was run on [LRex](https://www.l-rex.de/), so your raw data can be different if you use a different platform. We had several sub-experiments, here I report on one because code is the same for all of them.
 
-#### Files 
+#### Design
+
+#### Files
 
 The csv file with raw results is available in this repo (perhaps I can also load a spreadsheet with all conditions that I used for LRex?). There are also two files with the script -- rmd and md. The first one is a raw RMarkdown script from RStudio, the second one is a pretty version for GitHub, which is easier to follow online.
 
-```{r setup, include=FALSE} 
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE, cache = FALSE, 
                       options(digits=3)) 
 ```
@@ -30,13 +27,16 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE, cache = FALSE,
 ```{r}
 library(tidyverse) # THE package, it contains ggplot2, tidyr, dplyr, readr and more
 library(formattable) # for pretty markdown tables 
+library(here) # sets the dir 
 
 ```
 
-Here I'm setting the working directory and loading data. There is an option to download a version without abandoned trials from LRex and I load it here. Then I remove the unnecessary example items.
+Here I'm setting the working directory and loading data. 
 
-```{r}
-# setting the dir
+There is an option to download a version without abandoned trials from LRex and I load it here. Then I remove the unnecessary example items.
+
+```{r eval=FALSE}
+# standard way of setting the directory locally on your machine
 setwd("/Users/maria.onoeva/Desktop/new_folder/GitHub/stat-repo/R_script_new")
 
 # loading all data
@@ -46,10 +46,20 @@ all_df <-
                                              trim_ws = TRUE,
                                              show_col_types = FALSE)
 
+```
+
+```{r}
+# since I load it online, it's more convenient to do it via "here" package
+# loading all data
+all_df <-
+  read_delim(here("R_script_new", # showing path to the folder with the file
+                  "queslav_neg_mo_RESULTS_2023-03-06-0953_noaband.csv"), ";")
+
 # removing example items
 main_df <- all_df %>%
   filter(materials != "1_examples")
 
+# I thank Masha Razguliaeva for the tip!
 ```
 
 ## Fillers and unreliable participants
@@ -69,7 +79,8 @@ main_df %>%
   summarize(items = n())
 
 ```
-The next step is to extract all filler items. These items are used to test reliability of the participants. Here I have 10 such items, people had to assess 3 items as 'bad' or 1-4 and the rest as 'good' 5-7. 
+
+The next step is to extract all filler items. These items are used to test reliability of the participants. Here I have 10 such items, people had to assess 3 items as 'bad' or 1-4 and the rest as 'good' 5-7.
 
 ```{r}
 # creating a new df with the filler items only 
@@ -86,7 +97,8 @@ fillers_only$condition[fillers_only$item %in% c("1", "2", "3")] <- 'bad'
 fillers_only$condition[fillers_only$condition != "bad"] <- 'good'
 ```
 
-Now I'm assigning '1' to filler_answer column if these filler items were assessed correctly. In other words, if bad fillers have 1-4 and good 5-7. If these conditions are not met, the value remains '0'. 
+Now I'm assigning '1' to filler_answer column if these filler items were assessed correctly. In other words, if bad fillers have 1-4 and good 5-7. If these conditions are not met, the value remains '0'.
+
 ```{r}
 # bad fillers
 fillers_only$filler_answer[which(grepl('bad', fillers_only$condition) &
@@ -97,7 +109,7 @@ fillers_only$filler_answer[which(grepl('good', fillers_only$condition) &
                                      grepl('5|6|7', fillers_only$rating1))] <- 1
 ```
 
-So now I have the column which tells me how each participant assessed each filler item. I can measure their reliability simply by counting how good they were in the fillers. In the table below, the first participant has mean '1', so they have assessed all fillers correctly as I expected them. If mean is lower than 80 %, a participant is unreliable. 
+So now I have the column which tells me how each participant assessed each filler item. I can measure their reliability simply by counting how good they were in the fillers. In the table below, the first participant has mean '1', so they have assessed all fillers correctly as I expected them. If mean is lower than 80 %, a participant is unreliable.
 
 ```{r}
 filler_results <- fillers_only %>% 
@@ -110,13 +122,17 @@ filler_results
 mean(filler_results$Mean)
 
 ```
-Now I need to find unreliable participants. This is done quickly, just to find the people who have means lower than 0.8. This is quite a high threshold but 68 participants is still fine. 
+
+Now I need to find unreliable participants. This is done quickly, just to find the people who have means lower than 0.8. This is quite a high threshold but 68 participants is still fine.
+
 ```{r}
 unreliable_participants <- filler_results %>% 
   filter(Mean < 0.8) # I have 27 unreliable participants
 
 ```
-Then I remove unreliable participants from reliable ones. 
+
+Then I remove unreliable participants from reliable ones.
+
 ```{r}
 fillers_only_reliable <- anti_join(filler_results, unreliable_participants, 
                           by = "participant")
@@ -124,9 +140,10 @@ fillers_only_reliable <- anti_join(filler_results, unreliable_participants,
 mean(fillers_only_reliable$Mean) # testing by applying mean to the reliable df
 ```
 
-## Data sets 
+## Data sets
 
-In this experiment, we had one big experiment and several smaller, see summary of the materials column. I'm going to separate them into several data frames. But first, it's necessary to remove the filler items and unreliable participants. 
+In this experiment, we had one big experiment and several smaller, see summary of the materials column. I'm going to separate them into several data frames. But first, it's necessary to remove the filler items and unreliable participants.
+
 ```{r}
 main_df %>%
   group_by(materials) %>%
@@ -141,7 +158,8 @@ main_df1 %>%
 
 ```
 
-Removing unreliable participants and checking the number. 
+Removing unreliable participants and checking the number.
+
 ```{r}
 main_df2 <- anti_join(main_df1, unreliable_participants, 
                           by = "participant")
@@ -150,22 +168,26 @@ main_df2 %>%
   distinct(participant) %>%
   summarize(total_part = n())
 ```
+
 Now I need to create a separate df for each materials set, they are stored in split_main_df1. It can be done using filter() but I try here group_split(). I can access each group later.
+
 ```{r}
 
 split_main_df1 <- main_df2 %>% group_split(materials)
 
 ```
+
 ## Descriptive stat
 
-The design for this experiment was 2 x 2 x 2. 
+The design for this experiment was 2 x 2 x 2.
 
 | verb  | context  | indefinite |
 |-------|----------|------------|
 | V1 li | neutral  | ni         |
 | V2    | negative | nibud      |
 
-The conditions were coded as letters in the spreadsheet for LRex, so first, I assign new comprehensible conditions, so it's easier to read the results. Not sure if it can be done in a more sophisticated way (ChatGPT says otherwise :unamused: :expressionless:). 
+The conditions were coded as letters in the spreadsheet for LRex, so first, I assign new comprehensible conditions, so it's easier to read the results. Not sure if it can be done in a more sophisticated way (ChatGPT says otherwise :unamused: :expressionless:).
+
 ```{r}
 # accessing the first experiment from the groups  
 e1_df <- split_main_df1[[1]]
@@ -197,7 +219,7 @@ e1_df$indef[e1_df$indef != "ni"] <- "nibud"
 
 ```
 
-There are two ways how to look at my data: check how they are similar and how they are different. For the first, I need measures of central tendency -- mode, mean, median, for the second variability values -- range, variance, standard deviation. 
+There are two ways how to look at my data: check how they are similar and how they are different. For the first, I need measures of central tendency -- mode, mean, median, for the second variability values -- range, variance, standard deviation.
 
 ```{r}
 # creating one mega condition, not necessary though, group_by() works just fine
@@ -217,16 +239,16 @@ formattable(e1_df %>%
   align = "c")
 ```
 
-- **Mode** is the most popular ~~dude~~ number in the set. It's usually not a very useful value but here why not :grin:
-- **Median** is a true central tendency value as it's in the middle but it's necessary to order the values first. It's resilient to outliers which can be good and bad at the same time. 
-- **Mean** is also known as average. It's like a parent that loves their kids equally, or ideal socialism, it shows the sum of all values divided by their number, so if everybody should get the same, they get mean. 
-- **Range** is min and max values, not super telling here but can be useful with different data. 
-- For **variance** mean is required. To calculate that one, each observed value has to be compared to the mean, then this difference must be squared (because it can be negative), after the sum of all of these squared differences should be divided by the number of observed values (I'm aware about n and n-1 stuff, but there is no space for that). So it's average for squared differences from the mean. It's possible to do from median, I guess, but here it's calculated from mean.
-- **Standard deviation (SD)** is the easiest, it's a square root from variance. Since differences from the mean were squared in the previous step, one needs to 'unsquare' that result. Perhaps my SDs are too high in some cases  but this is what I'm going to investigate in my dissertation (Masha Razguliaeva's comment: for naturalness judgments SD might be higher than for grammaticality).  
+-   **Mode** is the most popular ~~dude~~ number in the set. It's usually not a very useful value but here why not :grin:
+-   **Median** is a true central tendency value as it's in the middle but it's necessary to order the values first. It's resilient to outliers which can be good and bad at the same time.
+-   **Mean** is also known as average. It's like a parent that loves their kids equally, or ideal socialism, it shows the sum of all values divided by their number, so if everybody should get the same, they get mean.
+-   **Range** is min and max values, not super telling here but can be useful with different data.
+-   For **variance** mean is required. To calculate that one, each observed value has to be compared to the mean, then this difference must be squared (because it can be negative), after the sum of all of these squared differences should be divided by the number of observed values (I'm aware about n and n-1 stuff, but there is no space for that). So it's average for squared differences from the mean. It's possible to do from median, I guess, but here it's calculated from mean.
+-   **Standard deviation (SD)** is the easiest, it's a square root from variance. Since differences from the mean were squared in the previous step, one needs to 'unsquare' that result. Perhaps my SDs are too high in some cases but this is what I'm going to investigate in my dissertation (Masha Razguliaeva's comment: for naturalness judgments SD might be higher than for grammaticality).
 
-### Stacked bar plot 
+### Stacked bar plot
 
-The next step is to plot the results. Before I do that I need to refactor and relevel ratings, so they are displayed properly (not upside-down).  
+The next step is to plot the results. Before I do that I need to refactor and relevel ratings, so they are displayed properly (not upside-down).
 
 ```{r}
 
@@ -243,9 +265,9 @@ e1_df_relevel1 <- e1_df_relevel %>%
 
 ```
 
-On the x axis, there are contexts, on the y axis -- proportions of ratings. The darkness of the bars indicates naturalness (dark means more natural). The black line that strikes through the plots is median. 
+On the x axis, there are contexts, on the y axis -- proportions of ratings. The darkness of the bars indicates naturalness (dark means more natural). The black line that strikes through the plots is median.
 
-I have commented out some lines for the plot but they are mostly cosmetics that change size of text, etc. These might be useful for specific cases but here I don't need them. 
+I have commented out some lines for the plot but they are mostly cosmetics that change size of text, etc. These might be useful for specific cases but here I don't need them.
 
 ```{r}
 e1_main_plot <- ggplot(e1_df_relevel1, aes(fill=rating1, x=context)) + 
@@ -272,8 +294,8 @@ e1_main_plot
 
 ```
 
+It is also possible to save the plots using this code:
 
-It is also possible to save the plots using this code: 
 ```{r eval=FALSE}
 ggsave(e1_main_plot, file="e1_main1.eps", 
        width = 35, height = 37, units = "cm", device="eps")
@@ -282,9 +304,11 @@ ggsave(e1_main_plot, file="e1_main1_pdf.pdf",
 ```
 
 ### Interaction plot
-The next step is to create an interaction plot. First, I do the calculations and then plot the results. 
 
-:exclamation: I use here the results **before re-leveling**. 
+The next step is to create an interaction plot. First, I do the calculations and then plot the results.
+
+:exclamation: I use here the results **before re-leveling**.
+
 ```{r}
 # This code is based on Radek Šimík's code.
 
@@ -303,6 +327,7 @@ tab_inter <- summarySE(inter_df, measurevar="rating1",
 ```
 
 The plot code might look crazy, but I've commented things out and most of the lines are cosmetics.
+
 ```{r}
 
 # plotting 
@@ -332,7 +357,8 @@ inter_plot <- ggplot(tab_inter, aes(x=context, y=rating1, colour=indef, group=in
 inter_plot
 ```
 
-The same plot as above but for each item. (Perhaps I can  use conditions as color?)
+The same plot as above but for each item. (Perhaps I can use conditions as color?)
+
 ```{r fig.height=4, fig.width=10}
 
 tab_inter_items <- summarySE(inter_df, measurevar="rating1", 
@@ -367,8 +393,7 @@ inter_plot_items <- ggplot(tab_inter_items, aes(x=item, y=rating1, colour=indef,
 inter_plot_items
 ```
 
-
-#### Geom_smooth plot for all items in all conditions 
+#### Geom_smooth plot for all items in all conditions
 
 ```{r fig.height=4, fig.width=7, eval=FALSE}
 
@@ -393,10 +418,10 @@ all_summary %>%
 # sd_plot
 ```
 
-## Inferential stat 
-I'll come back with description :v: :sparkles:
-Drawing inferences about population (all Russian speakers) from sample (68 people). 
-Sampling strategy -- convenience sampling. 
+## Inferential stat
+
+I'll come back with description :v: :sparkles: Drawing inferences about population (all Russian speakers) from sample (68 people). Sampling strategy -- convenience sampling.
+
 ```{r}
 library(modelsummary)
 library(lmerTest)
@@ -410,5 +435,3 @@ stat_E1 <- clmm(rating1 ~ verb * indef * context +
 
 summary(stat_E1)
 ```
-
-
