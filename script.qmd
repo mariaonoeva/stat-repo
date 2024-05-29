@@ -52,7 +52,7 @@ all_df <-
 # since I load it online, it's more convenient to do it via "here" package
 # loading all data
 all_df <-
-  read_delim(here("R_script_new", # showing path to the folder with the file
+  read_delim(here("data", # showing path to the folder with the file
                   "queslav_neg_mo_RESULTS_2023-03-06-0953_noaband.csv"), ";")
 
 # removing example items
