@@ -230,6 +230,8 @@ e1_df$indef[e1_df$indef != "ni"] <- "nibud"
 
 ```
 
+### Table
+
 There are two ways how to look at my data: check how they are similar and how they are different. For the first, I need measures of central tendency -- mode, mean, median, for the second variability values -- range, variance, standard deviation.
 
 ```{r}
@@ -250,8 +252,8 @@ raw_summary <- e1_df %>%
             Variance = var(rating1),
             SD = sd(rating1)) # sd = sqrt(var(rating1))
 
-raw_summary %>% gt(groupname_col = 'indef', rowname_col = 'context') %>%
-  cols_label(verb = 'Verb') 
+as_raw_html(raw_summary %>% gt(groupname_col = 'indef', rowname_col = 'context') %>%
+  cols_label(verb = 'Verb'))
 
 ```
 
