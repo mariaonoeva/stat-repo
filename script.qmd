@@ -13,9 +13,17 @@ Hi! This R notebook describes the steps that are required for the analysis of na
 
 #### Design
 
+The goal of the experiment was to find out how natural are various negated polar questions in different context. There were three independent variables, each had two manipulations, so the design was 2 x 2 x 2. There variables were:
+
+1.  verb: V1 li and V2
+2.  indefinite: ni and nibud
+3.  context: neutral and negative
+
+Participants had to assess questions in different context on the scale from 1 very unnatural to 7 very natural. It was the dependent variable.
+
 #### Files
 
-The csv file with raw results is available in this repo (perhaps I can also load a spreadsheet with all conditions that I used for LRex?). There are also two files with the script -- rmd and md. The first one is a raw RMarkdown script from RStudio, the second one is a pretty version for GitHub, which is easier to follow online.
+The csv file with raw results is available in this repo (perhaps I can also load a spreadsheet with all conditions that I used for LRex?). There are also two files with the script -- qmd and md. The first one is a Quarto RMarkdown script from RStudio, the second one is a pretty version for GitHub, which is easier to follow online.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE, cache = FALSE, 
@@ -31,17 +39,17 @@ library(here) # sets the dir
 
 ```
 
-Here I'm setting the working directory and loading data. 
+Here I'm setting the working directory and loading data.
 
 There is an option to download a version without abandoned trials from LRex and I load it here. Then I remove the unnecessary example items.
 
 ```{r eval=FALSE}
 # standard way of setting the directory locally on your machine
-setwd("/Users/maria.onoeva/Desktop/new_folder/GitHub/stat-repo/R_script_new")
+setwd("/Users/maria.onoeva/Desktop/new_folder/GitHub/stat-repo")
 
 # loading all data
 all_df <-
-  read_delim("queslav_neg_mo_RESULTS_2023-03-06-0953_noaband.csv", ";",
+  read_delim("data/queslav_neg_mo_RESULTS_2023-03-06-0953_noaband.csv", ";",
                                              escape_double = FALSE,
                                              trim_ws = TRUE,
                                              show_col_types = FALSE)
@@ -53,7 +61,10 @@ all_df <-
 # loading all data
 all_df <-
   read_delim(here("data", # showing path to the folder with the file
-                  "queslav_neg_mo_RESULTS_2023-03-06-0953_noaband.csv"), ";")
+                  "queslav_neg_mo_RESULTS_2023-03-06-0953_noaband.csv"), ";",
+                                             escape_double = FALSE,
+                                             trim_ws = TRUE,
+                                             show_col_types = FALSE)
 
 # removing example items
 main_df <- all_df %>%
@@ -227,21 +238,26 @@ There are two ways how to look at my data: check how they are similar and how th
 #  mutate(condition1 = paste(context, verb, indef))
 
 library(DescTools) # for Mode() 
+library(gt)
+e1_df$rating1 <- as.numeric(e1_df$rating1)
 
-formattable(e1_df %>%
-  group_by(indef, verb, context) %>%
-  summarize(Mode = Mode(rating1),
+raw_summary <- e1_df %>%
+  dplyr::group_by(indef, verb, context) %>%
+  dplyr::summarize(Mode = Mode(rating1),
             Median = median(rating1),
             Mean = mean(rating1),
             Range = paste(range(rating1), collapse = "-"),
             Variance = var(rating1),
-            SD = sd(rating1)), # sd = sqrt(var(rating1))
-  align = "c")
+            SD = sd(rating1)) # sd = sqrt(var(rating1))
+
+raw_summary %>% gt(groupname_col = 'indef', rowname_col = 'context') %>%
+  cols_label(verb = 'Verb') 
+
 ```
 
 -   **Mode** is the most popular ~~dude~~ number in the set. It's usually not a very useful value but here why not :grin:
 -   **Median** is a true central tendency value as it's in the middle but it's necessary to order the values first. It's resilient to outliers which can be good and bad at the same time.
--   **Mean** is also known as average. It's like a parent that loves their kids equally, or ideal socialism, it shows the sum of all values divided by their number, so if everybody should get the same, they get mean.
+-   **Mean** is also known as average. It's like a parent who loves their kids equally, or ideal socialism, it shows the sum of all values divided by their number, so if everybody should get the same, they get mean.
 -   **Range** is min and max values, not super telling here but can be useful with different data.
 -   For **variance** mean is required. To calculate that one, each observed value has to be compared to the mean, then this difference must be squared (because it can be negative), after the sum of all of these squared differences should be divided by the number of observed values (I'm aware about n and n-1 stuff, but there is no space for that). So it's average for squared differences from the mean. It's possible to do from median, I guess, but here it's calculated from mean.
 -   **Standard deviation (SD)** is the easiest, it's a square root from variance. Since differences from the mean were squared in the previous step, one needs to 'unsquare' that result. Perhaps my SDs are too high in some cases but this is what I'm going to investigate in my dissertation (Masha Razguliaeva's comment: for naturalness judgments SD might be higher than for grammaticality).
@@ -269,7 +285,7 @@ On the x axis, there are contexts, on the y axis -- proportions of ratings. The 
 
 I have commented out some lines for the plot but they are mostly cosmetics that change size of text, etc. These might be useful for specific cases but here I don't need them.
 
-```{r}
+```{r fig.height=5, fig.width=5}
 e1_main_plot <- ggplot(e1_df_relevel1, aes(fill=rating1, x=context)) + 
     geom_bar(position = "fill") +
     geom_hline(aes(yintercept=0.5), size=0.5) +
@@ -309,7 +325,7 @@ The next step is to create an interaction plot. First, I do the calculations and
 
 :exclamation: I use here the results **before re-leveling**.
 
-```{r}
+```{r fig.height=5, fig.width=5}
 # This code is based on Radek Šimík's code.
 
 library(Rmisc) # for summarySE 
@@ -328,7 +344,7 @@ tab_inter <- summarySE(inter_df, measurevar="rating1",
 
 The plot code might look crazy, but I've commented things out and most of the lines are cosmetics.
 
-```{r}
+```{r fig.height=5, fig.width=5}
 
 # plotting 
 inter_plot <- ggplot(tab_inter, aes(x=context, y=rating1, colour=indef, group=indef)) + 
@@ -365,7 +381,8 @@ tab_inter_items <- summarySE(inter_df, measurevar="rating1",
                          groupvars = c("item", "context", "verb", "indef"))
 
 # plotting 
-inter_plot_items <- ggplot(tab_inter_items, aes(x=item, y=rating1, colour=indef, group=indef)) + 
+inter_plot_items <- ggplot(tab_inter_items, aes(x=item,y=rating1, 
+                                                colour=indef, group=indef)) + 
     geom_errorbar(aes(ymin=rating1-se, ymax=rating1+se), width=.1) +
     #facet_wrap(~verb+context) +
     facet_grid(vars(verb),  rows = vars(context)) +
@@ -393,36 +410,17 @@ inter_plot_items <- ggplot(tab_inter_items, aes(x=item, y=rating1, colour=indef,
 inter_plot_items
 ```
 
-#### Geom_smooth plot for all items in all conditions
-
-```{r fig.height=4, fig.width=7, eval=FALSE}
-
-e1_df$rating1 <- as.numeric(e1_df$rating1)
-
-all_summary %>%
-  group_by(item, indef, verb, context) %>%
-  summarize(Median = median(rating1),
-            Mean = mean(rating1),
-            Variance = var(rating1),
-            SD = sd(rating1)) # sd = sqrt(var(rating1))
-
-
-# sd_plot <- ggplot(all_summary) + 
-#   geom_point(aes(x=item, y=Mean, color = indef)) +
-#   facet_grid(vars(verb),  rows = vars(context)) +
-#   theme(legend.title=element_blank()) +
-#   theme_bw() +
-#   guides(colour = guide_legend(reverse=TRUE))  +
-#   scale_color_brewer(palette = "Set2")
-# 
-# sd_plot
-```
-
 ## Inferential stat
 
-I'll come back with description :v: :sparkles: Drawing inferences about population (all Russian speakers) from sample (68 people). Sampling strategy -- convenience sampling.
+I'll come back with description :v: :sparkles:
 
-```{r}
+The purpose of inferential stat here is to check if the experimental results were not produced by chance.
+
+-   Drawing inferences about population (all Russian speakers) from sample (68 people).
+
+-   Sampling strategy -- convenience sampling.
+
+```{r eval=FALSE}
 library(modelsummary)
 library(lmerTest)
 library(ordinal)

@@ -26,13 +26,25 @@ of them.
 
 #### Design
 
+The goal of the experiment was to find out how natural are various
+negated polar questions in different context. There were three
+independent variables, each had two manipulations, so the design was 2 x
+2 x 2. There variables were:
+
+1.  verb: V1 li and V2
+2.  indefinite: ni and nibud
+3.  context: neutral and negative
+
+Participants had to assess questions in different context on the scale
+from 1 very unnatural to 7 very natural. It was the dependent variable.
+
 #### Files
 
 The csv file with raw results is available in this repo (perhaps I can
 also load a spreadsheet with all conditions that I used for LRex?).
-There are also two files with the script – rmd and md. The first one is
-a raw RMarkdown script from RStudio, the second one is a pretty version
-for GitHub, which is easier to follow online.
+There are also two files with the script – qmd and md. The first one is
+a Quarto RMarkdown script from RStudio, the second one is a pretty
+version for GitHub, which is easier to follow online.
 
 ## Loading data
 
@@ -49,11 +61,11 @@ LRex and I load it here. Then I remove the unnecessary example items.
 
 ``` r
 # standard way of setting the directory locally on your machine
-setwd("/Users/maria.onoeva/Desktop/new_folder/GitHub/stat-repo/R_script_new")
+setwd("/Users/maria.onoeva/Desktop/new_folder/GitHub/stat-repo")
 
 # loading all data
 all_df <-
-  read_delim("queslav_neg_mo_RESULTS_2023-03-06-0953_noaband.csv", ";",
+  read_delim("data/queslav_neg_mo_RESULTS_2023-03-06-0953_noaband.csv", ";",
                                              escape_double = FALSE,
                                              trim_ws = TRUE,
                                              show_col_types = FALSE)
@@ -64,7 +76,10 @@ all_df <-
 # loading all data
 all_df <-
   read_delim(here("data", # showing path to the folder with the file
-                  "queslav_neg_mo_RESULTS_2023-03-06-0953_noaband.csv"), ";")
+                  "queslav_neg_mo_RESULTS_2023-03-06-0953_noaband.csv"), ";",
+                                             escape_double = FALSE,
+                                             trim_ws = TRUE,
+                                             show_col_types = FALSE)
 
 # removing example items
 main_df <- all_df %>%
@@ -329,292 +344,437 @@ range, variance, standard deviation.
 #  mutate(condition1 = paste(context, verb, indef))
 
 library(DescTools) # for Mode() 
+library(gt)
 
-formattable(e1_df %>%
+raw_summary <- e1_df %>%
   group_by(indef, verb, context) %>%
   summarize(Mode = Mode(rating1),
             Median = median(rating1),
             Mean = mean(rating1),
             Range = paste(range(rating1), collapse = "-"),
             Variance = var(rating1),
-            SD = sd(rating1)), # sd = sqrt(var(rating1))
-  align = "c")
+            SD = sd(rating1)) # sd = sqrt(var(rating1))
+
+raw_summary %>% gt()
 ```
 
-<table class="table table-condensed">
-<thead>
-<tr>
-<th style="text-align:center;">
-indef
-</th>
-<th style="text-align:center;">
-verb
-</th>
-<th style="text-align:center;">
-context
-</th>
-<th style="text-align:center;">
-Mode
-</th>
-<th style="text-align:center;">
-Median
-</th>
-<th style="text-align:center;">
-Mean
-</th>
-<th style="text-align:center;">
-Range
-</th>
-<th style="text-align:center;">
-Variance
-</th>
-<th style="text-align:center;">
-SD
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center;">
-ni
-</td>
-<td style="text-align:center;">
-V1 li
-</td>
-<td style="text-align:center;">
-negative
-</td>
-<td style="text-align:center;">
-1
-</td>
-<td style="text-align:center;">
-2
-</td>
-<td style="text-align:center;">
-2.76
-</td>
-<td style="text-align:center;">
-1-7
-</td>
-<td style="text-align:center;">
-3.56
-</td>
-<td style="text-align:center;">
-1.89
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-ni
-</td>
-<td style="text-align:center;">
-V1 li
-</td>
-<td style="text-align:center;">
-neutral
-</td>
-<td style="text-align:center;">
-1
-</td>
-<td style="text-align:center;">
-3
-</td>
-<td style="text-align:center;">
-3.33
-</td>
-<td style="text-align:center;">
-1-7
-</td>
-<td style="text-align:center;">
-4.85
-</td>
-<td style="text-align:center;">
-2.20
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-ni
-</td>
-<td style="text-align:center;">
-V2
-</td>
-<td style="text-align:center;">
-negative
-</td>
-<td style="text-align:center;">
-7
-</td>
-<td style="text-align:center;">
-4
-</td>
-<td style="text-align:center;">
-4.17
-</td>
-<td style="text-align:center;">
-1-7
-</td>
-<td style="text-align:center;">
-4.48
-</td>
-<td style="text-align:center;">
-2.12
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-ni
-</td>
-<td style="text-align:center;">
-V2
-</td>
-<td style="text-align:center;">
-neutral
-</td>
-<td style="text-align:center;">
-7
-</td>
-<td style="text-align:center;">
-5
-</td>
-<td style="text-align:center;">
-4.36
-</td>
-<td style="text-align:center;">
-1-7
-</td>
-<td style="text-align:center;">
-4.93
-</td>
-<td style="text-align:center;">
-2.22
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-nibud
-</td>
-<td style="text-align:center;">
-V1 li
-</td>
-<td style="text-align:center;">
-negative
-</td>
-<td style="text-align:center;">
-7
-</td>
-<td style="text-align:center;">
-6
-</td>
-<td style="text-align:center;">
-5.01
-</td>
-<td style="text-align:center;">
-1-7
-</td>
-<td style="text-align:center;">
-3.90
-</td>
-<td style="text-align:center;">
-1.98
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-nibud
-</td>
-<td style="text-align:center;">
-V1 li
-</td>
-<td style="text-align:center;">
-neutral
-</td>
-<td style="text-align:center;">
-7
-</td>
-<td style="text-align:center;">
-6
-</td>
-<td style="text-align:center;">
-5.89
-</td>
-<td style="text-align:center;">
-1-7
-</td>
-<td style="text-align:center;">
-2.10
-</td>
-<td style="text-align:center;">
-1.45
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-nibud
-</td>
-<td style="text-align:center;">
-V2
-</td>
-<td style="text-align:center;">
-negative
-</td>
-<td style="text-align:center;">
-7
-</td>
-<td style="text-align:center;">
-5
-</td>
-<td style="text-align:center;">
-4.85
-</td>
-<td style="text-align:center;">
-1-7
-</td>
-<td style="text-align:center;">
-3.65
-</td>
-<td style="text-align:center;">
-1.91
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-nibud
-</td>
-<td style="text-align:center;">
-V2
-</td>
-<td style="text-align:center;">
-neutral
-</td>
-<td style="text-align:center;">
-7
-</td>
-<td style="text-align:center;">
-6
-</td>
-<td style="text-align:center;">
-5.28
-</td>
-<td style="text-align:center;">
-1-7
-</td>
-<td style="text-align:center;">
-3.07
-</td>
-<td style="text-align:center;">
-1.75
-</td>
-</tr>
-</tbody>
-</table>
+<div>
+
+<div id="ehytgywrho" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#ehytgywrho table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+&#10;#ehytgywrho thead, #ehytgywrho tbody, #ehytgywrho tfoot, #ehytgywrho tr, #ehytgywrho td, #ehytgywrho th {
+  border-style: none;
+}
+&#10;#ehytgywrho p {
+  margin: 0;
+  padding: 0;
+}
+&#10;#ehytgywrho .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+&#10;#ehytgywrho .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+&#10;#ehytgywrho .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+&#10;#ehytgywrho .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+&#10;#ehytgywrho .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+&#10;#ehytgywrho .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+&#10;#ehytgywrho .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+&#10;#ehytgywrho .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+&#10;#ehytgywrho .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+&#10;#ehytgywrho .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+&#10;#ehytgywrho .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+&#10;#ehytgywrho .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+&#10;#ehytgywrho .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+&#10;#ehytgywrho .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+&#10;#ehytgywrho .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+&#10;#ehytgywrho .gt_from_md > :first-child {
+  margin-top: 0;
+}
+&#10;#ehytgywrho .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+&#10;#ehytgywrho .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+&#10;#ehytgywrho .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+&#10;#ehytgywrho .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+&#10;#ehytgywrho .gt_row_group_first td {
+  border-top-width: 2px;
+}
+&#10;#ehytgywrho .gt_row_group_first th {
+  border-top-width: 2px;
+}
+&#10;#ehytgywrho .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+&#10;#ehytgywrho .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+&#10;#ehytgywrho .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+&#10;#ehytgywrho .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+&#10;#ehytgywrho .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+&#10;#ehytgywrho .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+&#10;#ehytgywrho .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+&#10;#ehytgywrho .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+&#10;#ehytgywrho .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+&#10;#ehytgywrho .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+&#10;#ehytgywrho .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+&#10;#ehytgywrho .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+&#10;#ehytgywrho .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+&#10;#ehytgywrho .gt_left {
+  text-align: left;
+}
+&#10;#ehytgywrho .gt_center {
+  text-align: center;
+}
+&#10;#ehytgywrho .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+&#10;#ehytgywrho .gt_font_normal {
+  font-weight: normal;
+}
+&#10;#ehytgywrho .gt_font_bold {
+  font-weight: bold;
+}
+&#10;#ehytgywrho .gt_font_italic {
+  font-style: italic;
+}
+&#10;#ehytgywrho .gt_super {
+  font-size: 65%;
+}
+&#10;#ehytgywrho .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+&#10;#ehytgywrho .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+&#10;#ehytgywrho .gt_indent_1 {
+  text-indent: 5px;
+}
+&#10;#ehytgywrho .gt_indent_2 {
+  text-indent: 10px;
+}
+&#10;#ehytgywrho .gt_indent_3 {
+  text-indent: 15px;
+}
+&#10;#ehytgywrho .gt_indent_4 {
+  text-indent: 20px;
+}
+&#10;#ehytgywrho .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+
+| context       | Mode | Median | Mean | Range | Variance | SD   |
+|---------------|------|--------|------|-------|----------|------|
+| ni - V1 li    |      |        |      |       |          |      |
+| negative      | 1    | 2      | 2.76 | 1-7   | 3.56     | 1.89 |
+| neutral       | 1    | 3      | 3.33 | 1-7   | 4.85     | 2.20 |
+| ni - V2       |      |        |      |       |          |      |
+| negative      | 7    | 4      | 4.17 | 1-7   | 4.48     | 2.12 |
+| neutral       | 7    | 5      | 4.36 | 1-7   | 4.93     | 2.22 |
+| nibud - V1 li |      |        |      |       |          |      |
+| negative      | 7    | 6      | 5.01 | 1-7   | 3.90     | 1.98 |
+| neutral       | 7    | 6      | 5.89 | 1-7   | 2.10     | 1.45 |
+| nibud - V2    |      |        |      |       |          |      |
+| negative      | 7    | 5      | 4.85 | 1-7   | 3.65     | 1.91 |
+| neutral       | 7    | 6      | 5.28 | 1-7   | 3.07     | 1.75 |
+
+</div>
+
+</div>
 
 - **Mode** is the most popular ~~dude~~ number in the set. It’s usually
   not a very useful value but here why not :grin:
 - **Median** is a true central tendency value as it’s in the middle but
   it’s necessary to order the values first. It’s resilient to outliers
   which can be good and bad at the same time.
-- **Mean** is also known as average. It’s like a parent that loves their
+- **Mean** is also known as average. It’s like a parent who loves their
   kids equally, or ideal socialism, it shows the sum of all values
   divided by their number, so if everybody should get the same, they get
   mean.
@@ -761,7 +921,8 @@ tab_inter_items <- summarySE(inter_df, measurevar="rating1",
                          groupvars = c("item", "context", "verb", "indef"))
 
 # plotting 
-inter_plot_items <- ggplot(tab_inter_items, aes(x=item, y=rating1, colour=indef, group=indef)) + 
+inter_plot_items <- ggplot(tab_inter_items, aes(x=item,y=rating1, 
+                                                colour=indef, group=indef)) + 
     geom_errorbar(aes(ymin=rating1-se, ymax=rating1+se), width=.1) +
     #facet_wrap(~verb+context) +
     facet_grid(vars(verb),  rows = vars(context)) +
@@ -791,35 +952,17 @@ inter_plot_items
 
 ![](script_files/figure-commonmark/unnamed-chunk-20-1.png)
 
-#### Geom_smooth plot for all items in all conditions
-
-``` r
-e1_df$rating1 <- as.numeric(e1_df$rating1)
-
-all_summary %>%
-  group_by(item, indef, verb, context) %>%
-  summarize(Median = median(rating1),
-            Mean = mean(rating1),
-            Variance = var(rating1),
-            SD = sd(rating1)) # sd = sqrt(var(rating1))
-
-
-# sd_plot <- ggplot(all_summary) + 
-#   geom_point(aes(x=item, y=Mean, color = indef)) +
-#   facet_grid(vars(verb),  rows = vars(context)) +
-#   theme(legend.title=element_blank()) +
-#   theme_bw() +
-#   guides(colour = guide_legend(reverse=TRUE))  +
-#   scale_color_brewer(palette = "Set2")
-# 
-# sd_plot
-```
-
 ## Inferential stat
 
-I’ll come back with description :v: :sparkles: Drawing inferences about
-population (all Russian speakers) from sample (68 people). Sampling
-strategy – convenience sampling.
+I’ll come back with description :v: :sparkles:
+
+The purpose of inferential stat here is to check if the experimental
+results were not produced by chance.
+
+- Drawing inferences about population (all Russian speakers) from sample
+  (68 people).
+
+- Sampling strategy – convenience sampling.
 
 ``` r
 library(modelsummary)
@@ -834,38 +977,3 @@ stat_E1 <- clmm(rating1 ~ verb * indef * context +
 
 summary(stat_E1)
 ```
-
-    Cumulative Link Mixed Model fitted with the Laplace approximation
-
-    formula: rating1 ~ verb * indef * context + (1 | participant) + (1 | item)
-    data:    e1_df
-
-     link  threshold nobs logLik   AIC     niter       max.grad cond.H 
-     logit flexible  2176 -3681.28 7392.57 2723(10896) 1.71e-03 2.8e+02
-
-    Random effects:
-     Groups      Name        Variance Std.Dev.
-     participant (Intercept) 0.940    0.970   
-     item        (Intercept) 0.258    0.508   
-    Number of groups:  participant 68,  item 32 
-
-    Coefficients:
-                          Estimate Std. Error z value Pr(>|z|)    
-    verb1                  -0.1795     0.0397   -4.53  6.0e-06 ***
-    indef1                 -0.8142     0.0423  -19.26  < 2e-16 ***
-    context1               -0.2440     0.0401   -6.09  1.1e-09 ***
-    verb1:indef1           -0.4060     0.0404  -10.05  < 2e-16 ***
-    verb1:context1         -0.1130     0.0396   -2.85   0.0043 ** 
-    indef1:context1         0.0674     0.0398    1.69   0.0905 .  
-    verb1:indef1:context1   0.0215     0.0396    0.54   0.5873    
-    ---
-    Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-    Threshold coefficients:
-        Estimate Std. Error z value
-    1|2   -2.375      0.165  -14.37
-    2|3   -1.529      0.160   -9.57
-    3|4   -0.885      0.158   -5.62
-    4|5   -0.266      0.157   -1.70
-    5|6    0.458      0.157    2.93
-    6|7    1.464      0.159    9.19
