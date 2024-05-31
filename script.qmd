@@ -9,11 +9,11 @@ author: "Masha Onoeva"
 
 ## Info
 
-Hi! This R notebook describes the steps that are required for the analysis of naturalness/acceptability judgment linguistic experiments. I use the experiment that I did with Radek Šimík testing Russian negated polar questions in different contexts as the example data (see [Onoeva and Šimík 2023](https://mariaonoeva.github.io/assets/pdf/FDSL16_RuNPQs_Onoeva_Simik.pdf)). The experiment was run on [LRex](https://www.l-rex.de/), so your raw data can be different if you use a different platform. We had several sub-experiments, here I report on one because code is the same for all of them.
+Hi! This R notebook describes the steps that are required for the analysis of naturalness/acceptability judgment linguistic experiments. I use the experiment that I did with Radek Šimík testing Russian negated polar questions in different contexts as the example data (see [Onoeva and Šimík 2023](https://mariaonoeva.github.io/assets/pdf/FDSL16_RuNPQs_Onoeva_Simik.pdf)). We had several sub-experiments, here I report on one because code is the same for all of them. The experiment was run on [LRex](https://www.l-rex.de/).
 
 #### Design
 
-The goal of the experiment was to find out how natural are various negated polar questions in different context. There were three independent variables, each had two manipulations, so the design was 2 x 2 x 2. There variables were:
+The goal of the experiment was to find out how natural are various negated polar questions in different contexts. There were three independent variables, each had two manipulations, so the design was 2 x 2 x 2. There variables were:
 
 1.  verb: V1 li and V2
 2.  indefinite: ni and nibud
@@ -23,7 +23,7 @@ Participants had to assess questions in different context on the scale from 1 ve
 
 #### Files
 
-The csv file with raw results is available in this repo (perhaps I can also load a spreadsheet with all conditions that I used for LRex?). There are also two files with the script -- qmd and md. The first one is a Quarto RMarkdown script from RStudio, the second one is a pretty version for GitHub, which is easier to follow online.
+The csv file with raw results is available in this repo (perhaps I can also load a spreadsheet with all conditions that I used for LRex?). There are also two files with the script -- qmd and md. The first one is a Quarto RMarkdown script from RStudio, the second one is a pretty version for GitHub (it is easier to follow online).
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE, cache = FALSE, 
@@ -39,9 +39,7 @@ library(here) # sets the dir
 
 ```
 
-Here I'm setting the working directory and loading data.
-
-There is an option to download a version without abandoned trials from LRex and I load it here. Then I remove the unnecessary example items.
+There is an option to download a version without abandoned trials from LRex and I load it here. Then I'm setting the working directory and loading data. I have two ways here – standard local set up and more convenient for sharing.
 
 ```{r eval=FALSE}
 # standard way of setting the directory locally on your machine
@@ -65,12 +63,15 @@ all_df <-
                                              escape_double = FALSE,
                                              trim_ws = TRUE,
                                              show_col_types = FALSE)
+# I thank Masha Razguliaeva for the tip!
+```
 
+Then I remove the unnecessary example items.
+
+```{r}
 # removing example items
 main_df <- all_df %>%
   filter(materials != "1_examples")
-
-# I thank Masha Razguliaeva for the tip!
 ```
 
 ## Fillers and unreliable participants
@@ -131,7 +132,6 @@ filler_results
 
 # how in general the participants went through fillers 
 mean(filler_results$Mean)
-
 ```
 
 Now I need to find unreliable participants. This is done quickly, just to find the people who have means lower than 0.8. This is quite a high threshold but 68 participants is still fine.
@@ -139,7 +139,6 @@ Now I need to find unreliable participants. This is done quickly, just to find t
 ```{r}
 unreliable_participants <- filler_results %>% 
   filter(Mean < 0.8) # I have 27 unreliable participants
-
 ```
 
 Then I remove unreliable participants from reliable ones.
@@ -153,20 +152,23 @@ mean(fillers_only_reliable$Mean) # testing by applying mean to the reliable df
 
 ## Data sets
 
-In this experiment, we had one big experiment and several smaller, see summary of the materials column. I'm going to separate them into several data frames. But first, it's necessary to remove the filler items and unreliable participants.
+In this experiment, we had one big experiment and several smaller, see summary of the materials column.
 
 ```{r}
 main_df %>%
   group_by(materials) %>%
   summarise()
+```
 
+I'm going to separate them into several data frames. But first, it's necessary to remove the filler items and unreliable participants.
+
+```{r}
 main_df1 <- main_df %>%
   filter(materials != "f9_filler")
 
 main_df1 %>% 
   group_by(materials) %>%
   summarise() # no filler in the summary 
-
 ```
 
 Removing unreliable participants and checking the number.
@@ -250,7 +252,8 @@ raw_summary <- e1_df %>%
             Mean = mean(rating1),
             Range = paste(range(rating1), collapse = "-"),
             Variance = var(rating1),
-            SD = sd(rating1)) # sd = sqrt(var(rating1))
+            SD = sd(rating1), # sd = sqrt(var(rating1))
+            )
 
 as_raw_html(raw_summary %>% gt(groupname_col = 'indef', rowname_col = 'context') %>%
   cols_label(verb = 'Verb'))
@@ -266,7 +269,7 @@ as_raw_html(raw_summary %>% gt(groupname_col = 'indef', rowname_col = 'context')
 
 ### Stacked bar plot
 
-The next step is to plot the results. Before I do that I need to refactor and relevel ratings, so they are displayed properly (not upside-down).
+The table is cool but the next step is to plot the results. Before I do that I need to refactor and relevel ratings, so they are displayed properly (not upside-down).
 
 ```{r}
 
@@ -282,8 +285,6 @@ e1_df_relevel1 <- e1_df_relevel %>%
   mutate(verb = fct_relevel(verb,"V1 li", "V2"))
 
 ```
-
-On the x axis, there are contexts, on the y axis -- proportions of ratings. The darkness of the bars indicates naturalness (dark means more natural). The black line that strikes through the plots is median.
 
 I have commented out some lines for the plot but they are mostly cosmetics that change size of text, etc. These might be useful for specific cases but here I don't need them.
 
@@ -311,6 +312,8 @@ e1_main_plot <- ggplot(e1_df_relevel1, aes(fill=rating1, x=context)) +
 e1_main_plot
 
 ```
+
+On the x axis, there are contexts, on the y axis -- proportions of ratings. The darkness of the bars indicates naturalness (dark means more natural). The black line that strikes through the plots is median.
 
 It is also possible to save the plots using this code:
 
@@ -414,13 +417,47 @@ inter_plot_items
 
 ## Inferential stat
 
-I'll come back with description :v: :sparkles:
+I begin with the most basic basics and continue further.
 
-The purpose of inferential stat here is to check if the experimental results were not produced by chance.
+The purpose of inferential statistics is to determine whether the experimental results were not produced by chance. In other words, there is a chance that our results are like this by a mere accident and the interactions between the variables are just coincidences. But using some smart tests one can eliminate this possibility.
 
--   Drawing inferences about population (all Russian speakers) from sample (68 people).
+### Standard error
 
--   Sampling strategy -- convenience sampling.
+In the table below, there are means from the descriptive table together with Standard Deviations (SD), Standard Errors (SE) and Relative SEs. SEs were already present in the interaction plot, it's represented as those little bars around the dots. There is an option to plot SD but those plots look crazy.
+
+```{r}
+e1_df$rating1 <- as.numeric(e1_df$rating1)
+raw_summary1 <- e1_df %>%
+  dplyr::group_by(indef, verb, context) %>%
+  dplyr::summarize(Mean = mean(rating1),
+            SD = sd(rating1), # sd = sqrt(var(rating1))
+            SE = sd(rating1)/sqrt(length(rating1)),
+            # RSD = sd(rating1)/mean(rating1) * 100,
+            RSE = sd(rating1)/sqrt(length(rating1))/mean(rating1) * 100
+            )
+
+as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef', rowname_col = 'context') %>%
+  cols_label(verb = 'Verb',
+             RSE = 'RSE (%)'))
+
+```
+
+```{r}
+```
+
+Unlike SD, SE is an inferential statistic in this case, so it can only be estimated. In the ideal case if one knows the population mean, SE can be calculated. But there is no mean for all Russian speakers, so the input values for SE are replaced with the sample mean and thus the sample SD.
+
+SE is supposed to tell how close my sample mean is to the population mean. In other words, if I would do this experiment a couple more times, new possible means would differ this SE much from each other. The formula for SE is pretty easy, SE = SD/sqrt(Number of observations).
+
+But is it too big or too good? RSE indicates that. It represents the size of SE relative to the mean, so as percentage. They say if RSE is below 10 %, then SE is relatively small they are here.
+
+### t-test
+
+Student's t-test is unlikely the best test for this experiment but it's calculated from SE and SD, so why not to have it? :wink:
+
+### Cumulative Link Mixed Model
+
+I'll come back with more :v: :sparkles:
 
 ```{r eval=FALSE}
 library(modelsummary)

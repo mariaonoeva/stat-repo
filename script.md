@@ -7,9 +7,13 @@ Masha Onoeva
   participants](#fillers-and-unreliable-participants)
 - [Data sets](#data-sets)
 - [Descriptive stat](#descriptive-stat)
+  - [Table](#table)
   - [Stacked bar plot](#stacked-bar-plot)
   - [Interaction plot](#interaction-plot)
 - [Inferential stat](#inferential-stat)
+  - [Standard error](#standard-error)
+  - [t-test](#t-test)
+  - [Cumulative Link Mixed Model](#cumulative-link-mixed-model)
 
 ## Info
 
@@ -19,15 +23,14 @@ use the experiment that I did with Radek Šimík testing Russian negated
 polar questions in different contexts as the example data (see [Onoeva
 and Šimík
 2023](https://mariaonoeva.github.io/assets/pdf/FDSL16_RuNPQs_Onoeva_Simik.pdf)).
-The experiment was run on [LRex](https://www.l-rex.de/), so your raw
-data can be different if you use a different platform. We had several
-sub-experiments, here I report on one because code is the same for all
-of them.
+We had several sub-experiments, here I report on one because code is the
+same for all of them. The experiment was run on
+[LRex](https://www.l-rex.de/).
 
 #### Design
 
 The goal of the experiment was to find out how natural are various
-negated polar questions in different context. There were three
+negated polar questions in different contexts. There were three
 independent variables, each had two manipulations, so the design was 2 x
 2 x 2. There variables were:
 
@@ -44,7 +47,7 @@ The csv file with raw results is available in this repo (perhaps I can
 also load a spreadsheet with all conditions that I used for LRex?).
 There are also two files with the script – qmd and md. The first one is
 a Quarto RMarkdown script from RStudio, the second one is a pretty
-version for GitHub, which is easier to follow online.
+version for GitHub (it is easier to follow online).
 
 ## Loading data
 
@@ -54,10 +57,10 @@ library(formattable) # for pretty markdown tables
 library(here) # sets the dir 
 ```
 
-Here I’m setting the working directory and loading data.
-
 There is an option to download a version without abandoned trials from
-LRex and I load it here. Then I remove the unnecessary example items.
+LRex and I load it here. Then I’m setting the working directory and
+loading data. I have two ways here – standard local set up and more
+convenient for sharing.
 
 ``` r
 # standard way of setting the directory locally on your machine
@@ -80,12 +83,15 @@ all_df <-
                                              escape_double = FALSE,
                                              trim_ws = TRUE,
                                              show_col_types = FALSE)
+# I thank Masha Razguliaeva for the tip!
+```
 
+Then I remove the unnecessary example items.
+
+``` r
 # removing example items
 main_df <- all_df %>%
   filter(materials != "1_examples")
-
-# I thank Masha Razguliaeva for the tip!
 ```
 
 ## Fillers and unreliable participants
@@ -219,9 +225,7 @@ mean(fillers_only_reliable$Mean) # testing by applying mean to the reliable df
 ## Data sets
 
 In this experiment, we had one big experiment and several smaller, see
-summary of the materials column. I’m going to separate them into several
-data frames. But first, it’s necessary to remove the filler items and
-unreliable participants.
+summary of the materials column.
 
 ``` r
 main_df %>%
@@ -242,6 +246,9 @@ main_df %>%
      8 f7_ctoli_pos   
      9 f8_repetitive  
     10 f9_filler      
+
+I’m going to separate them into several data frames. But first, it’s
+necessary to remove the filler items and unreliable participants.
 
 ``` r
 main_df1 <- main_df %>%
@@ -333,6 +340,8 @@ e1_df$indef[e1_df$indef != "ni"] <- "nibud"
 #   )
 ```
 
+### Table
+
 There are two ways how to look at my data: check how they are similar
 and how they are different. For the first, I need measures of central
 tendency – mode, mean, median, for the second variability values –
@@ -354,7 +363,8 @@ raw_summary <- e1_df %>%
             Mean = mean(rating1),
             Range = paste(range(rating1), collapse = "-"),
             Variance = var(rating1),
-            SD = sd(rating1)) # sd = sqrt(var(rating1))
+            SD = sd(rating1), # sd = sqrt(var(rating1))
+            )
 
 as_raw_html(raw_summary %>% gt(groupname_col = 'indef', rowname_col = 'context') %>%
   cols_label(verb = 'Verb'))
@@ -362,7 +372,7 @@ as_raw_html(raw_summary %>% gt(groupname_col = 'indef', rowname_col = 'context')
 
 <div>
 
-<div id="ngummqqskx" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="dfkzrblxcu" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mode | Median | Mean | Range | Variance | SD   |
@@ -410,9 +420,9 @@ as_raw_html(raw_summary %>% gt(groupname_col = 'indef', rowname_col = 'context')
 
 ### Stacked bar plot
 
-The next step is to plot the results. Before I do that I need to
-refactor and relevel ratings, so they are displayed properly (not
-upside-down).
+The table is cool but the next step is to plot the results. Before I do
+that I need to refactor and relevel ratings, so they are displayed
+properly (not upside-down).
 
 ``` r
 # have to make as factor, otherwise error 
@@ -426,10 +436,6 @@ e1_df_relevel <- e1_df %>%
 e1_df_relevel1 <- e1_df_relevel %>%
   mutate(verb = fct_relevel(verb,"V1 li", "V2"))
 ```
-
-On the x axis, there are contexts, on the y axis – proportions of
-ratings. The darkness of the bars indicates naturalness (dark means more
-natural). The black line that strikes through the plots is median.
 
 I have commented out some lines for the plot but they are mostly
 cosmetics that change size of text, etc. These might be useful for
@@ -459,7 +465,11 @@ e1_main_plot <- ggplot(e1_df_relevel1, aes(fill=rating1, x=context)) +
 e1_main_plot
 ```
 
-![](script_files/figure-commonmark/unnamed-chunk-16-1.png)
+![](script_files/figure-commonmark/unnamed-chunk-18-1.png)
+
+On the x axis, there are contexts, on the y axis – proportions of
+ratings. The darkness of the bars indicates naturalness (dark means more
+natural). The black line that strikes through the plots is median.
 
 It is also possible to save the plots using this code:
 
@@ -524,7 +534,7 @@ inter_plot <- ggplot(tab_inter, aes(x=context, y=rating1, colour=indef, group=in
 inter_plot
 ```
 
-![](script_files/figure-commonmark/unnamed-chunk-19-1.png)
+![](script_files/figure-commonmark/unnamed-chunk-21-1.png)
 
 The same plot as above but for each item. (Perhaps I can use conditions
 as color?)
@@ -563,19 +573,87 @@ inter_plot_items <- ggplot(tab_inter_items, aes(x=item,y=rating1,
 inter_plot_items
 ```
 
-![](script_files/figure-commonmark/unnamed-chunk-20-1.png)
+![](script_files/figure-commonmark/unnamed-chunk-22-1.png)
 
 ## Inferential stat
 
-I’ll come back with description :v: :sparkles:
+I begin with the most basic basics and continue further.
 
-The purpose of inferential stat here is to check if the experimental
-results were not produced by chance.
+The purpose of inferential statistics is to determine whether the
+experimental results were not produced by chance. In other words, there
+is a chance that our results are like this by a mere accident and the
+interactions between the variables are just coincidences. But using some
+smart tests one can eliminate this possibility.
 
-- Drawing inferences about population (all Russian speakers) from sample
-  (68 people).
+### Standard error
 
-- Sampling strategy – convenience sampling.
+In the table below, there are means from the descriptive table together
+with Standard Deviations (SD), Standard Errors (SE) and Relative SEs.
+SEs were already present in the interaction plot, it’s represented as
+those little bars around the dots. There is an option to plot SD but
+those plots look crazy.
+
+``` r
+e1_df$rating1 <- as.numeric(e1_df$rating1)
+raw_summary1 <- e1_df %>%
+  dplyr::group_by(indef, verb, context) %>%
+  dplyr::summarize(Mean = mean(rating1),
+            SD = sd(rating1), # sd = sqrt(var(rating1))
+            SE = sd(rating1)/sqrt(length(rating1)),
+            # RSD = sd(rating1)/mean(rating1) * 100,
+            RSE = sd(rating1)/sqrt(length(rating1))/mean(rating1) * 100
+            )
+
+as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef', rowname_col = 'context') %>%
+  cols_label(verb = 'Verb',
+             RSE = 'RSE (%)'))
+```
+
+<div>
+
+<div id="pwuufrgjtj" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+  &#10;  
+
+|          | Verb  | Mean | SD   | SE     | RSE (%) |
+|:---------|:------|:-----|:-----|:-------|:--------|
+| ni       |       |      |      |        |         |
+| negative | V1 li | 2.76 | 1.89 | 0.1144 | 4.15    |
+| neutral  | V1 li | 3.33 | 2.20 | 0.1335 | 4.00    |
+| negative | V2    | 4.17 | 2.12 | 0.1283 | 3.07    |
+| neutral  | V2    | 4.36 | 2.22 | 0.1346 | 3.09    |
+| nibud    |       |      |      |        |         |
+| negative | V1 li | 5.01 | 1.98 | 0.1198 | 2.39    |
+| neutral  | V1 li | 5.89 | 1.45 | 0.0878 | 1.49    |
+| negative | V2    | 4.85 | 1.91 | 0.1158 | 2.39    |
+| neutral  | V2    | 5.28 | 1.75 | 0.1063 | 2.01    |
+
+</div>
+
+</div>
+
+Unlike SD, SE is an inferential statistic in this case, so it can only
+be estimated. In the ideal case if one knows the population mean, SE can
+be calculated. But there is no mean for all Russian speakers, so the
+input values for SE are replaced with the sample mean and thus the
+sample SD.
+
+SE is supposed to tell how close my sample mean is to the population
+mean. In other words, if I would do this experiment a couple more times,
+new possible means would differ this SE much from each other. The
+formula for SE is pretty easy, SE = SD/sqrt(Number of observations).
+
+But is it too big or too good? RSE indicates that. It represents the
+size of SE relative to the mean, so as percentage. They say if RSE is
+below 10 %, then SE is relatively small they are here.
+
+### t-test
+
+Student’s t-test is unlikely the best test for this experiment but it’s
+calculated from SE and SD, so why not to have it? :wink:
+
+### Cumulative Link Mixed Model
+
+I’ll come back with more :v: :sparkles:
 
 ``` r
 library(modelsummary)
