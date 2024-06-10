@@ -2,10 +2,10 @@
 Masha Onoeva
 
 - [Info](#info)
-- [Loading data](#loading-data)
-- [Fillers and unreliable
-  participants](#fillers-and-unreliable-participants)
-- [Data sets](#data-sets)
+- [Loading and cleaning data](#loading-and-cleaning-data)
+  - [Fillers and unreliable
+    participants](#fillers-and-unreliable-participants)
+  - [Data sets](#data-sets)
 - [Descriptive stat](#descriptive-stat)
   - [Table](#table)
   - [Stacked bar plot](#stacked-bar-plot)
@@ -13,6 +13,7 @@ Masha Onoeva
 - [Inferential stat](#inferential-stat)
   - [Standard error](#standard-error)
   - [t-test](#t-test)
+  - [ANOVA](#anova)
   - [Cumulative Link Mixed Model](#cumulative-link-mixed-model)
 
 ## Info
@@ -41,6 +42,8 @@ independent variables, each had two manipulations, so the design was 2 x
 Participants had to assess questions in different context on the scale
 from 1 very unnatural to 7 very natural. It was the dependent variable.
 
+Within-items, between subjects?
+
 #### Files
 
 The csv file with raw results is available in this repo (perhaps I can
@@ -49,18 +52,18 @@ There are also two files with the script – qmd and md. The first one is
 a Quarto RMarkdown script from RStudio, the second one is a pretty
 version for GitHub (it is easier to follow online).
 
-## Loading data
+## Loading and cleaning data
 
 ``` r
 library(tidyverse) # THE package, it contains ggplot2, tidyr, dplyr, readr and more
-library(formattable) # for pretty markdown tables 
-library(here) # sets the dir 
+library(gt) # for pretty markdown tables, needed for notebook rendering 
 ```
 
 There is an option to download a version without abandoned trials from
 LRex and I load it here. Then I’m setting the working directory and
-loading data. I have two ways here – standard local set up and more
-convenient for sharing.
+loading data. I have two ways here:
+
+- standard local set up
 
 ``` r
 # standard way of setting the directory locally on your machine
@@ -74,7 +77,10 @@ all_df <-
                                              show_col_types = FALSE)
 ```
 
+- this one is more convenient for sharing online and with someone
+
 ``` r
+library(here) # sets the dir
 # since I load it online, it's more convenient to do it via "here" package
 # loading all data
 all_df <-
@@ -94,7 +100,7 @@ main_df <- all_df %>%
   filter(materials != "1_examples")
 ```
 
-## Fillers and unreliable participants
+### Fillers and unreliable participants
 
 You can see the number of participants on LRex but just to double-check
 it I’ll run a couple of lines here as well.
@@ -222,7 +228,7 @@ mean(fillers_only_reliable$Mean) # testing by applying mean to the reliable df
 
     [1] 0.924
 
-## Data sets
+### Data sets
 
 In this experiment, we had one big experiment and several smaller, see
 summary of the materials column.
@@ -348,12 +354,12 @@ tendency – mode, mean, median, for the second variability values –
 range, variance, standard deviation.
 
 ``` r
-# creating one mega condition, not necessary though, group_by() works just fine
-# e1_df <- e1_df %>%
-#  mutate(condition1 = paste(context, verb, indef))
+# creating one GIGA condition
+# not necessary though, group_by() works just fine, but I'll need it further
+e1_df <- e1_df %>%
+ mutate(condition1 = paste(condition, context, verb, indef))
 
 library(DescTools) # for Mode() 
-library(gt)
 e1_df$rating1 <- as.numeric(e1_df$rating1)
 
 raw_summary <- e1_df %>%
@@ -372,7 +378,7 @@ as_raw_html(raw_summary %>% gt(groupname_col = 'indef', rowname_col = 'context')
 
 <div>
 
-<div id="dfkzrblxcu" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="idtwojmyfu" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mode | Median | Mean | Range | Variance | SD   |
@@ -490,7 +496,7 @@ calculations and then plot the results.
 ``` r
 # This code is based on Radek Šimík's code.
 
-library(Rmisc) # for summarySE 
+library(Rmisc) # for summarySE, needed just here
 
 # I load the df to inter_df
 inter_df <- e1_df
@@ -577,15 +583,23 @@ inter_plot_items
 
 ## Inferential stat
 
-I begin with the most basic basics and continue further.
-
 The purpose of inferential statistics is to determine whether the
 experimental results were not produced by chance. In other words, there
 is a chance that our results are like this by a mere accident and the
 interactions between the variables are just coincidences. But using some
-smart tests one can eliminate this possibility.
+smart tests one can eliminate this possibility. Inferential stat also
+helps to clearly articulate interactions which are found in the sample.
+Various models are used for this, so stay tuned.
+
+I begin with the most basic basics and continue further.
 
 ### Standard error
+
+Unlike SD, SE is an inferential statistic in this case, so it can only
+be estimated. In the ideal case if one knows the population mean, SE can
+be calculated. But there is no mean for all Russian speakers, so the
+input values for SE are replaced with the sample mean and thus the
+sample SD.
 
 In the table below, there are means from the descriptive table together
 with Standard Deviations (SD), Standard Errors (SE) and Relative SEs.
@@ -595,12 +609,15 @@ those plots look crazy.
 
 ``` r
 e1_df$rating1 <- as.numeric(e1_df$rating1)
+
+# using dplyr:: here as the functions interfere with plyr and don't work correctly
 raw_summary1 <- e1_df %>%
-  dplyr::group_by(indef, verb, context) %>%
-  dplyr::summarize(Mean = mean(rating1),
+  dplyr::group_by(indef, verb, context) %>% 
+  dplyr::summarize(Mean = mean(rating1), 
             SD = sd(rating1), # sd = sqrt(var(rating1))
             SE = sd(rating1)/sqrt(length(rating1)),
             # RSD = sd(rating1)/mean(rating1) * 100,
+            # Conf = mean(rating1)/sd(rating1),
             RSE = sd(rating1)/sqrt(length(rating1))/mean(rating1) * 100
             )
 
@@ -611,7 +628,7 @@ as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef', rowname_col = 'context'
 
 <div>
 
-<div id="pwuufrgjtj" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="dhfrqomrip" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mean | SD   | SE     | RSE (%) |
@@ -631,25 +648,196 @@ as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef', rowname_col = 'context'
 
 </div>
 
-Unlike SD, SE is an inferential statistic in this case, so it can only
-be estimated. In the ideal case if one knows the population mean, SE can
-be calculated. But there is no mean for all Russian speakers, so the
-input values for SE are replaced with the sample mean and thus the
-sample SD.
-
 SE is supposed to tell how close my sample mean is to the population
 mean. In other words, if I would do this experiment a couple more times,
-new possible means would differ this SE much from each other. The
+new possible means could differ this SE much from each other. The
 formula for SE is pretty easy, SE = SD/sqrt(Number of observations).
 
-But is it too big or too good? RSE indicates that. It represents the
+But is it too big or I’m fine? RSE indicates that. It represents the
 size of SE relative to the mean, so as percentage. They say if RSE is
-below 10 %, then SE is relatively small they are here.
+below 10 %, then SE is relatively small as they are here.
 
 ### t-test
 
 Student’s t-test is unlikely the best test for this experiment but it’s
-calculated from SE and SD, so why not to have it? :wink:
+calculated from SE and mean, so why not to have it? :wink:
+
+The formula for t-value is the following, looks complicated, meh.
+
+$$
+t = \frac{\bar{x} - \mu}{SE}
+$$
+
+But if one rewrites it, it becomes super clear:
+
+$$
+t \times SE = \bar{x} - \mu
+$$
+
+So t-value says how much my sample mean or x-bar is far from the
+population mean or mu in SEs. If I need many SEs, the difference is big,
+if little, the difference is not big.
+
+Since I have only one sample and no population mean, I need to find mu
+to compare it with, shall it be 0. So now there are two hypotheses:
+
+1.  the sample mean = 0
+2.  the sample mean is significantly different from 0
+
+I’m going to use here a one sample t-test because I have one sample.
+There are also paired samples t-test and independent samples t-test. For
+the first, it’s required to measure one sample two times, for the
+second, one needs at least two different samples, then their differences
+are compared.
+
+t-test can be run like this for one condition. The output says that it
+is unlikely that the observed mean was due to chance as t = 25 and p \<
+2e-16.
+
+``` r
+cond_1 <- e1_df %>% filter(condition1 == 'a neutral V1 li ni')
+result_cond_1 <- t.test(cond_1$rating1)
+result_cond_1
+```
+
+
+        One Sample t-test
+
+    data:  cond_1$rating1
+    t = 25, df = 271, p-value <2e-16
+    alternative hypothesis: true mean is not equal to 0
+    95 percent confidence interval:
+     3.07 3.60
+    sample estimates:
+    mean of x 
+         3.33 
+
+Or it can be done for all 8 conditions at once. All t-values are huge,
+up to t = 67 and ps \< 0.05
+
+``` r
+library(broom)
+
+# packing all conditions into a vector 
+conditions <- e1_df %>%
+  dplyr::distinct(condition1) %>%
+  pull(condition1)
+
+# applying t.test function to each condition and creating a table 
+t_test_results <- map_df(conditions, function(cond) {
+  result <- e1_df %>% 
+    filter(condition1 == cond) %>% 
+    pull(rating1) %>% 
+    t.test() %>%
+    tidy()
+  
+  result$Condition <- cond
+  return(result)
+})
+
+as_raw_html(t_test_results %>% 
+              gt() %>% 
+              cols_move_to_start(columns = Condition) %>%
+              cols_label(estimate = 'Mean',
+                         statistic = 't-value', 
+                         p.value = 'p-value'))
+```
+
+<div>
+
+<div id="dmmtwpmuoq" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+  &#10;  
+
+| Condition              | Mean | t-value |   p-value | parameter | conf.low | conf.high | method            | alternative |
+|:-----------------------|-----:|--------:|----------:|----------:|---------:|----------:|:------------------|:------------|
+| c neutral V1 li nibud  | 5.89 |    67.1 | 9.12e-171 |       271 |     5.72 |      6.06 | One Sample t-test | two.sided   |
+| d neutral V2 nibud     | 5.28 |    49.7 | 3.99e-138 |       271 |     5.07 |      5.49 | One Sample t-test | two.sided   |
+| e negative V1 li ni    | 2.76 |    24.1 |  2.16e-69 |       271 |     2.53 |      2.98 | One Sample t-test | two.sided   |
+| f negative V2 ni       | 4.17 |    32.5 |  1.43e-95 |       271 |     3.92 |      4.43 | One Sample t-test | two.sided   |
+| g negative V1 li nibud | 5.01 |    41.8 | 3.70e-120 |       271 |     4.77 |      5.24 | One Sample t-test | two.sided   |
+| h negative V2 nibud    | 4.85 |    41.9 | 1.90e-120 |       271 |     4.62 |      5.08 | One Sample t-test | two.sided   |
+| a neutral V1 li ni     | 3.33 |    25.0 |  3.10e-72 |       271 |     3.07 |      3.60 | One Sample t-test | two.sided   |
+| b neutral V2 ni        | 4.36 |    32.4 |  3.31e-95 |       271 |     4.10 |      4.63 | One Sample t-test | two.sided   |
+
+</div>
+
+</div>
+
+#### Two-tailed and one-tailed?
+
+It depends on predictions. If I predict that my difference will be
+somehow direct towards positive or negative t, I use one-tailed test.
+Two-tailed is used when one just looks for some difference and doesn’t
+care about positive or negative direction. Two-tailed is more
+conservative though which is good for the type I error exclusion. In
+principle, here I assume that my results should be bigger than 0, so I
+can use one-tailed test but I don’t really care that much, so whatevs.
+
+#### Why isn’t t-test good for this experiment?
+
+The main reason is that I have a factorial design, so there are multiple
+conditions that have to be compared to each other. t-test compares mean
+with 0 or whatever value one has. It says if the sample mean is
+significantly different and if it is or isn’t obtained by chance. But I
+want to know what influence manipulations have on the dependent
+variable. I can pair conditions and run it but then it’s ANOVA which is
+the next test.
+
+### ANOVA
+
+(All taken from [this web](https://statsandr.com/blog/anova-in-r/).)
+
+ANOVA (Analysis of Variance) suits a bit better for the experiment but
+it’s still not quite there yet. With t-test I compared two things only,
+now I can do it with all my conditions. ANOVA determines whether the
+means I have in my conditions are significantly different from each
+other. My hypotheses for ANOVA are:
+
+- H0: mean(a) = mean(b) = mean(c) = mean(d) = mean(e) = mean(f) =
+  mean(g) = mean(e)
+
+- H1: **at least one** of them is different
+
+One of the requirements for this test is to have a continuous
+quantitative dependent variable. I have a Lickert scale, it’s an ordinal
+scale and those are considered categorical but let’s pretend that it’s
+continuous. As for the independent variables, they have to be
+qualitative with at least two levels.
+
+Other requirements are normality and equality of variances. For the
+first one, with this sample size distribution should not be necessary
+normal, but the second requirement has to be checked. Levene’s test
+suits for this which is run below. p-value is pretty small, so the null
+hypothesis that the variances are equal is rejected. I need to consider
+for that in the model and use Welch ANOVA.
+
+``` r
+e1_df$condition = as.factor(e1_df$condition)
+car::leveneTest(rating1~condition, e1_df)
+```
+
+    Levene's Test for Homogeneity of Variance (center = median)
+            Df F value Pr(>F)    
+    group    7    14.8 <2e-16 ***
+          2168                   
+    ---
+    Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Welch ANOVA is present below. p-value is small, so we reject H0 that all
+groups are equal. But it only means that at least one is different but
+which one? And what is the relation between other variables?
+
+``` r
+oneway.test(rating1~condition, 
+            data = e1_df, 
+            var.equal = FALSE) # considering not equal variances, so Welch ANOVA
+```
+
+
+        One-way analysis of means (not assuming equal variances)
+
+    data:  rating1 and condition
+    F = 90, num df = 7, denom df = 927, p-value <2e-16
 
 ### Cumulative Link Mixed Model
 
