@@ -14,6 +14,8 @@ Masha Onoeva
   - [Standard error](#standard-error)
   - [t-test](#t-test)
   - [ANOVA](#anova)
+  - [Linear model and linear mixed
+    model](#linear-model-and-linear-mixed-model)
   - [Cumulative Link Mixed Model](#cumulative-link-mixed-model)
 
 ## Info
@@ -55,7 +57,7 @@ version for GitHub (it is easier to follow online).
 ## Loading and cleaning data
 
 ``` r
-library(tidyverse) # THE package, it contains ggplot2, tidyr, dplyr, readr and more
+library(tidyverse) # THE package, it contains ggplot2, tidyr, dplyr, readr etc.
 library(gt) # for pretty markdown tables, needed for notebook rendering 
 ```
 
@@ -153,7 +155,6 @@ fillers_only$filler_answer <- 0
 fillers_only$filler_answer <- as.numeric(fillers_only$filler_answer)
 
 # rename filler items: the first three items were bad, the rest were good
-# this step can be skipped but it's easier for me to check and manipulate the results with it
 fillers_only$condition[fillers_only$item %in% c("1", "2", "3")] <- 'bad'
 fillers_only$condition[fillers_only$condition != "bad"] <- 'good'
 ```
@@ -165,11 +166,11 @@ assessed correctly. In other words, if bad fillers have 1-4 and good
 ``` r
 # bad fillers
 fillers_only$filler_answer[which(grepl('bad', fillers_only$condition) &
-                                     grepl('1|2|3', fillers_only$rating1))] <- 1
+                                grepl('1|2|3', fillers_only$rating1))] <- 1
 
 # good fillers 
 fillers_only$filler_answer[which(grepl('good', fillers_only$condition) &
-                                     grepl('5|6|7', fillers_only$rating1))] <- 1
+                                grepl('5|6|7', fillers_only$rating1))] <- 1
 ```
 
 So now I have the column which tells me how each participant assessed
@@ -223,7 +224,8 @@ Then I remove unreliable participants from reliable ones.
 fillers_only_reliable <- anti_join(filler_results, unreliable_participants, 
                           by = "participant")
 
-mean(fillers_only_reliable$Mean) # testing by applying mean to the reliable df
+# testing by applying mean to the reliable df
+mean(fillers_only_reliable$Mean)
 ```
 
     [1] 0.924
@@ -320,8 +322,8 @@ the results. Not sure if it can be done in a more sophisticated way
 # accessing the first experiment from the groups  
 e1_df <- split_main_df1[[1]]
 
-# creating a new column for the first variable 'verb' and recoding to the readable form
-# 4 conditions were V1 li, 4 -- V2 
+# creating a new column for the first variable 'verb' and recoding 
+# to the readable form 4 conditions were V1 li, 4 -- V2 
 e1_df$verb <- 0 
 e1_df$verb[e1_df$condition %in% c("a", "c", "e", "g")] <- "V1 li"
 e1_df$verb[e1_df$verb != "V1 li"] <- "V2"
@@ -372,13 +374,12 @@ raw_summary <- e1_df %>%
             SD = sd(rating1), # sd = sqrt(var(rating1))
             )
 
-as_raw_html(raw_summary %>% gt(groupname_col = 'indef', rowname_col = 'context') %>%
+as_raw_html(raw_summary %>% gt(groupname_col = 'indef', 
+                               rowname_col = 'context') %>%
   cols_label(verb = 'Verb'))
 ```
 
-<div>
-
-<div id="idtwojmyfu" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="naneanolhj" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mode | Median | Mean | Range | Variance | SD   |
@@ -393,8 +394,6 @@ as_raw_html(raw_summary %>% gt(groupname_col = 'indef', rowname_col = 'context')
 | neutral  | V1 li | 7    | 6      | 5.89 | 1-7   | 2.10     | 1.45 |
 | negative | V2    | 7    | 5      | 4.85 | 1-7   | 3.65     | 1.91 |
 | neutral  | V2    | 7    | 6      | 5.28 | 1-7   | 3.07     | 1.75 |
-
-</div>
 
 </div>
 
@@ -462,9 +461,9 @@ e1_main_plot <- ggplot(e1_df_relevel1, aes(fill=rating1, x=context)) +
           legend.title = element_blank())+
           # axis.text = element_text(size = 25),
           # axis.title = element_text(size = 25),
-          # axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
-          # axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
-   # ggtitle("Stacked bar plot E1 (68 participants)") +
+# axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+# axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
+# ggtitle("Stacked bar plot E1 (68 participants)") +
     xlab("Context") +
     ylab("Proportions of raiting")
 
@@ -472,6 +471,48 @@ e1_main_plot
 ```
 
 ![](script_files/figure-commonmark/unnamed-chunk-18-1.png)
+
+``` r
+facet_labels <- c('V1 li' = "LiPQs", 
+                     'V2' = "IntonPQs", 
+                     'ni' = "NCIs", 
+                     'nibud' = "nibud")
+
+verb.labs <- c("LiPQs", "IntonPQs")
+names(verb.labs) <- c("V1 li", "V2")
+indef.labs <- c("NCIs", "nibud")
+names(indef.labs) <- c("ni", "nibud")
+
+
+e1_main_plot1 <- ggplot(e1_df_relevel1, aes(fill = rating1, x = context)) + 
+  geom_bar(position = "fill") +
+  geom_hline(aes(yintercept = 0.5), size = 0.5) +
+  facet_wrap(~verb + indef, labeller = labeller(verb = verb.labs, indef = indef.labs)) +
+  theme_bw() +
+  scale_fill_brewer(palette = "RdYlGn", direction = -1) +
+  theme(
+    legend.position = "right",
+    text = element_text(size = 12),
+    legend.text = element_text(size = 20),
+    legend.key.size = unit(1, 'cm'),
+    legend.title = element_blank(),
+    axis.text = element_text(size = 25),
+    axis.title = element_text(size = 25),
+    axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+    axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))
+  ) +
+  xlab("Context") +
+  ylab("Proportions of rating")
+
+e1_main_plot1
+```
+
+![](script_files/figure-commonmark/unnamed-chunk-19-1.png)
+
+``` r
+ggsave(e1_main_plot1, file="e1_main11.pdf", 
+       width = 35, height = 37, units = "cm", device="pdf")
+```
 
 On the x axis, there are contexts, on the y axis – proportions of
 ratings. The darkness of the bars indicates naturalness (dark means more
@@ -514,7 +555,8 @@ of the lines are cosmetics.
 
 ``` r
 # plotting 
-inter_plot <- ggplot(tab_inter, aes(x=context, y=rating1, colour=indef, group=indef)) + 
+inter_plot <- ggplot(tab_inter, aes(x=context, y=rating1, 
+                                    colour=indef, group=indef)) + 
     geom_errorbar(aes(ymin=rating1-se, ymax=rating1+se), width=.1) +
     facet_wrap(~verb) +
     theme_bw() +
@@ -527,8 +569,8 @@ inter_plot <- ggplot(tab_inter, aes(x=context, y=rating1, colour=indef, group=in
         # legend.position = c(0.8, 0.15),
         # axis.text = element_text(size = 25),
         # axis.title = element_text(size = 25),
-        # axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
-        # axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
+# axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+# axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
     geom_point() + 
     xlab("Context") +
     ylab("Naturalness (SE)") +
@@ -540,7 +582,7 @@ inter_plot <- ggplot(tab_inter, aes(x=context, y=rating1, colour=indef, group=in
 inter_plot
 ```
 
-![](script_files/figure-commonmark/unnamed-chunk-21-1.png)
+![](script_files/figure-commonmark/unnamed-chunk-22-1.png)
 
 The same plot as above but for each item. (Perhaps I can use conditions
 as color?)
@@ -565,8 +607,8 @@ inter_plot_items <- ggplot(tab_inter_items, aes(x=item,y=rating1,
         # legend.position = c(0.8, 0.15),
         # axis.text = element_text(size = 25),
         # axis.title = element_text(size = 25),
-        # axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
-        # axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
+# axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+# axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
     geom_point() + 
     xlab("Context") +
     ylab("Naturalness (SE)") +
@@ -579,7 +621,7 @@ inter_plot_items <- ggplot(tab_inter_items, aes(x=item,y=rating1,
 inter_plot_items
 ```
 
-![](script_files/figure-commonmark/unnamed-chunk-22-1.png)
+![](script_files/figure-commonmark/unnamed-chunk-23-1.png)
 
 ## Inferential stat
 
@@ -610,7 +652,7 @@ those plots look crazy.
 ``` r
 e1_df$rating1 <- as.numeric(e1_df$rating1)
 
-# using dplyr:: here as the functions interfere with plyr and don't work correctly
+# using dplyr:: here as the functions interfere with plyr
 raw_summary1 <- e1_df %>%
   dplyr::group_by(indef, verb, context) %>% 
   dplyr::summarize(Mean = mean(rating1), 
@@ -621,14 +663,13 @@ raw_summary1 <- e1_df %>%
             RSE = sd(rating1)/sqrt(length(rating1))/mean(rating1) * 100
             )
 
-as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef', rowname_col = 'context') %>%
+as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef', 
+                                rowname_col = 'context') %>%
   cols_label(verb = 'Verb',
              RSE = 'RSE (%)'))
 ```
 
-<div>
-
-<div id="dhfrqomrip" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="repxshdpgl" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mean | SD   | SE     | RSE (%) |
@@ -646,12 +687,12 @@ as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef', rowname_col = 'context'
 
 </div>
 
-</div>
-
 SE is supposed to tell how close my sample mean is to the population
 mean. In other words, if I would do this experiment a couple more times,
 new possible means could differ this SE much from each other. The
-formula for SE is pretty easy, SE = SD/sqrt(Number of observations).
+formula for SE is pretty easy, n is a number of observations,
+
+$$SE = \frac{SD}{\sqrt{n}}$$
 
 But is it too big or I’m fine? RSE indicates that. It represents the
 size of SE relative to the mean, so as percentage. They say if RSE is
@@ -696,8 +737,7 @@ is unlikely that the observed mean was due to chance as t = 25 and p \<
 
 ``` r
 cond_1 <- e1_df %>% filter(condition1 == 'a neutral V1 li ni')
-result_cond_1 <- t.test(cond_1$rating1)
-result_cond_1
+t.test(cond_1$rating1)
 ```
 
 
@@ -713,7 +753,7 @@ result_cond_1
          3.33 
 
 Or it can be done for all 8 conditions at once. All t-values are huge,
-up to t = 67 and ps \< 0.05
+up to t = 67 and ps \< 0.05.
 
 ``` r
 library(broom)
@@ -743,9 +783,7 @@ as_raw_html(t_test_results %>%
                          p.value = 'p-value'))
 ```
 
-<div>
-
-<div id="dmmtwpmuoq" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="bfxrfpgynh" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 | Condition              | Mean | t-value |   p-value | parameter | conf.low | conf.high | method            | alternative |
@@ -761,8 +799,6 @@ as_raw_html(t_test_results %>%
 
 </div>
 
-</div>
-
 #### Two-tailed and one-tailed?
 
 It depends on predictions. If I predict that my difference will be
@@ -773,25 +809,52 @@ conservative though which is good for the type I error exclusion. In
 principle, here I assume that my results should be bigger than 0, so I
 can use one-tailed test but I don’t really care that much, so whatevs.
 
+#### What is p-value though?
+
+It is the probability of seeing a test statistic, here it’s t-value, as
+extreme or more extreme as one observes given the null hypothesis
+([Vasishth and Nicenboim
+2016](https://compass.onlinelibrary.wiley.com/doi/abs/10.1111/lnc3.12201)).
+Complicated as heck. But if one writes it this way
+
+$$
+P(data|H_0)
+$$
+
+is it easier to understand? This is just conditional probability. If H0
+is true, how likely the observed statistic is. Low p-value says that we
+can reject H0, but it doesn’t say we accept H1 though, as it’s not in
+condition.
+
 #### Why isn’t t-test good for this experiment?
 
-The main reason is that I have a factorial design, so there are multiple
-conditions that have to be compared to each other. t-test compares mean
-with 0 or whatever value one has. It says if the sample mean is
-significantly different and if it is or isn’t obtained by chance. But I
-want to know what influence manipulations have on the dependent
-variable. I can pair conditions and run it but then it’s ANOVA which is
-the next test.
+One of the reasons is that I have a factorial design, so there are
+multiple conditions that have to be compared to each other. t-test
+compares mean with 0. It says if the sample mean is significantly
+different and if it is or isn’t obtained by chance. But I want to know
+what influence manipulations have on the dependent variable. I can pair
+conditions and run it but then it’s ANOVA which is the next test. And it
+feels a bit wrong when I compare it with 0, maybe it’s more correct to
+compare it with 1 ‘completely unacceptable’ or 7 ‘completely
+acceptable’?
+
+Another reason is that my sample data are not that independent as t-test
+requires them to be. I have to account for variability in participants
+and in items. There are possibilities how to account for it for t-test
+(aggregate all) but it’s better to do a linear mixed model.
 
 ### ANOVA
 
-(All taken from [this web](https://statsandr.com/blog/anova-in-r/).)
+(All taken from [this web](https://statsandr.com/blog/anova-in-r/) and
+[this
+web](https://support.minitab.com/en-us/minitab/help-and-how-to/statistical-modeling/anova/supporting-topics/basics/what-is-anova/).)
 
 ANOVA (Analysis of Variance) suits a bit better for the experiment but
-it’s still not quite there yet. With t-test I compared two things only,
-now I can do it with all my conditions. ANOVA determines whether the
-means I have in my conditions are significantly different from each
-other. My hypotheses for ANOVA are:
+it’s still not quite there yet as it doesn’t care for random effects.
+With t-test I compared two things only, now I can do it with all my
+conditions. ANOVA determines whether the means I have in my conditions
+are significantly different from each other. My hypotheses for ANOVA
+are:
 
 - H0: mean(a) = mean(b) = mean(c) = mean(d) = mean(e) = mean(f) =
   mean(g) = mean(e)
@@ -830,7 +893,7 @@ which one? And what is the relation between other variables?
 ``` r
 oneway.test(rating1~condition, 
             data = e1_df, 
-            var.equal = FALSE) # considering not equal variances, so Welch ANOVA
+            var.equal = FALSE) # Welch ANOVA as variences aren't equal
 ```
 
 
@@ -838,6 +901,10 @@ oneway.test(rating1~condition,
 
     data:  rating1 and condition
     F = 90, num df = 7, denom df = 927, p-value <2e-16
+
+### Linear model and linear mixed model
+
+Well, ANOVA section seems redundant now.
 
 ### Cumulative Link Mixed Model
 
@@ -848,11 +915,75 @@ library(modelsummary)
 library(lmerTest)
 library(ordinal)
 library(gtsummary)
+```
+
+``` r
+e1_df$rating1 = as.factor(e1_df$rating1)
 
 stat_E1 <- clmm(rating1 ~ verb * indef * context + 
   (1 | participant) + (1 | item), 
-  contrasts = list(verb="contr.sum",indef="contr.sum", context="contr.sum"), 
+  contrasts = list(verb="contr.sum",
+                   indef="contr.sum", 
+                   context="contr.sum"), 
   data=e1_df)
+```
 
+``` r
+broom.mixed::tidy(stat_E1)
+```
+
+    # A tibble: 13 × 6
+       term                  estimate std.error statistic  p.value coef.type
+       <chr>                    <dbl>     <dbl>     <dbl>    <dbl> <chr>    
+     1 1|2                    -2.37      0.165    -14.4   7.57e-47 intercept
+     2 2|3                    -1.53      0.160     -9.57  1.10e-21 intercept
+     3 3|4                    -0.885     0.158     -5.62  1.94e- 8 intercept
+     4 4|5                    -0.266     0.157     -1.70  8.93e- 2 intercept
+     5 5|6                     0.458     0.157      2.93  3.44e- 3 intercept
+     6 6|7                     1.46      0.159      9.19  3.82e-20 intercept
+     7 verb1                  -0.180     0.0397    -4.53  6.02e- 6 location 
+     8 indef1                 -0.814     0.0423   -19.3   1.08e-82 location 
+     9 context1               -0.244     0.0401    -6.09  1.14e- 9 location 
+    10 verb1:indef1           -0.406     0.0404   -10.0   9.55e-24 location 
+    11 verb1:context1         -0.113     0.0396    -2.85  4.31e- 3 location 
+    12 indef1:context1         0.0674    0.0398     1.69  9.05e- 2 location 
+    13 verb1:indef1:context1   0.0215    0.0396     0.543 5.87e- 1 location 
+
+``` r
 summary(stat_E1)
 ```
+
+    Cumulative Link Mixed Model fitted with the Laplace approximation
+
+    formula: rating1 ~ verb * indef * context + (1 | participant) + (1 | item)
+    data:    e1_df
+
+     link  threshold nobs logLik   AIC     niter       max.grad cond.H 
+     logit flexible  2176 -3681.28 7392.57 2723(10896) 1.71e-03 2.8e+02
+
+    Random effects:
+     Groups      Name        Variance Std.Dev.
+     participant (Intercept) 0.940    0.970   
+     item        (Intercept) 0.258    0.508   
+    Number of groups:  participant 68,  item 32 
+
+    Coefficients:
+                          Estimate Std. Error z value Pr(>|z|)    
+    verb1                  -0.1795     0.0397   -4.53  6.0e-06 ***
+    indef1                 -0.8142     0.0423  -19.26  < 2e-16 ***
+    context1               -0.2440     0.0401   -6.09  1.1e-09 ***
+    verb1:indef1           -0.4060     0.0404  -10.05  < 2e-16 ***
+    verb1:context1         -0.1130     0.0396   -2.85   0.0043 ** 
+    indef1:context1         0.0674     0.0398    1.69   0.0905 .  
+    verb1:indef1:context1   0.0215     0.0396    0.54   0.5873    
+    ---
+    Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+    Threshold coefficients:
+        Estimate Std. Error z value
+    1|2   -2.375      0.165  -14.37
+    2|3   -1.529      0.160   -9.57
+    3|4   -0.885      0.158   -5.62
+    4|5   -0.266      0.157   -1.70
+    5|6    0.458      0.157    2.93
+    6|7    1.464      0.159    9.19

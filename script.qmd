@@ -35,7 +35,7 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE, cache = FALSE,
 ## Loading and cleaning data
 
 ```{r}
-library(tidyverse) # THE package, it contains ggplot2, tidyr, dplyr, readr and more
+library(tidyverse) # THE package, it contains ggplot2, tidyr, dplyr, readr etc.
 library(gt) # for pretty markdown tables, needed for notebook rendering 
 
 ```
@@ -109,7 +109,6 @@ fillers_only$filler_answer <- 0
 fillers_only$filler_answer <- as.numeric(fillers_only$filler_answer)
 
 # rename filler items: the first three items were bad, the rest were good
-# this step can be skipped but it's easier for me to check and manipulate the results with it
 fillers_only$condition[fillers_only$item %in% c("1", "2", "3")] <- 'bad'
 fillers_only$condition[fillers_only$condition != "bad"] <- 'good'
 ```
@@ -119,11 +118,11 @@ Now I'm assigning '1' to filler_answer column if these filler items were assesse
 ```{r}
 # bad fillers
 fillers_only$filler_answer[which(grepl('bad', fillers_only$condition) &
-                                     grepl('1|2|3', fillers_only$rating1))] <- 1
+                                grepl('1|2|3', fillers_only$rating1))] <- 1
 
 # good fillers 
 fillers_only$filler_answer[which(grepl('good', fillers_only$condition) &
-                                     grepl('5|6|7', fillers_only$rating1))] <- 1
+                                grepl('5|6|7', fillers_only$rating1))] <- 1
 ```
 
 So now I have the column which tells me how each participant assessed each filler item. I can measure their reliability simply by counting how good they were in the fillers. In the table below, the first participant has mean '1', so they have assessed all fillers correctly as I expected them. If mean is lower than 80 %, a participant is unreliable.
@@ -152,7 +151,8 @@ Then I remove unreliable participants from reliable ones.
 fillers_only_reliable <- anti_join(filler_results, unreliable_participants, 
                           by = "participant")
 
-mean(fillers_only_reliable$Mean) # testing by applying mean to the reliable df
+# testing by applying mean to the reliable df
+mean(fillers_only_reliable$Mean)
 ```
 
 ### Data sets
@@ -210,8 +210,8 @@ The conditions were coded as letters in the spreadsheet for LRex, so first, I as
 # accessing the first experiment from the groups  
 e1_df <- split_main_df1[[1]]
 
-# creating a new column for the first variable 'verb' and recoding to the readable form
-# 4 conditions were V1 li, 4 -- V2 
+# creating a new column for the first variable 'verb' and recoding 
+# to the readable form 4 conditions were V1 li, 4 -- V2 
 e1_df$verb <- 0 
 e1_df$verb[e1_df$condition %in% c("a", "c", "e", "g")] <- "V1 li"
 e1_df$verb[e1_df$verb != "V1 li"] <- "V2"
@@ -260,7 +260,8 @@ raw_summary <- e1_df %>%
             SD = sd(rating1), # sd = sqrt(var(rating1))
             )
 
-as_raw_html(raw_summary %>% gt(groupname_col = 'indef', rowname_col = 'context') %>%
+as_raw_html(raw_summary %>% gt(groupname_col = 'indef', 
+                               rowname_col = 'context') %>%
   cols_label(verb = 'Verb'))
 
 ```
@@ -293,6 +294,9 @@ e1_df_relevel1 <- e1_df_relevel %>%
 
 I have commented out some lines for the plot but they are mostly cosmetics that change size of text, etc. These might be useful for specific cases but here I don't need them.
 
+```         
+```
+
 ```{r fig.height=5, fig.width=5}
 e1_main_plot <- ggplot(e1_df_relevel1, aes(fill=rating1, x=context)) + 
     geom_bar(position = "fill") +
@@ -308,13 +312,51 @@ e1_main_plot <- ggplot(e1_df_relevel1, aes(fill=rating1, x=context)) +
           legend.title = element_blank())+
           # axis.text = element_text(size = 25),
           # axis.title = element_text(size = 25),
-          # axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
-          # axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
-   # ggtitle("Stacked bar plot E1 (68 participants)") +
+# axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+# axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
+# ggtitle("Stacked bar plot E1 (68 participants)") +
     xlab("Context") +
     ylab("Proportions of raiting")
 
 e1_main_plot
+```
+
+```{r fig.height=5, fig.width=5}
+facet_labels <- c('V1 li' = "LiPQs", 
+                     'V2' = "IntonPQs", 
+                     'ni' = "NCIs", 
+                     'nibud' = "nibud")
+
+verb.labs <- c("LiPQs", "IntonPQs")
+names(verb.labs) <- c("V1 li", "V2")
+indef.labs <- c("NCIs", "nibud")
+names(indef.labs) <- c("ni", "nibud")
+
+
+e1_main_plot1 <- ggplot(e1_df_relevel1, aes(fill = rating1, x = context)) + 
+  geom_bar(position = "fill") +
+  geom_hline(aes(yintercept = 0.5), size = 0.5) +
+  facet_wrap(~verb + indef, labeller = labeller(verb = verb.labs, indef = indef.labs)) +
+  theme_bw() +
+  scale_fill_brewer(palette = "RdYlGn", direction = -1) +
+  theme(
+    legend.position = "right",
+    text = element_text(size = 30),
+    legend.text = element_text(size = 20),
+    legend.key.size = unit(1, 'cm'),
+    legend.title = element_blank(),
+    axis.text = element_text(size = 25),
+    axis.title = element_text(size = 25),
+    axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+    axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))
+  ) +
+  xlab("Context") +
+  ylab("Proportions of rating")
+
+e1_main_plot1
+
+ggsave(e1_main_plot1, file="e1_main11.pdf", 
+       width = 25, height = 27, units = "cm", device="pdf")
 
 ```
 
@@ -357,7 +399,8 @@ The plot code might look crazy, but I've commented things out and most of the li
 ```{r fig.height=5, fig.width=5}
 
 # plotting 
-inter_plot <- ggplot(tab_inter, aes(x=context, y=rating1, colour=indef, group=indef)) + 
+inter_plot <- ggplot(tab_inter, aes(x=context, y=rating1, 
+                                    colour=indef, group=indef)) + 
     geom_errorbar(aes(ymin=rating1-se, ymax=rating1+se), width=.1) +
     facet_wrap(~verb) +
     theme_bw() +
@@ -370,8 +413,8 @@ inter_plot <- ggplot(tab_inter, aes(x=context, y=rating1, colour=indef, group=in
         # legend.position = c(0.8, 0.15),
         # axis.text = element_text(size = 25),
         # axis.title = element_text(size = 25),
-        # axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
-        # axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
+# axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+# axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
     geom_point() + 
     xlab("Context") +
     ylab("Naturalness (SE)") +
@@ -406,8 +449,8 @@ inter_plot_items <- ggplot(tab_inter_items, aes(x=item,y=rating1,
         # legend.position = c(0.8, 0.15),
         # axis.text = element_text(size = 25),
         # axis.title = element_text(size = 25),
-        # axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
-        # axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
+# axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+# axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
     geom_point() + 
     xlab("Context") +
     ylab("Naturalness (SE)") +
@@ -435,7 +478,7 @@ In the table below, there are means from the descriptive table together with Sta
 ```{r}
 e1_df$rating1 <- as.numeric(e1_df$rating1)
 
-# using dplyr:: here as the functions interfere with plyr and don't work correctly
+# using dplyr:: here as the functions interfere with plyr
 raw_summary1 <- e1_df %>%
   dplyr::group_by(indef, verb, context) %>% 
   dplyr::summarize(Mean = mean(rating1), 
@@ -446,13 +489,16 @@ raw_summary1 <- e1_df %>%
             RSE = sd(rating1)/sqrt(length(rating1))/mean(rating1) * 100
             )
 
-as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef', rowname_col = 'context') %>%
+as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef', 
+                                rowname_col = 'context') %>%
   cols_label(verb = 'Verb',
              RSE = 'RSE (%)'))
 
 ```
 
-SE is supposed to tell how close my sample mean is to the population mean. In other words, if I would do this experiment a couple more times, new possible means could differ this SE much from each other. The formula for SE is pretty easy, SE = SD/sqrt(Number of observations).
+SE is supposed to tell how close my sample mean is to the population mean. In other words, if I would do this experiment a couple more times, new possible means could differ this SE much from each other. The formula for SE is pretty easy, n is a number of observations,
+
+$$SE = \frac{SD}{\sqrt{n}}$$
 
 But is it too big or I'm fine? RSE indicates that. It represents the size of SE relative to the mean, so as percentage. They say if RSE is below 10 %, then SE is relatively small as they are here.
 
@@ -485,11 +531,10 @@ t-test can be run like this for one condition. The output says that it is unlike
 
 ```{r}
 cond_1 <- e1_df %>% filter(condition1 == 'a neutral V1 li ni')
-result_cond_1 <- t.test(cond_1$rating1)
-result_cond_1
+t.test(cond_1$rating1)
 ```
 
-Or it can be done for all 8 conditions at once. All t-values are huge, up to t = 67 and ps \< 0.05
+Or it can be done for all 8 conditions at once. All t-values are huge, up to t = 67 and ps \< 0.05.
 
 ```{r}
 library(broom)
@@ -523,15 +568,27 @@ as_raw_html(t_test_results %>%
 
 It depends on predictions. If I predict that my difference will be somehow direct towards positive or negative t, I use one-tailed test. Two-tailed is used when one just looks for some difference and doesn't care about positive or negative direction. Two-tailed is more conservative though which is good for the type I error exclusion. In principle, here I assume that my results should be bigger than 0, so I can use one-tailed test but I don't really care that much, so whatevs.
 
+#### What is p-value though?
+
+It is the probability of seeing a test statistic, here it's t-value, as extreme or more extreme as one observes given the null hypothesis ([Vasishth and Nicenboim 2016](https://compass.onlinelibrary.wiley.com/doi/abs/10.1111/lnc3.12201)). Complicated as heck. But if one writes it this way
+
+$$
+P(data|H_0)
+$$
+
+is it easier to understand? This is just conditional probability. If H0 is true, how likely the observed statistic is. Low p-value says that we can reject H0, but it doesn't say we accept H1 though, as it's not in condition.
+
 #### Why isn't t-test good for this experiment?
 
-The main reason is that I have a factorial design, so there are multiple conditions that have to be compared to each other. t-test compares mean with 0 or whatever value one has. It says if the sample mean is significantly different and if it is or isn't obtained by chance. But I want to know what influence manipulations have on the dependent variable. I can pair conditions and run it but then it's ANOVA which is the next test.
+One of the reasons is that I have a factorial design, so there are multiple conditions that have to be compared to each other. t-test compares mean with 0. It says if the sample mean is significantly different and if it is or isn't obtained by chance. But I want to know what influence manipulations have on the dependent variable. I can pair conditions and run it but then it's ANOVA which is the next test. And it feels a bit wrong when I compare it with 0, maybe it's more correct to compare it with 1 'completely unacceptable' or 7 'completely acceptable'?
+
+Another reason is that my sample data are not that independent as t-test requires them to be. I have to account for variability in participants and in items. There are possibilities how to account for it for t-test (aggregate all) but it's better to do a linear mixed model.
 
 ### ANOVA
 
-(All taken from [this web](https://statsandr.com/blog/anova-in-r/).)
+(All taken from [this web](https://statsandr.com/blog/anova-in-r/) and [this web](https://support.minitab.com/en-us/minitab/help-and-how-to/statistical-modeling/anova/supporting-topics/basics/what-is-anova/).)
 
-ANOVA (Analysis of Variance) suits a bit better for the experiment but it's still not quite there yet. With t-test I compared two things only, now I can do it with all my conditions. ANOVA determines whether the means I have in my conditions are significantly different from each other. My hypotheses for ANOVA are:
+ANOVA (Analysis of Variance) suits a bit better for the experiment but it's still not quite there yet as it doesn't care for random effects. With t-test I compared two things only, now I can do it with all my conditions. ANOVA determines whether the means I have in my conditions are significantly different from each other. My hypotheses for ANOVA are:
 
 -   H0: mean(a) = mean(b) = mean(c) = mean(d) = mean(e) = mean(f) = mean(g) = mean(e)
 
@@ -551,23 +608,47 @@ Welch ANOVA is present below. p-value is small, so we reject H0 that all groups 
 ```{r}
 oneway.test(rating1~condition, 
             data = e1_df, 
-            var.equal = FALSE) # considering not equal variances, so Welch ANOVA
+            var.equal = FALSE) # Welch ANOVA as variences aren't equal
 ```
+
+### Linear model and linear mixed model
+
+Well, ANOVA section seems redundant now.
 
 ### Cumulative Link Mixed Model
 
 I'll come back with more :v: :sparkles:
 
-```{r eval=FALSE}
+```{r}
 library(modelsummary)
 library(lmerTest)
 library(ordinal)
 library(gtsummary)
+```
+
+```{r}
+e1_df$rating1 = as.factor(e1_df$rating1)
 
 stat_E1 <- clmm(rating1 ~ verb * indef * context + 
   (1 | participant) + (1 | item), 
-  contrasts = list(verb="contr.sum",indef="contr.sum", context="contr.sum"), 
+  contrasts = list(verb="contr.sum",
+                   indef="contr.sum", 
+                   context="contr.sum"), 
   data=e1_df)
 
+```
+
+```{r}
+broom.mixed::tidy(stat_E1)
+```
+
+```{r}
 summary(stat_E1)
+```
+
+```         
+```
+
+```{r}
+
 ```
