@@ -69,7 +69,7 @@ loading data. I have two ways here:
 
 ``` r
 # standard way of setting the directory locally on your machine
-setwd("/Users/maria.onoeva/Desktop/new_folder/GitHub/stat-repo")
+setwd("/Users/maria.onoeva/Desktop/new_folder/GitHub/stat-repo/freq")
 
 # loading all data
 all_df <-
@@ -110,8 +110,7 @@ it I’ll run a couple of lines here as well.
 ``` r
 # counts all participants 
 main_df %>%
-  distinct(participant) %>%
-  summarize(total_part = n())
+  summarise(total_part = n_distinct(participant))
 ```
 
     # A tibble: 1 × 1
@@ -122,8 +121,7 @@ main_df %>%
 ``` r
 # summarizes items for all participants 
 main_df %>%
-  group_by(participant) %>%
-  summarize(items = n())
+  count(participant, name = "items")
 ```
 
     # A tibble: 95 × 2
@@ -379,7 +377,7 @@ as_raw_html(raw_summary %>% gt(groupname_col = 'indef',
   cols_label(verb = 'Verb'))
 ```
 
-<div id="naneanolhj" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="dztmhfgcyb" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mode | Median | Mean | Range | Variance | SD   |
@@ -447,32 +445,6 @@ cosmetics that change size of text, etc. These might be useful for
 specific cases but here I don’t need them.
 
 ``` r
-e1_main_plot <- ggplot(e1_df_relevel1, aes(fill=rating1, x=context)) + 
-    geom_bar(position = "fill") +
-    geom_hline(aes(yintercept=0.5), size=0.5) +
-    facet_wrap(~verb+indef) +
-  # coloring
-    theme_bw() +
-    scale_fill_brewer(palette = "RdPu", direction=-1) +
-    theme(legend.position = "right",
-          text = element_text(size = 12),
-          # legend.text = element_text(size=20),
-          # legend.key.size = unit(1, 'cm'), 
-          legend.title = element_blank())+
-          # axis.text = element_text(size = 25),
-          # axis.title = element_text(size = 25),
-# axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
-# axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
-# ggtitle("Stacked bar plot E1 (68 participants)") +
-    xlab("Context") +
-    ylab("Proportions of raiting")
-
-e1_main_plot
-```
-
-![](script_files/figure-commonmark/unnamed-chunk-18-1.png)
-
-``` r
 facet_labels <- c('V1 li' = "LiPQs", 
                      'V2' = "IntonPQs", 
                      'ni' = "NCIs", 
@@ -483,6 +455,11 @@ names(verb.labs) <- c("V1 li", "V2")
 indef.labs <- c("NCIs", "nibud")
 names(indef.labs) <- c("ni", "nibud")
 
+facet_border <- data.frame(
+  xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf, 
+  verb = 'V1 li', indef = 'NCIs'
+)
+
 
 e1_main_plot1 <- ggplot(e1_df_relevel1, aes(fill = rating1, x = context)) + 
   geom_bar(position = "fill") +
@@ -492,7 +469,7 @@ e1_main_plot1 <- ggplot(e1_df_relevel1, aes(fill = rating1, x = context)) +
   scale_fill_brewer(palette = "RdYlGn", direction = -1) +
   theme(
     legend.position = "right",
-    text = element_text(size = 12),
+    text = element_text(size = 30),
     legend.text = element_text(size = 20),
     legend.key.size = unit(1, 'cm'),
     legend.title = element_blank(),
@@ -502,8 +479,11 @@ e1_main_plot1 <- ggplot(e1_df_relevel1, aes(fill = rating1, x = context)) +
     axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))
   ) +
   xlab("Context") +
-  ylab("Proportions of rating")
-
+  ylab("Proportions of rating") + 
+  geom_rect(data = subset(e1_df_relevel1, verb  %in% c("V2") & indef %in% c("ni")), 
+                          fill = NA, colour = "blue", size = 4,
+                          xmin = -Inf,xmax = Inf,
+                          ymin = -Inf, ymax = Inf) 
 e1_main_plot1
 ```
 
@@ -511,7 +491,7 @@ e1_main_plot1
 
 ``` r
 ggsave(e1_main_plot1, file="e1_main11.pdf", 
-       width = 35, height = 37, units = "cm", device="pdf")
+       width = 25, height = 27, units = "cm", device="pdf")
 ```
 
 On the x axis, there are contexts, on the y axis – proportions of
@@ -669,7 +649,7 @@ as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef',
              RSE = 'RSE (%)'))
 ```
 
-<div id="repxshdpgl" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="vccjnkqrfz" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mean | SD   | SE     | RSE (%) |
@@ -783,19 +763,19 @@ as_raw_html(t_test_results %>%
                          p.value = 'p-value'))
 ```
 
-<div id="bfxrfpgynh" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="yjmujcxatc" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
-| Condition              | Mean | t-value |   p-value | parameter | conf.low | conf.high | method            | alternative |
-|:-----------------------|-----:|--------:|----------:|----------:|---------:|----------:|:------------------|:------------|
-| c neutral V1 li nibud  | 5.89 |    67.1 | 9.12e-171 |       271 |     5.72 |      6.06 | One Sample t-test | two.sided   |
-| d neutral V2 nibud     | 5.28 |    49.7 | 3.99e-138 |       271 |     5.07 |      5.49 | One Sample t-test | two.sided   |
-| e negative V1 li ni    | 2.76 |    24.1 |  2.16e-69 |       271 |     2.53 |      2.98 | One Sample t-test | two.sided   |
-| f negative V2 ni       | 4.17 |    32.5 |  1.43e-95 |       271 |     3.92 |      4.43 | One Sample t-test | two.sided   |
-| g negative V1 li nibud | 5.01 |    41.8 | 3.70e-120 |       271 |     4.77 |      5.24 | One Sample t-test | two.sided   |
-| h negative V2 nibud    | 4.85 |    41.9 | 1.90e-120 |       271 |     4.62 |      5.08 | One Sample t-test | two.sided   |
-| a neutral V1 li ni     | 3.33 |    25.0 |  3.10e-72 |       271 |     3.07 |      3.60 | One Sample t-test | two.sided   |
-| b neutral V2 ni        | 4.36 |    32.4 |  3.31e-95 |       271 |     4.10 |      4.63 | One Sample t-test | two.sided   |
+| Condition | Mean | t-value | p-value | parameter | conf.low | conf.high | method | alternative |
+|:---|---:|---:|---:|---:|---:|---:|:---|:---|
+| c neutral V1 li nibud | 5.89 | 67.1 | 9.12e-171 | 271 | 5.72 | 6.06 | One Sample t-test | two.sided |
+| d neutral V2 nibud | 5.28 | 49.7 | 3.99e-138 | 271 | 5.07 | 5.49 | One Sample t-test | two.sided |
+| e negative V1 li ni | 2.76 | 24.1 | 2.16e-69 | 271 | 2.53 | 2.98 | One Sample t-test | two.sided |
+| f negative V2 ni | 4.17 | 32.5 | 1.43e-95 | 271 | 3.92 | 4.43 | One Sample t-test | two.sided |
+| g negative V1 li nibud | 5.01 | 41.8 | 3.70e-120 | 271 | 4.77 | 5.24 | One Sample t-test | two.sided |
+| h negative V2 nibud | 4.85 | 41.9 | 1.90e-120 | 271 | 4.62 | 5.08 | One Sample t-test | two.sided |
+| a neutral V1 li ni | 3.33 | 25.0 | 3.10e-72 | 271 | 3.07 | 3.60 | One Sample t-test | two.sided |
+| b neutral V2 ni | 4.36 | 32.4 | 3.31e-95 | 271 | 4.10 | 4.63 | One Sample t-test | two.sided |
 
 </div>
 
@@ -902,6 +882,72 @@ oneway.test(rating1~condition,
     data:  rating1 and condition
     F = 90, num df = 7, denom df = 927, p-value <2e-16
 
+#### Two-way ANOVA?
+
+``` r
+lm_model <- lm(rating1 ~ indef * verb * context, data = e1_df)
+summary(lm_model)
+```
+
+
+    Call:
+    lm(formula = rating1 ~ indef * verb * context, data = e1_df)
+
+    Residuals:
+       Min     1Q Median     3Q    Max 
+     -4.89  -1.76   0.11   1.67   4.24 
+
+    Coefficients:
+                                     Estimate Std. Error t value Pr(>|t|)    
+    (Intercept)                        2.7574     0.1184   23.28  < 2e-16 ***
+    indefnibud                         2.2500     0.1675   13.43  < 2e-16 ***
+    verbV2                             1.4154     0.1675    8.45  < 2e-16 ***
+    contextneutral                     0.5772     0.1675    3.45  0.00058 ***
+    indefnibud:verbV2                 -1.5699     0.2369   -6.63  4.3e-11 ***
+    indefnibud:contextneutral          0.3051     0.2369    1.29  0.19785    
+    verbV2:contextneutral             -0.3897     0.2369   -1.65  0.10011    
+    indefnibud:verbV2:contextneutral  -0.0662     0.3350   -0.20  0.84343    
+    ---
+    Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+    Residual standard error: 1.95 on 2168 degrees of freedom
+    Multiple R-squared:  0.196, Adjusted R-squared:  0.194 
+    F-statistic: 75.6 on 7 and 2168 DF,  p-value: <2e-16
+
+``` r
+library(ordinal)
+e1_df$rating1 = as.factor(e1_df$rating1)
+clm_model <- clm(rating1 ~ indef * verb * context, data = e1_df)
+summary(clm_model)
+```
+
+    formula: rating1 ~ indef * verb * context
+    data:    e1_df
+
+     link  threshold nobs logLik   AIC     niter max.grad cond.H 
+     logit flexible  2176 -3887.37 7800.74 5(0)  3.70e-13 6.8e+02
+
+    Coefficients:
+                                     Estimate Std. Error z value Pr(>|z|)    
+    indefnibud                          1.952      0.157   12.46  < 2e-16 ***
+    verbV2                              1.218      0.154    7.91  2.5e-15 ***
+    contextneutral                      0.471      0.154    3.05   0.0023 ** 
+    indefnibud:verbV2                  -1.385      0.216   -6.42  1.4e-10 ***
+    indefnibud:contextneutral           0.319      0.218    1.46   0.1435    
+    verbV2:contextneutral              -0.284      0.218   -1.31   0.1917    
+    indefnibud:verbV2:contextneutral   -0.156      0.305   -0.51   0.6106    
+    ---
+    Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+    Threshold coefficients:
+        Estimate Std. Error z value
+    1|2   -0.496      0.112   -4.44
+    2|3    0.246      0.111    2.22
+    3|4    0.794      0.112    7.08
+    4|5    1.312      0.115   11.45
+    5|6    1.908      0.118   16.19
+    6|7    2.714      0.123   22.10
+
 ### Linear model and linear mixed model
 
 Well, ANOVA section seems redundant now.
@@ -913,44 +959,20 @@ I’ll come back with more :v: :sparkles:
 ``` r
 library(modelsummary)
 library(lmerTest)
-library(ordinal)
 library(gtsummary)
 ```
 
 ``` r
 e1_df$rating1 = as.factor(e1_df$rating1)
 
-stat_E1 <- clmm(rating1 ~ verb * indef * context + 
+clmm_model <- clmm(rating1 ~ verb * indef * context + 
   (1 | participant) + (1 | item), 
   contrasts = list(verb="contr.sum",
                    indef="contr.sum", 
                    context="contr.sum"), 
   data=e1_df)
-```
 
-``` r
-broom.mixed::tidy(stat_E1)
-```
-
-    # A tibble: 13 × 6
-       term                  estimate std.error statistic  p.value coef.type
-       <chr>                    <dbl>     <dbl>     <dbl>    <dbl> <chr>    
-     1 1|2                    -2.37      0.165    -14.4   7.57e-47 intercept
-     2 2|3                    -1.53      0.160     -9.57  1.10e-21 intercept
-     3 3|4                    -0.885     0.158     -5.62  1.94e- 8 intercept
-     4 4|5                    -0.266     0.157     -1.70  8.93e- 2 intercept
-     5 5|6                     0.458     0.157      2.93  3.44e- 3 intercept
-     6 6|7                     1.46      0.159      9.19  3.82e-20 intercept
-     7 verb1                  -0.180     0.0397    -4.53  6.02e- 6 location 
-     8 indef1                 -0.814     0.0423   -19.3   1.08e-82 location 
-     9 context1               -0.244     0.0401    -6.09  1.14e- 9 location 
-    10 verb1:indef1           -0.406     0.0404   -10.0   9.55e-24 location 
-    11 verb1:context1         -0.113     0.0396    -2.85  4.31e- 3 location 
-    12 indef1:context1         0.0674    0.0398     1.69  9.05e- 2 location 
-    13 verb1:indef1:context1   0.0215    0.0396     0.543 5.87e- 1 location 
-
-``` r
-summary(stat_E1)
+summary(clmm_model)
 ```
 
     Cumulative Link Mixed Model fitted with the Laplace approximation

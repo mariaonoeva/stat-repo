@@ -625,6 +625,8 @@ summary(lm_model)
 ```
 
 ```{r}
+library(ordinal)
+e1_df$rating1 = as.factor(e1_df$rating1)
 clm_model <- clm(rating1 ~ indef * verb * context, data = e1_df)
 summary(clm_model)
 ```
@@ -640,7 +642,6 @@ I'll come back with more :v: :sparkles:
 ```{r}
 library(modelsummary)
 library(lmerTest)
-library(ordinal)
 library(gtsummary)
 ```
 
