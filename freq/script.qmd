@@ -44,9 +44,9 @@ There is an option to download a version without abandoned trials from LRex and 
 
 -   standard local set up
 
-```{r eval=FALSE}
+```{r }
 # standard way of setting the directory locally on your machine
-setwd("/Users/maria.onoeva/Desktop/new_folder/GitHub/stat-repo")
+setwd("/Users/maria.onoeva/Desktop/new_folder/GitHub/stat-repo/freq")
 
 # loading all data
 all_df <-
@@ -58,7 +58,7 @@ all_df <-
 
 -   this one is more convenient for sharing online and with someone
 
-```{r}
+```{r eval=FALSE}
 library(here) # sets the dir
 # since I load it online, it's more convenient to do it via "here" package
 # loading all data
@@ -87,13 +87,11 @@ You can see the number of participants on LRex but just to double-check it I'll 
 
 # counts all participants 
 main_df %>%
-  distinct(participant) %>%
-  summarize(total_part = n())
+  summarise(total_part = n_distinct(participant))
 
 # summarizes items for all participants 
 main_df %>%
-  group_by(participant) %>%
-  summarize(items = n())
+  count(participant, name = "items")
 
 ```
 
@@ -297,7 +295,7 @@ I have commented out some lines for the plot but they are mostly cosmetics that 
 ```         
 ```
 
-```{r fig.height=5, fig.width=5}
+```{r fig.height=5, fig.width=5, include = FALSE}
 e1_main_plot <- ggplot(e1_df_relevel1, aes(fill=rating1, x=context)) + 
     geom_bar(position = "fill") +
     geom_hline(aes(yintercept=0.5), size=0.5) +
@@ -619,6 +617,18 @@ oneway.test(rating1~condition,
             var.equal = FALSE) # Welch ANOVA as variences aren't equal
 ```
 
+#### Two-way ANOVA?
+
+```{r}
+lm_model <- lm(rating1 ~ indef * verb * context, data = e1_df)
+summary(lm_model)
+```
+
+```{r}
+clm_model <- clm(rating1 ~ indef * verb * context, data = e1_df)
+summary(clm_model)
+```
+
 ### Linear model and linear mixed model
 
 Well, ANOVA section seems redundant now.
@@ -637,26 +647,12 @@ library(gtsummary)
 ```{r}
 e1_df$rating1 = as.factor(e1_df$rating1)
 
-stat_E1 <- clmm(rating1 ~ verb * indef * context + 
+clmm_model <- clmm(rating1 ~ verb * indef * context + 
   (1 | participant) + (1 | item), 
   contrasts = list(verb="contr.sum",
                    indef="contr.sum", 
                    context="contr.sum"), 
   data=e1_df)
 
-```
-
-```{r}
-broom.mixed::tidy(stat_E1)
-```
-
-```{r}
-summary(stat_E1)
-```
-
-```         
-```
-
-```{r}
-
+summary(clmm_model)
 ```
