@@ -332,6 +332,11 @@ names(verb.labs) <- c("V1 li", "V2")
 indef.labs <- c("NCIs", "nibud")
 names(indef.labs) <- c("ni", "nibud")
 
+facet_border <- data.frame(
+  xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf, 
+  verb = 'V1 li', indef = 'NCIs'
+)
+
 
 e1_main_plot1 <- ggplot(e1_df_relevel1, aes(fill = rating1, x = context)) + 
   geom_bar(position = "fill") +
@@ -351,8 +356,11 @@ e1_main_plot1 <- ggplot(e1_df_relevel1, aes(fill = rating1, x = context)) +
     axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))
   ) +
   xlab("Context") +
-  ylab("Proportions of rating")
-
+  ylab("Proportions of rating") + 
+  geom_rect(data = subset(e1_df_relevel1, verb  %in% c("V2") & indef %in% c("ni")), 
+                          fill = NA, colour = "blue", size = 4,
+                          xmin = -Inf,xmax = Inf,
+                          ymin = -Inf, ymax = Inf) 
 e1_main_plot1
 
 ggsave(e1_main_plot1, file="e1_main11.pdf", 
