@@ -14,8 +14,6 @@ Masha Onoeva
   - [Standard error](#standard-error)
   - [t-test](#t-test)
   - [ANOVA](#anova)
-  - [Linear model and linear mixed
-    model](#linear-model-and-linear-mixed-model)
   - [Cumulative Link Mixed Model](#cumulative-link-mixed-model)
 
 ## Info
@@ -377,7 +375,7 @@ as_raw_html(raw_summary %>% gt(groupname_col = 'indef',
   cols_label(verb = 'Verb'))
 ```
 
-<div id="dztmhfgcyb" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="bxbzwbrjeb" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mode | Median | Mean | Range | Variance | SD   |
@@ -472,11 +470,11 @@ e1_main_plot1 <- ggplot(e1_df_relevel1, aes(fill = rating1, x = context)) +
     text = element_text(size = 30),
     legend.text = element_text(size = 20),
     legend.key.size = unit(1, 'cm'),
-    legend.title = element_blank(),
-    axis.text = element_text(size = 25),
-    axis.title = element_text(size = 25),
-    axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
-    axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))
+    legend.title = element_blank()
+    # axis.text = element_text(size = 25),
+    # axis.title = element_text(size = 25),
+    # axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+    # axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))
   ) +
   xlab("Context") +
   ylab("Proportions of rating") + 
@@ -649,7 +647,7 @@ as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef',
              RSE = 'RSE (%)'))
 ```
 
-<div id="vccjnkqrfz" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="tuzumaagya" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mean | SD   | SE     | RSE (%) |
@@ -763,7 +761,7 @@ as_raw_html(t_test_results %>%
                          p.value = 'p-value'))
 ```
 
-<div id="yjmujcxatc" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="mdsfcdjouf" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 | Condition | Mean | t-value | p-value | parameter | conf.low | conf.high | method | alternative |
@@ -825,9 +823,17 @@ and in items. There are possibilities how to account for it for t-test
 
 ### ANOVA
 
-(All taken from [this web](https://statsandr.com/blog/anova-in-r/) and
-[this
-web](https://support.minitab.com/en-us/minitab/help-and-how-to/statistical-modeling/anova/supporting-topics/basics/what-is-anova/).)
+#### One-way ANOVA
+
+Disclaimer :point_up:: All of this with one-way ANOVA is done only for
+an explanatory and study purpose. My design is within-subject, so
+technically I cannot use one-way ANOVA. I violate so many things here
+:grimacing:
+
+Disclaimer :v:: All taken from [this
+web](https://statsandr.com/blog/anova-in-r/), [this
+web](https://support.minitab.com/en-us/minitab/help-and-how-to/statistical-modeling/anova/supporting-topics/basics/what-is-anova/)
+and Levshina (2016).
 
 ANOVA (Analysis of Variance) suits a bit better for the experiment but
 it’s still not quite there yet as it doesn’t care for random effects.
@@ -882,16 +888,52 @@ oneway.test(rating1~condition,
     data:  rating1 and condition
     F = 90, num df = 7, denom df = 927, p-value <2e-16
 
-#### Two-way ANOVA?
+Below is the most common output from ANOVA. Once again I violate perhaps
+all conditions that can be violated but who cares.
 
 ``` r
-lm_model <- lm(rating1 ~ indef * verb * context, data = e1_df)
-summary(lm_model)
+e1_df$rating1 <- as.numeric(e1_df$rating1)
+e1_df.aov <- aov(rating1~condition, data=e1_df)
+summary(e1_df.aov)
+```
+
+                  Df Sum Sq Mean Sq F value Pr(>F)    
+    condition      7   2020   288.6    75.6 <2e-16 ***
+    Residuals   2168   8274     3.8                   
+    ---
+    Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
+res <- residuals(e1_df.aov)
+pred <- predict(e1_df.aov)
+
+# Residuals vs Predicted Values
+plot(pred, res, 
+     xlab = "Predicted Values", 
+     ylab = "Residuals", 
+     main = "Residuals vs. Predicted Values",
+     pch = 20, col = "blue")
+abline(h = 0, col = "red", lty = 2)
+```
+
+![](script_files/figure-commonmark/unnamed-chunk-30-1.png)
+
+``` r
+# Q-Q Plot
+qqnorm(res)  # Create the Q-Q plot
+qqline(res, col = "red")  # Add a reference line
+```
+
+![](script_files/figure-commonmark/unnamed-chunk-30-2.png)
+
+``` r
+e1_df.lm <- lm(rating1~condition1, data=e1_df)
+summary(e1_df.lm)
 ```
 
 
     Call:
-    lm(formula = rating1 ~ indef * verb * context, data = e1_df)
+    lm(formula = rating1 ~ condition1, data = e1_df)
 
     Residuals:
        Min     1Q Median     3Q    Max 
@@ -899,14 +941,14 @@ summary(lm_model)
 
     Coefficients:
                                      Estimate Std. Error t value Pr(>|t|)    
-    (Intercept)                        2.7574     0.1184   23.28  < 2e-16 ***
-    indefnibud                         2.2500     0.1675   13.43  < 2e-16 ***
-    verbV2                             1.4154     0.1675    8.45  < 2e-16 ***
-    contextneutral                     0.5772     0.1675    3.45  0.00058 ***
-    indefnibud:verbV2                 -1.5699     0.2369   -6.63  4.3e-11 ***
-    indefnibud:contextneutral          0.3051     0.2369    1.29  0.19785    
-    verbV2:contextneutral             -0.3897     0.2369   -1.65  0.10011    
-    indefnibud:verbV2:contextneutral  -0.0662     0.3350   -0.20  0.84343    
+    (Intercept)                         3.335      0.118   28.15  < 2e-16 ***
+    condition1b neutral V2 ni           1.026      0.168    6.12  1.1e-09 ***
+    condition1c neutral V1 li nibud     2.555      0.168   15.25  < 2e-16 ***
+    condition1d neutral V2 nibud        1.945      0.168   11.61  < 2e-16 ***
+    condition1e negative V1 li ni      -0.577      0.168   -3.45  0.00058 ***
+    condition1f negative V2 ni          0.838      0.168    5.00  6.1e-07 ***
+    condition1g negative V1 li nibud    1.673      0.168    9.99  < 2e-16 ***
+    condition1h negative V2 nibud       1.518      0.168    9.06  < 2e-16 ***
     ---
     Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -948,11 +990,30 @@ summary(clm_model)
     5|6    1.908      0.118   16.19
     6|7    2.714      0.123   22.10
 
-### Linear model and linear mixed model
-
-Well, ANOVA section seems redundant now.
-
 ### Cumulative Link Mixed Model
+
+So far I looked whether my obtained means are different from each other.
+I just found out that some conditions significantly more natural then
+the others. But why? Well, maybe it’s a chance or maybe these three
+independent variables that I had impacted their naturalness. Using
+linear models one can now check how the independent variables change the
+dependent one.
+
+Just to remind:
+
+- rating from 1 to 7 is my dependent variable, it is ordinal type of
+  data (very important!)
+
+- three variables each with two levels are independent
+
+  - indef: ni/nibud
+
+  - context: neutral/negative
+
+  - verb: V1/V2
+
+Maybe one of the independent variables affected the dependent, maybe
+their combinations did.
 
 I’ll come back with more :v: :sparkles:
 

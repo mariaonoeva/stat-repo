@@ -347,11 +347,11 @@ e1_main_plot1 <- ggplot(e1_df_relevel1, aes(fill = rating1, x = context)) +
     text = element_text(size = 30),
     legend.text = element_text(size = 20),
     legend.key.size = unit(1, 'cm'),
-    legend.title = element_blank(),
-    axis.text = element_text(size = 25),
-    axis.title = element_text(size = 25),
-    axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
-    axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))
+    legend.title = element_blank()
+    # axis.text = element_text(size = 25),
+    # axis.title = element_text(size = 25),
+    # axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+    # axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))
   ) +
   xlab("Context") +
   ylab("Proportions of rating") + 
@@ -592,7 +592,11 @@ Another reason is that my sample data are not that independent as t-test require
 
 ### ANOVA
 
-(All taken from [this web](https://statsandr.com/blog/anova-in-r/) and [this web](https://support.minitab.com/en-us/minitab/help-and-how-to/statistical-modeling/anova/supporting-topics/basics/what-is-anova/).)
+#### One-way ANOVA
+
+Disclaimer :point_up:: All of this with one-way ANOVA is done only for an explanatory and study purpose. My design is within-subject, so technically I cannot use one-way ANOVA. I violate so many things here :grimacing:
+
+Disclaimer :v:: All taken from [this web](https://statsandr.com/blog/anova-in-r/), [this web](https://support.minitab.com/en-us/minitab/help-and-how-to/statistical-modeling/anova/supporting-topics/basics/what-is-anova/) and Levshina (2016).
 
 ANOVA (Analysis of Variance) suits a bit better for the experiment but it's still not quite there yet as it doesn't care for random effects. With t-test I compared two things only, now I can do it with all my conditions. ANOVA determines whether the means I have in my conditions are significantly different from each other. My hypotheses for ANOVA are:
 
@@ -616,12 +620,34 @@ oneway.test(rating1~condition,
             data = e1_df, 
             var.equal = FALSE) # Welch ANOVA as variences aren't equal
 ```
-
-#### Two-way ANOVA?
+Below is the most common output from ANOVA. Once again I violate perhaps all conditions that can be violated but who cares. 
 
 ```{r}
-lm_model <- lm(rating1 ~ indef * verb * context, data = e1_df)
-summary(lm_model)
+e1_df$rating1 <- as.numeric(e1_df$rating1)
+e1_df.aov <- aov(rating1~condition, data=e1_df)
+summary(e1_df.aov)
+```
+```{r}
+res <- residuals(e1_df.aov)
+pred <- predict(e1_df.aov)
+
+# Residuals vs Predicted Values
+plot(pred, res, 
+     xlab = "Predicted Values", 
+     ylab = "Residuals", 
+     main = "Residuals vs. Predicted Values",
+     pch = 20, col = "blue")
+abline(h = 0, col = "red", lty = 2)
+
+# Q-Q Plot
+qqnorm(res)  # Create the Q-Q plot
+qqline(res, col = "red")  # Add a reference line
+
+```
+
+```{r}
+e1_df.lm <- lm(rating1~condition1, data=e1_df)
+summary(e1_df.lm)
 ```
 
 ```{r}
@@ -631,11 +657,23 @@ clm_model <- clm(rating1 ~ indef * verb * context, data = e1_df)
 summary(clm_model)
 ```
 
-### Linear model and linear mixed model
-
-Well, ANOVA section seems redundant now.
-
 ### Cumulative Link Mixed Model
+
+So far I looked whether my obtained means are different from each other. I just found out that some conditions significantly more natural then the others. But why? Well, maybe it's a chance or maybe these three independent variables that I had impacted their naturalness. Using linear models one can now check how the independent variables change the dependent one.
+
+Just to remind:
+
+-   rating from 1 to 7 is my dependent variable, it is ordinal type of data (very important!)
+
+-   three variables each with two levels are independent
+
+    -   indef: ni/nibud
+
+    -   context: neutral/negative
+
+    -   verb: V1/V2
+
+Maybe one of the independent variables affected the dependent, maybe their combinations did.
 
 I'll come back with more :v: :sparkles:
 
@@ -656,4 +694,7 @@ clmm_model <- clmm(rating1 ~ verb * indef * context +
   data=e1_df)
 
 summary(clmm_model)
+```
+
+```{r}
 ```
