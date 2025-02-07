@@ -375,7 +375,7 @@ as_raw_html(raw_summary %>% gt(groupname_col = 'indef',
   cols_label(verb = 'Verb'))
 ```
 
-<div id="lxzlucozyx" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="gzozfhmtez" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mode | Median | Mean | Range | Variance | SD   |
@@ -647,7 +647,7 @@ as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef',
              RSE = 'RSE (%)'))
 ```
 
-<div id="drcsnlwglc" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="pvxiutonzb" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mean | SD   | SE     | RSE (%) |
@@ -761,7 +761,7 @@ as_raw_html(t_test_results %>%
                          p.value = 'p-value'))
 ```
 
-<div id="dqkpxkoyvo" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="thlgebaomk" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 | Condition | Mean | t-value | p-value | parameter | conf.low | conf.high | method | alternative |
@@ -876,9 +876,7 @@ car::leveneTest(rating1~condition, e1_df)
     ---
     Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-Welch ANOVA is present below. p-value is small, so we reject H0 that all
-groups are equal. But it only means that at least one is different but
-which one? And what is the relation between other variables?
+Welch ANOVA is present below.
 
 ``` r
 oneway.test(rating1~condition, 
@@ -893,44 +891,27 @@ oneway.test(rating1~condition,
     F = 90, num df = 7, denom df = 927, p-value <2e-16
 
 Below is the most common output from ANOVA. Once again I violate perhaps
-all conditions that can be violated but who cares.
+all conditions that can be violated but who cares. p-value is small, so
+we reject H0 that all groups are equal. But it only means that at least
+one is different but which one? And what is the relation between other
+variables?
 
 ``` r
 e1_df$rating1 <- as.numeric(e1_df$rating1)
-e1_df.aov <- aov(rating1~condition, data=e1_df)
+e1_df.aov <- aov(rating1~condition1, data=e1_df)
 summary(e1_df.aov)
 ```
 
                   Df Sum Sq Mean Sq F value Pr(>F)    
-    condition      7   2020   288.6    75.6 <2e-16 ***
+    condition1     7   2020   288.6    75.6 <2e-16 ***
     Residuals   2168   8274     3.8                   
     ---
     Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-``` r
-res <- residuals(e1_df.aov)
-pred <- predict(e1_df.aov)
-
-# Residuals vs Predicted Values
-plot(pred, res, 
-     xlab = "Predicted Values", 
-     ylab = "Residuals", 
-     main = "Residuals vs. Predicted Values",
-     pch = 20, col = "blue")
-abline(h = 0, col = "red", lty = 2)
-```
-
-![](script_files/figure-commonmark/unnamed-chunk-30-1.png)
+I’m going to try another trick here: instead of aov() I’ll use lm().
 
 ``` r
-# Q-Q Plot
-qqnorm(res)  # Create the Q-Q plot
-qqline(res, col = "red")  # Add a reference line
-```
-
-![](script_files/figure-commonmark/unnamed-chunk-30-2.png)
-
-``` r
+e1_df$rating1 <- as.numeric(e1_df$rating1)
 e1_df.lm <- lm(rating1~condition1, data=e1_df)
 summary(e1_df.lm)
 ```
@@ -959,6 +940,29 @@ summary(e1_df.lm)
     Residual standard error: 1.95 on 2168 degrees of freedom
     Multiple R-squared:  0.196, Adjusted R-squared:  0.194 
     F-statistic: 75.6 on 7 and 2168 DF,  p-value: <2e-16
+
+``` r
+res <- residuals(e1_df.aov)
+pred <- predict(e1_df.aov)
+
+# Residuals vs Predicted Values
+plot(pred, res, 
+     xlab = "Predicted Values", 
+     ylab = "Residuals", 
+     main = "Residuals vs. Predicted Values",
+     pch = 20, col = "blue")
+abline(h = 0, col = "red", lty = 2)
+```
+
+![](script_files/figure-commonmark/unnamed-chunk-31-1.png)
+
+``` r
+# Q-Q Plot
+qqnorm(res)  # Create the Q-Q plot
+qqline(res, col = "red")  # Add a reference line
+```
+
+![](script_files/figure-commonmark/unnamed-chunk-31-2.png)
 
 ``` r
 library(ordinal)

@@ -615,7 +615,7 @@ e1_df$condition = as.factor(e1_df$condition)
 car::leveneTest(rating1~condition, e1_df)
 ```
 
-Welch ANOVA is present below. p-value is small, so we reject H0 that all groups are equal. But it only means that at least one is different but which one? And what is the relation between other variables?
+Welch ANOVA is present below. 
 
 ```{r}
 oneway.test(rating1~condition, 
@@ -623,12 +623,19 @@ oneway.test(rating1~condition,
             var.equal = FALSE) # Welch ANOVA as variences aren't equal
 ```
 
-Below is the most common output from ANOVA. Once again I violate perhaps all conditions that can be violated but who cares.
+Below is the most common output from ANOVA. Once again I violate perhaps all conditions that can be violated but who cares. p-value is small, so we reject H0 that all groups are equal. But it only means that at least one is different but which one? And what is the relation between other variables?
 
 ```{r}
 e1_df$rating1 <- as.numeric(e1_df$rating1)
-e1_df.aov <- aov(rating1~condition, data=e1_df)
+e1_df.aov <- aov(rating1~condition1, data=e1_df)
 summary(e1_df.aov)
+```
+I'm going to try another trick here: instead of aov() I'll use lm(). 
+
+```{r}
+e1_df$rating1 <- as.numeric(e1_df$rating1)
+e1_df.lm <- lm(rating1~condition1, data=e1_df)
+summary(e1_df.lm)
 ```
 
 ```{r}
@@ -647,11 +654,6 @@ abline(h = 0, col = "red", lty = 2)
 qqnorm(res)  # Create the Q-Q plot
 qqline(res, col = "red")  # Add a reference line
 
-```
-
-```{r}
-e1_df.lm <- lm(rating1~condition1, data=e1_df)
-summary(e1_df.lm)
 ```
 
 ```{r}
