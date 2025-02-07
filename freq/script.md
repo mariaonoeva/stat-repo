@@ -375,7 +375,7 @@ as_raw_html(raw_summary %>% gt(groupname_col = 'indef',
   cols_label(verb = 'Verb'))
 ```
 
-<div id="bxbzwbrjeb" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="lxzlucozyx" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mode | Median | Mean | Range | Variance | SD   |
@@ -647,7 +647,7 @@ as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef',
              RSE = 'RSE (%)'))
 ```
 
-<div id="tuzumaagya" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="drcsnlwglc" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mean | SD   | SE     | RSE (%) |
@@ -761,7 +761,7 @@ as_raw_html(t_test_results %>%
                          p.value = 'p-value'))
 ```
 
-<div id="mdsfcdjouf" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="dqkpxkoyvo" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 | Condition | Mean | t-value | p-value | parameter | conf.low | conf.high | method | alternative |
@@ -825,15 +825,19 @@ and in items. There are possibilities how to account for it for t-test
 
 #### One-way ANOVA
 
-Disclaimer :point_up:: All of this with one-way ANOVA is done only for
-an explanatory and study purpose. My design is within-subject, so
-technically I cannot use one-way ANOVA. I violate so many things here
-:grimacing:
-
-Disclaimer :v:: All taken from [this
-web](https://statsandr.com/blog/anova-in-r/), [this
-web](https://support.minitab.com/en-us/minitab/help-and-how-to/statistical-modeling/anova/supporting-topics/basics/what-is-anova/)
-and Levshina (2016).
+> [!NOTE]
+>
+> ### Disclaimer
+>
+> :point_up:: All of this with one-way ANOVA is done only for an
+> explanatory and study purpose. My design is within-subject, so
+> technically I cannot use one-way ANOVA. I violate so many things here
+> :grimacing:
+>
+> :v:: All taken from [this
+> web](https://statsandr.com/blog/anova-in-r/), [this
+> web](https://support.minitab.com/en-us/minitab/help-and-how-to/statistical-modeling/anova/supporting-topics/basics/what-is-anova/)
+> and Levshina (2016).
 
 ANOVA (Analysis of Variance) suits a bit better for the experiment but
 it’s still not quite there yet as it doesn’t care for random effects.
@@ -1070,3 +1074,5 @@ summary(clmm_model)
     4|5   -0.266      0.157   -1.70
     5|6    0.458      0.157    2.93
     6|7    1.464      0.159    9.19
+
+Петя учился в Париже или во Франции

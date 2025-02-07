@@ -594,9 +594,11 @@ Another reason is that my sample data are not that independent as t-test require
 
 #### One-way ANOVA
 
-Disclaimer :point_up:: All of this with one-way ANOVA is done only for an explanatory and study purpose. My design is within-subject, so technically I cannot use one-way ANOVA. I violate so many things here :grimacing:
+::: {.callout-note title="Disclaimer"}
+:point_up:: All of this with one-way ANOVA is done only for an explanatory and study purpose. My design is within-subject, so technically I cannot use one-way ANOVA. I violate so many things here :grimacing:
 
-Disclaimer :v:: All taken from [this web](https://statsandr.com/blog/anova-in-r/), [this web](https://support.minitab.com/en-us/minitab/help-and-how-to/statistical-modeling/anova/supporting-topics/basics/what-is-anova/) and Levshina (2016).
+:v:: All taken from [this web](https://statsandr.com/blog/anova-in-r/), [this web](https://support.minitab.com/en-us/minitab/help-and-how-to/statistical-modeling/anova/supporting-topics/basics/what-is-anova/) and Levshina (2016).
+:::
 
 ANOVA (Analysis of Variance) suits a bit better for the experiment but it's still not quite there yet as it doesn't care for random effects. With t-test I compared two things only, now I can do it with all my conditions. ANOVA determines whether the means I have in my conditions are significantly different from each other. My hypotheses for ANOVA are:
 
@@ -620,13 +622,15 @@ oneway.test(rating1~condition,
             data = e1_df, 
             var.equal = FALSE) # Welch ANOVA as variences aren't equal
 ```
-Below is the most common output from ANOVA. Once again I violate perhaps all conditions that can be violated but who cares. 
+
+Below is the most common output from ANOVA. Once again I violate perhaps all conditions that can be violated but who cares.
 
 ```{r}
 e1_df$rating1 <- as.numeric(e1_df$rating1)
 e1_df.aov <- aov(rating1~condition, data=e1_df)
 summary(e1_df.aov)
 ```
+
 ```{r}
 res <- residuals(e1_df.aov)
 pred <- predict(e1_df.aov)
@@ -698,3 +702,5 @@ summary(clmm_model)
 
 ```{r}
 ```
+
+Петя учился в Париже или во Франции
