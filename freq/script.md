@@ -375,7 +375,7 @@ as_raw_html(raw_summary %>% gt(groupname_col = 'indef',
   cols_label(verb = 'Verb'))
 ```
 
-<div id="gzozfhmtez" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="flqvtzxtsc" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mode | Median | Mean | Range | Variance | SD   |
@@ -647,7 +647,7 @@ as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef',
              RSE = 'RSE (%)'))
 ```
 
-<div id="pvxiutonzb" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="ncssouuntl" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mean | SD   | SE     | RSE (%) |
@@ -761,7 +761,7 @@ as_raw_html(t_test_results %>%
                          p.value = 'p-value'))
 ```
 
-<div id="thlgebaomk" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="xdkeqbegfd" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 | Condition | Mean | t-value | p-value | parameter | conf.low | conf.high | method | alternative |
@@ -881,7 +881,7 @@ Welch ANOVA is present below.
 ``` r
 oneway.test(rating1~condition, 
             data = e1_df, 
-            var.equal = FALSE) # Welch ANOVA as variences aren't equal
+            var.equal = FALSE) # Welch ANOVA as variances aren't equal
 ```
 
 
@@ -892,9 +892,7 @@ oneway.test(rating1~condition,
 
 Below is the most common output from ANOVA. Once again I violate perhaps
 all conditions that can be violated but who cares. p-value is small, so
-we reject H0 that all groups are equal. But it only means that at least
-one is different but which one? And what is the relation between other
-variables?
+we reject H0 that all groups are equal.
 
 ``` r
 e1_df$rating1 <- as.numeric(e1_df$rating1)
@@ -908,17 +906,180 @@ summary(e1_df.aov)
     ---
     Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-I’m going to try another trick here: instead of aov() I’ll use lm().
+##### Df (degree of freedom)
+
+- condition1: my 8 groups that I compare :arrow_right: 8 - 1 = 7
+
+- Residuals: total observations - number of groups :arrow_right: 2176 -
+  8 = 2168
+
+##### Sum Sq (Sum of Squares)
+
+**condition1:** between group variance – 2020 (Explained variance)
+
+How to obtain this? Let’s count this manually.
 
 ``` r
-e1_df$rating1 <- as.numeric(e1_df$rating1)
-e1_df.lm <- lm(rating1~condition1, data=e1_df)
+# adding all means to one vector from the descriptive table above
+all_means <- raw_summary1$Mean
+
+# computing a grand mean, sum of all means in condition1 divided by their count 
+overall_mean <- sum(all_means)/8 
+
+# new vector, counting square differences: individual mean - grand mean
+all_means_var <- (all_means-overall_mean)^2
+
+# multiplying vector by total occurrence for each group, 272 inputs and sum 
+sum2_condition <- sum(all_means_var*272) 
+
+# voila, the same value!
+sum2_condition
+```
+
+    [1] 2020
+
+**Residuals**: within group variance – 8274 (Unexplained variance)
+$$ SumSq_{Residulas} = SumSq_{Total} - SumSq_{Between}$$ SumSq Total:
+how each value varied from the grand mean
+
+``` r
+# all obtained values from E1
+all_rating <- e1_df$rating1
+
+# how far was the value from the overall grand mean, squaring and summing all
+sum2_total <- sum((all_rating-overall_mean)^2)
+sum2_total
+```
+
+    [1] 10294
+
+And SumSq Residuals:
+
+``` r
+sum2_res <- sum2_total - sum2_condition
+
+# voila again! the same value from the ANOVA summary for residuals sumsq 
+sum2_res
+```
+
+    [1] 8274
+
+##### Mean Sq
+
+- condition1 :arrow_right: SumSq / Df = 288.6
+
+- Residuals :arrow_right: SumSq / Df = 3.8
+
+``` r
+print(mean2_condition <- sum2_condition/7)
+```
+
+    [1] 289
+
+``` r
+print(mean2_residuls <- sum2_res/2168)
+```
+
+    [1] 3.82
+
+##### F-value
+
+$$
+F = \frac{explained \, variance}{unexplained\,variance} = 75.6
+$$
+
+or
+
+$$
+F = \frac{Mean2_{condition1}}{Mean2_{residuals}} = 75.6
+$$
+
+``` r
+f_value <- mean2_condition/mean2_residuls
+f_value # yay! this is the same!!!
+```
+
+    [1] 75.6
+
+##### p-value
+
+p-value is teeny-tiny, so given this data set, the probability of all
+means being equal is this much:
+
+``` r
+p_value <- pf(f_value, 7, 2168, lower.tail = FALSE)
+p_value
+```
+
+    [1] 2.82e-98
+
+But it only means that at least one is different but which one? And what
+is the relation between other variables?
+
+#### Three-way ANOVA and lm()
+
+Wait a sec, where is a two-way ANOVA? Well, since we moved to finally
+the independent variables – verb, indefinite and context–, ANOVA is
+three way now. Seems clear, if there are two variables, then it’s two
+way ANOVA.
+
+``` r
+e1_df.aov3 <- aov(rating1~verb*indef*context, data = e1_df)
+summary(e1_df.aov3)
+```
+
+                         Df Sum Sq Mean Sq F value  Pr(>F)    
+    verb                  1     96      96   25.04 6.1e-07 ***
+    indef                 1   1395    1395  365.43 < 2e-16 ***
+    context               1    146     146   38.31 7.2e-10 ***
+    verb:indef            1    349     349   91.57 < 2e-16 ***
+    verb:context          1     24      24    6.37   0.012 *  
+    indef:context         1     10      10    2.64   0.104    
+    verb:indef:context    1      0       0    0.04   0.843    
+    Residuals          2168   8274       4                    
+    ---
+    Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+In principle, it does all of the described steps above but for each
+group. I’ll do it for verb here.
+
+``` r
+overall_mean <- mean(raw_summary1$Mean)
+
+verb_V1 <- e1_df %>%
+  filter(verb == "V1 li")
+
+verb_V2 <- e1_df %>%
+  filter(verb == "V2")
+
+mean_V1 <- mean(verb_V1$rating1)
+mean_V2 <- mean(verb_V2$rating1)
+
+observ_verb <- 1088
+
+sum2_verb <- observ_verb * (mean_V1-overall_mean)^2 + observ_verb * (mean_V2-overall_mean)^2
+sum2_verb
+```
+
+    [1] 95.6
+
+It works! So this model now tells me that all my three factors influence
+the independent variable. There is also an interaction between verb and
+indef and a weaker interaction of verb and context. What it does it
+compares these three groups and their means to the grand mean. And what
+I need to know how my levels within factors affect rating.
+
+So I’m going to try another trick here: instead of aov() I’ll use lm().
+
+``` r
+e1_df$rating1 <- as.numeric(e1_df$rating1) # data need to be factorial
+e1_df.lm <- lm(rating1~verb*indef*context, data=e1_df)
 summary(e1_df.lm)
 ```
 
 
     Call:
-    lm(formula = rating1 ~ condition1, data = e1_df)
+    lm(formula = rating1 ~ verb * indef * context, data = e1_df)
 
     Residuals:
        Min     1Q Median     3Q    Max 
@@ -926,20 +1087,23 @@ summary(e1_df.lm)
 
     Coefficients:
                                      Estimate Std. Error t value Pr(>|t|)    
-    (Intercept)                         3.335      0.118   28.15  < 2e-16 ***
-    condition1b neutral V2 ni           1.026      0.168    6.12  1.1e-09 ***
-    condition1c neutral V1 li nibud     2.555      0.168   15.25  < 2e-16 ***
-    condition1d neutral V2 nibud        1.945      0.168   11.61  < 2e-16 ***
-    condition1e negative V1 li ni      -0.577      0.168   -3.45  0.00058 ***
-    condition1f negative V2 ni          0.838      0.168    5.00  6.1e-07 ***
-    condition1g negative V1 li nibud    1.673      0.168    9.99  < 2e-16 ***
-    condition1h negative V2 nibud       1.518      0.168    9.06  < 2e-16 ***
+    (Intercept)                        2.7574     0.1184   23.28  < 2e-16 ***
+    verbV2                             1.4154     0.1675    8.45  < 2e-16 ***
+    indefnibud                         2.2500     0.1675   13.43  < 2e-16 ***
+    contextneutral                     0.5772     0.1675    3.45  0.00058 ***
+    verbV2:indefnibud                 -1.5699     0.2369   -6.63  4.3e-11 ***
+    verbV2:contextneutral             -0.3897     0.2369   -1.65  0.10011    
+    indefnibud:contextneutral          0.3051     0.2369    1.29  0.19785    
+    verbV2:indefnibud:contextneutral  -0.0662     0.3350   -0.20  0.84343    
     ---
     Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
     Residual standard error: 1.95 on 2168 degrees of freedom
     Multiple R-squared:  0.196, Adjusted R-squared:  0.194 
     F-statistic: 75.6 on 7 and 2168 DF,  p-value: <2e-16
+
+Results from the bottom of the summary might seem familiar. There are
+degrees of freedom for residuals, F-statistic/value and p-value.
 
 ``` r
 res <- residuals(e1_df.aov)
@@ -952,17 +1116,11 @@ plot(pred, res,
      main = "Residuals vs. Predicted Values",
      pch = 20, col = "blue")
 abline(h = 0, col = "red", lty = 2)
-```
 
-![](script_files/figure-commonmark/unnamed-chunk-31-1.png)
-
-``` r
 # Q-Q Plot
 qqnorm(res)  # Create the Q-Q plot
 qqline(res, col = "red")  # Add a reference line
 ```
-
-![](script_files/figure-commonmark/unnamed-chunk-31-2.png)
 
 ``` r
 library(ordinal)
@@ -1034,7 +1192,7 @@ library(gtsummary)
 ``` r
 e1_df$rating1 = as.factor(e1_df$rating1)
 
-clmm_model <- clmm(rating1 ~ verb * indef * context + 
+clmm_model <- clmm(rating1 ~ verb * context * indef + 
   (1 | participant) + (1 | item), 
   contrasts = list(verb="contr.sum",
                    indef="contr.sum", 
@@ -1046,11 +1204,11 @@ summary(clmm_model)
 
     Cumulative Link Mixed Model fitted with the Laplace approximation
 
-    formula: rating1 ~ verb * indef * context + (1 | participant) + (1 | item)
+    formula: rating1 ~ verb * context * indef + (1 | participant) + (1 | item)
     data:    e1_df
 
      link  threshold nobs logLik   AIC     niter       max.grad cond.H 
-     logit flexible  2176 -3681.28 7392.57 2723(10896) 1.71e-03 2.8e+02
+     logit flexible  2176 -3681.28 7392.57 2729(10920) 4.90e-03 2.8e+02
 
     Random effects:
      Groups      Name        Variance Std.Dev.
@@ -1061,12 +1219,12 @@ summary(clmm_model)
     Coefficients:
                           Estimate Std. Error z value Pr(>|z|)    
     verb1                  -0.1795     0.0397   -4.53  6.0e-06 ***
-    indef1                 -0.8142     0.0423  -19.26  < 2e-16 ***
     context1               -0.2440     0.0401   -6.09  1.1e-09 ***
-    verb1:indef1           -0.4060     0.0404  -10.05  < 2e-16 ***
+    indef1                 -0.8142     0.0423  -19.26  < 2e-16 ***
     verb1:context1         -0.1130     0.0396   -2.85   0.0043 ** 
-    indef1:context1         0.0674     0.0398    1.69   0.0905 .  
-    verb1:indef1:context1   0.0215     0.0396    0.54   0.5873    
+    verb1:indef1           -0.4060     0.0404  -10.05  < 2e-16 ***
+    context1:indef1         0.0674     0.0398    1.69   0.0905 .  
+    verb1:context1:indef1   0.0215     0.0396    0.54   0.5872    
     ---
     Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -1078,5 +1236,3 @@ summary(clmm_model)
     4|5   -0.266      0.157   -1.70
     5|6    0.458      0.157    2.93
     6|7    1.464      0.159    9.19
-
-Петя учился в Париже или во Франции
