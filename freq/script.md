@@ -375,7 +375,7 @@ as_raw_html(raw_summary %>% gt(groupname_col = 'indef',
   cols_label(verb = 'Verb'))
 ```
 
-<div id="flqvtzxtsc" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="brezyxocih" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mode | Median | Mean | Range | Variance | SD   |
@@ -647,7 +647,7 @@ as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef',
              RSE = 'RSE (%)'))
 ```
 
-<div id="ncssouuntl" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="ppbmvnuczs" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mean | SD   | SE     | RSE (%) |
@@ -761,7 +761,7 @@ as_raw_html(t_test_results %>%
                          p.value = 'p-value'))
 ```
 
-<div id="xdkeqbegfd" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="iitchtwgpd" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 | Condition | Mean | t-value | p-value | parameter | conf.low | conf.high | method | alternative |
@@ -1018,10 +1018,9 @@ is the relation between other variables?
 
 #### Three-way ANOVA and lm()
 
-Wait a sec, where is a two-way ANOVA? Well, since we moved to finally
-the independent variables – verb, indefinite and context–, ANOVA is
-three way now. Seems clear, if there are two variables, then it’s two
-way ANOVA.
+Wait a sec, where is a two-way ANOVA? Well, since we moved to the
+independent variables (finally!), ANOVA is three way now. Seems clear,
+if there are two variables, then it’s two way ANOVA.
 
 ``` r
 e1_df.aov3 <- aov(rating1~verb*indef*context, data = e1_df)
@@ -1065,11 +1064,17 @@ sum2_verb
 
 It works! So this model now tells me that all my three factors influence
 the independent variable. There is also an interaction between verb and
-indef and a weaker interaction of verb and context. What it does it
-compares these three groups and their means to the grand mean. And what
-I need to know how my levels within factors affect rating.
+indef and a weaker interaction of verb and context. It is not ideal but
+it already deals with the independent variables. What it does it
+compares these three groups and their means to the grand mean but it
+doesn’t tell how much the independent variables affect the dependent
+one.
 
 So I’m going to try another trick here: instead of aov() I’ll use lm().
+Results from the bottom of the summary might seem familiar. There are
+degrees of freedom for residuals, F-statistic/value and p-value. So lm
+estimates coefficients for factor levels whereas ANOVA compares means
+between the groups.
 
 ``` r
 e1_df$rating1 <- as.numeric(e1_df$rating1) # data need to be factorial
@@ -1102,24 +1107,18 @@ summary(e1_df.lm)
     Multiple R-squared:  0.196, Adjusted R-squared:  0.194 
     F-statistic: 75.6 on 7 and 2168 DF,  p-value: <2e-16
 
-Results from the bottom of the summary might seem familiar. There are
-degrees of freedom for residuals, F-statistic/value and p-value.
-
 ``` r
-res <- residuals(e1_df.aov)
-pred <- predict(e1_df.aov)
+e1_df$rating1 = as.factor(e1_df$rating1)
+e1_df$condition1 = as.factor(e1_df$condition1)
+e1_df$context = as.factor(e1_df$context)
 
-# Residuals vs Predicted Values
-plot(pred, res, 
-     xlab = "Predicted Values", 
-     ylab = "Residuals", 
-     main = "Residuals vs. Predicted Values",
-     pch = 20, col = "blue")
-abline(h = 0, col = "red", lty = 2)
+scat_plot <- ggplot(e1_df, aes(x=context, y=rating1, fill=condition1, group=condition1)) +
+  geom_boxplot() +  
+  geom_jitter(width = 0.2, alpha = 0.4)+
+  facet_wrap(~verb+indef) +
+  scale_color_brewer(palette = "Set2")
 
-# Q-Q Plot
-qqnorm(res)  # Create the Q-Q plot
-qqline(res, col = "red")  # Add a reference line
+scat_plot
 ```
 
 ``` r
@@ -1155,6 +1154,16 @@ summary(clm_model)
     4|5    1.312      0.115   11.45
     5|6    1.908      0.118   16.19
     6|7    2.714      0.123   22.10
+
+Is that it? Is this the final model? No :smiling_imp:
+
+Now we want to be sure that the effects we see are from the independent
+variables but not from random participants variation or bad items. You
+see, the items could have been very bad, e.g., there was one that
+everyone disliked and that influenced the ratings. Or some participants
+were somehow weird and assessed questions in a particular way. What I
+need to know now, that is my results are reliable even if these factors
+are included, so I need **a mixed model**.
 
 ### Cumulative Link Mixed Model
 

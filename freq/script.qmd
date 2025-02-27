@@ -692,7 +692,7 @@ print(mean2_residuls <- sum2_res/2168)
 
 ```
 
-##### F-value 
+##### F-value
 
 $$
 F = \frac{explained \, variance}{unexplained\,variance} = 75.6
@@ -709,7 +709,7 @@ f_value <- mean2_condition/mean2_residuls
 f_value # yay! this is the same!!!
 ```
 
-##### p-value 
+##### p-value
 
 p-value is teeny-tiny, so given this data set, the probability of all means being equal is this much:
 
@@ -722,7 +722,7 @@ But it only means that at least one is different but which one? And what is the 
 
 #### Three-way ANOVA and lm()
 
-Wait a sec, where is a two-way ANOVA? Well, since we moved to finally the independent variables – verb, indefinite and context–, ANOVA is three way now. Seems clear, if there are two variables, then it's two way ANOVA.
+Wait a sec, where is a two-way ANOVA? Well, since we moved to the independent variables (finally!), ANOVA is three way now. Seems clear, if there are two variables, then it's two way ANOVA.
 
 ```{r}
 e1_df.aov3 <- aov(rating1~verb*indef*context, data = e1_df)
@@ -749,9 +749,9 @@ sum2_verb <- observ_verb * (mean_V1-overall_mean)^2 + observ_verb * (mean_V2-ove
 sum2_verb
 ```
 
-It works! So this model now tells me that all my three factors influence the independent variable. There is also an interaction between verb and indef and a weaker interaction of verb and context. What it does it compares these three groups and their means to the grand mean. And what I need to know how my levels within factors affect rating.
+It works! So this model now tells me that all my three factors influence the independent variable. There is also an interaction between verb and indef and a weaker interaction of verb and context. It is not ideal but it already deals with the independent variables. What it does it compares these three groups and their means to the grand mean but it doesn't tell how much the independent variables affect the dependent one.
 
-So I'm going to try another trick here: instead of aov() I'll use lm().
+So I'm going to try another trick here: instead of aov() I'll use lm(). Results from the bottom of the summary might seem familiar. There are degrees of freedom for residuals, F-statistic/value and p-value. So lm estimates coefficients for factor levels whereas ANOVA compares means between the groups.
 
 ```{r}
 e1_df$rating1 <- as.numeric(e1_df$rating1) # data need to be factorial
@@ -759,23 +759,18 @@ e1_df.lm <- lm(rating1~verb*indef*context, data=e1_df)
 summary(e1_df.lm)
 ```
 
-Results from the bottom of the summary might seem familiar. There are degrees of freedom for residuals, F-statistic/value and p-value.
-
 ```{r eval = FALSE}
-res <- residuals(e1_df.aov)
-pred <- predict(e1_df.aov)
+e1_df$rating1 = as.factor(e1_df$rating1)
+e1_df$condition1 = as.factor(e1_df$condition1)
+e1_df$context = as.factor(e1_df$context)
 
-# Residuals vs Predicted Values
-plot(pred, res, 
-     xlab = "Predicted Values", 
-     ylab = "Residuals", 
-     main = "Residuals vs. Predicted Values",
-     pch = 20, col = "blue")
-abline(h = 0, col = "red", lty = 2)
+scat_plot <- ggplot(e1_df, aes(x=context, y=rating1, 
+                               fill=condition1, group=condition1)) +
+  geom_boxplot() +  
+  geom_jitter(width = 0.2, alpha = 0.4)+
+  facet_wrap(~verb+indef)
 
-# Q-Q Plot
-qqnorm(res)  # Create the Q-Q plot
-qqline(res, col = "red")  # Add a reference line
+scat_plot
 
 ```
 
@@ -786,11 +781,13 @@ clm_model <- clm(rating1 ~ indef * verb * context, data = e1_df)
 summary(clm_model)
 ```
 
+Is that it? Is this the final model? No :smiling_imp:
+
+Now we want to be sure that the effects we see come from the independent variables but not from random participants variation or bad items. You see, some items could have been very bad, e.g., there was an error in one and everyone disliked, so that influenced the ratings. Or some participants were somehow weird and assessed questions in a particular way. What I need to know now, that is my results are reliable even if these factors are included, so I need **a mixed model**.
+
 ### Cumulative Link Mixed Model
 
-So far I looked whether my obtained means are different from each other. I just found out that some conditions significantly more natural then the others. But why? Well, maybe it's a chance or maybe these three independent variables that I had impacted their naturalness. Using linear models one can now check how the independent variables change the dependent one.
-
-Just to remind:
+So far I looked whether my obtained means are different from each other. I just found out that some conditions significantly more natural then the others. But why? Well, maybe it's a chance or maybe these three independent variables that I had impacted their naturalness. Just to remind:
 
 -   rating from 1 to 7 is my dependent variable, it is ordinal type of data (very important!)
 
@@ -815,7 +812,7 @@ library(gtsummary)
 ```{r}
 e1_df$rating1 = as.factor(e1_df$rating1)
 
-clmm_model <- clmm(rating1 ~ verb * context * indef + 
+clmm_model <- clmm(rating1 ~ verb * context/indef + 
   (1 | participant) + (1 | item), 
   contrasts = list(verb="contr.sum",
                    indef="contr.sum", 
