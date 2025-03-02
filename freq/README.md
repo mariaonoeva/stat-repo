@@ -1,7 +1,5 @@
 # stat-repo
-My statistics repository 
-
-Hi, this is my repository dedicated to statistics. I post here my R scripts and various statistical stuff. 
+My freq statistics repository 
 
 Materials: 
 - I like this web about statistics https://www.crumplab.com/statistics/ 
