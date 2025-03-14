@@ -810,6 +810,16 @@ library(gtsummary)
 ```
 
 ```{r}
+e1_df$verb = as.factor(e1_df$verb)
+e1_df$context = as.factor(e1_df$context)
+e1_df$indef = as.factor(e1_df$indef)
+
+contrasts(e1_df$verb)
+contrasts(e1_df$context)
+contrasts(e1_df$indef)
+```
+
+```{r}
 e1_df$rating1 = as.factor(e1_df$rating1)
 
 e1.clmm <- clmm(rating1 ~ verb * context * indef + 
@@ -823,4 +833,13 @@ summary(e1.clmm)
 ```
 
 ```{r}
+
+e1.clmm_treat <- clmm(rating1 ~ verb * context * indef + 
+  (1 | participant) + (1 | item), 
+  contrasts = list(verb="contr.treatment",
+                   indef="contr.treatment", 
+                   context="contr.treatment"), 
+  data=e1_df)
+
+summary(e1.clmm_treat)
 ```
