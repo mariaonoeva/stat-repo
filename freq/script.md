@@ -376,7 +376,7 @@ as_raw_html(raw_summary %>% gt(groupname_col = 'indef',
   cols_label(verb = 'Verb'))
 ```
 
-<div id="qbvdidchon" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="tsihrnkrop" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mode | Median | Mean | Range | Variance | SD   |
@@ -648,7 +648,7 @@ as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef',
              RSE = 'RSE (%)'))
 ```
 
-<div id="pmqaxwbpmw" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="xiqrjykkls" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mean | SD   | SE     | RSE (%) |
@@ -762,7 +762,7 @@ as_raw_html(t_test_results %>%
                          p.value = 'p-value'))
 ```
 
-<div id="exwdaqwnka" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="vgpixzwfjn" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 | Condition | Mean | t-value | p-value | parameter | conf.low | conf.high | method | alternative |
@@ -1201,6 +1201,34 @@ library(gtsummary)
 ```
 
 ``` r
+e1_df$verb = as.factor(e1_df$verb)
+e1_df$context = as.factor(e1_df$context)
+e1_df$indef = as.factor(e1_df$indef)
+
+contrasts(e1_df$verb)
+```
+
+          V2
+    V1 li  0
+    V2     1
+
+``` r
+contrasts(e1_df$context)
+```
+
+             neutral
+    negative       0
+    neutral        1
+
+``` r
+contrasts(e1_df$indef)
+```
+
+          nibud
+    ni        0
+    nibud     1
+
+``` r
 e1_df$rating1 = as.factor(e1_df$rating1)
 
 e1.clmm <- clmm(rating1 ~ verb * context * indef + 
@@ -1247,3 +1275,49 @@ summary(e1.clmm)
     4|5   -0.266      0.157   -1.70
     5|6    0.458      0.157    2.93
     6|7    1.464      0.159    9.19
+
+``` r
+e1.clmm_treat <- clmm(rating1 ~ verb * context * indef + 
+  (1 | participant) + (1 | item), 
+  contrasts = list(verb="contr.treatment",
+                   indef="contr.treatment", 
+                   context="contr.treatment"), 
+  data=e1_df)
+
+summary(e1.clmm_treat)
+```
+
+    Cumulative Link Mixed Model fitted with the Laplace approximation
+
+    formula: rating1 ~ verb * context * indef + (1 | participant) + (1 | item)
+    data:    e1_df
+
+     link  threshold nobs logLik   AIC     niter      max.grad cond.H 
+     logit flexible  2176 -3681.28 7392.57 1894(7580) 1.86e-03 6.0e+02
+
+    Random effects:
+     Groups      Name        Variance Std.Dev.
+     participant (Intercept) 0.940    0.970   
+     item        (Intercept) 0.258    0.508   
+    Number of groups:  participant 68,  item 32 
+
+    Coefficients:
+                                     Estimate Std. Error z value Pr(>|z|)    
+    verbV2                              1.354      0.160    8.48  < 2e-16 ***
+    contextneutral                      0.536      0.161    3.32  0.00089 ***
+    indefnibud                          2.263      0.165   13.70  < 2e-16 ***
+    verbV2:contextneutral              -0.366      0.224   -1.63  0.10255    
+    verbV2:indefnibud                  -1.538      0.224   -6.86  6.8e-12 ***
+    contextneutral:indefnibud           0.355      0.229    1.55  0.12008    
+    verbV2:contextneutral:indefnibud   -0.172      0.317   -0.54  0.58719    
+    ---
+    Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+    Threshold coefficients:
+        Estimate Std. Error z value
+    1|2   -0.707      0.190   -3.72
+    2|3    0.139      0.189    0.73
+    3|4    0.782      0.190    4.12
+    4|5    1.402      0.192    7.32
+    5|6    2.126      0.194   10.94
+    6|7    3.132      0.199   15.74
