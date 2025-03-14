@@ -14,7 +14,8 @@ Masha Onoeva
   - [Standard error](#standard-error)
   - [t-test](#t-test)
   - [ANOVA](#anova)
-  - [Cumulative Link Mixed Model](#cumulative-link-mixed-model)
+  - [Cumulative Link Model and Cumulative Link Mixed
+    Model](#cumulative-link-model-and-cumulative-link-mixed-model)
 
 ## Info
 
@@ -375,7 +376,7 @@ as_raw_html(raw_summary %>% gt(groupname_col = 'indef',
   cols_label(verb = 'Verb'))
 ```
 
-<div id="brezyxocih" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="qbvdidchon" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mode | Median | Mean | Range | Variance | SD   |
@@ -647,7 +648,7 @@ as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef',
              RSE = 'RSE (%)'))
 ```
 
-<div id="ppbmvnuczs" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="pmqaxwbpmw" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mean | SD   | SE     | RSE (%) |
@@ -761,7 +762,7 @@ as_raw_html(t_test_results %>%
                          p.value = 'p-value'))
 ```
 
-<div id="iitchtwgpd" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="exwdaqwnka" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 | Condition | Mean | t-value | p-value | parameter | conf.low | conf.high | method | alternative |
@@ -1112,20 +1113,48 @@ e1_df$rating1 = as.factor(e1_df$rating1)
 e1_df$condition1 = as.factor(e1_df$condition1)
 e1_df$context = as.factor(e1_df$context)
 
-scat_plot <- ggplot(e1_df, aes(x=context, y=rating1, fill=condition1, group=condition1)) +
+scat_plot <- ggplot(e1_df, aes(x=context, y=rating1, 
+                               fill=condition1, group=condition1)) +
   geom_boxplot() +  
   geom_jitter(width = 0.2, alpha = 0.4)+
-  facet_wrap(~verb+indef) +
-  scale_color_brewer(palette = "Set2")
+  facet_wrap(~verb+indef)
 
 scat_plot
 ```
 
+### Cumulative Link Model and Cumulative Link Mixed Model
+
+So far I looked whether my obtained means are different from each other.
+I just found out that some conditions significantly more natural then
+the others. But why? Well, maybe it’s a chance or maybe these three
+independent variables that I had impacted their naturalness. Just to
+remind:
+
+- rating from 1 to 7 is my dependent variable, it is ordinal type of
+  data (very important!)
+
+- three variables each with two levels are independent
+
+  - indef: ni/nibud
+
+  - context: neutral/negative
+
+  - verb: V1/V2
+
+Maybe one of the independent variables affected the dependent, maybe
+their combinations did.
+
+One issue that was neglected above is data type. My data are ordinal and
+not continuous, I mentioned it there. For me it was important to
+understand how all these models (Anova and lm) work, so I just played
+with them. For the real analysis of my data and need **ordinal**
+library.
+
 ``` r
 library(ordinal)
 e1_df$rating1 = as.factor(e1_df$rating1)
-clm_model <- clm(rating1 ~ indef * verb * context, data = e1_df)
-summary(clm_model)
+e1.clm <- clm(rating1 ~ indef * verb * context, data = e1_df)
+summary(e1.clm)
 ```
 
     formula: rating1 ~ indef * verb * context
@@ -1157,40 +1186,13 @@ summary(clm_model)
 
 Is that it? Is this the final model? No :smiling_imp:
 
-Now we want to be sure that the effects we see are from the independent
-variables but not from random participants variation or bad items. You
-see, the items could have been very bad, e.g., there was one that
-everyone disliked and that influenced the ratings. Or some participants
-were somehow weird and assessed questions in a particular way. What I
-need to know now, that is my results are reliable even if these factors
-are included, so I need **a mixed model**.
-
-### Cumulative Link Mixed Model
-
-So far I looked whether my obtained means are different from each other.
-I just found out that some conditions significantly more natural then
-the others. But why? Well, maybe it’s a chance or maybe these three
-independent variables that I had impacted their naturalness. Using
-linear models one can now check how the independent variables change the
-dependent one.
-
-Just to remind:
-
-- rating from 1 to 7 is my dependent variable, it is ordinal type of
-  data (very important!)
-
-- three variables each with two levels are independent
-
-  - indef: ni/nibud
-
-  - context: neutral/negative
-
-  - verb: V1/V2
-
-Maybe one of the independent variables affected the dependent, maybe
-their combinations did.
-
-I’ll come back with more :v: :sparkles:
+Now we want to be sure that the effects we see come from the independent
+variables but not from random participant variation or bad items. You
+see, some items could have been very bad, e.g., there was an error in
+one and everyone disliked, so that influenced the ratings. Or some
+participants were somehow weird and assessed questions in a particular
+way. What I need to know now, that is my results are reliable even if
+these factors are included, so I need **a mixed model**.
 
 ``` r
 library(modelsummary)
@@ -1201,14 +1203,14 @@ library(gtsummary)
 ``` r
 e1_df$rating1 = as.factor(e1_df$rating1)
 
-clmm_model <- clmm(rating1 ~ verb * context * indef + 
+e1.clmm <- clmm(rating1 ~ verb * context * indef + 
   (1 | participant) + (1 | item), 
   contrasts = list(verb="contr.sum",
                    indef="contr.sum", 
                    context="contr.sum"), 
   data=e1_df)
 
-summary(clmm_model)
+summary(e1.clmm)
 ```
 
     Cumulative Link Mixed Model fitted with the Laplace approximation
