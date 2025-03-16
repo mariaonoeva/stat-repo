@@ -590,7 +590,7 @@ One of the reasons is that I have a factorial design, so there are multiple cond
 
 Another reason is that my sample data are not that independent as t-test requires them to be. I have to account for variability in participants and in items. There are possibilities how to account for it for t-test (aggregate all) but it's better to do a linear mixed model.
 
-### ANOVA
+### ANOVA and lm
 
 #### One-way ANOVA
 
@@ -772,6 +772,19 @@ scat_plot <- ggplot(e1_df, aes(x=context, y=rating1,
 
 scat_plot
 
+```
+
+t-value is also clear from above (the difference between my mean and 0 in SEs). Now I also have coefficents and estimates in this table, let's unpack.
+
+-   Intercept: I was so confused with it every time! But it just a reference level for the model. So the factors that are not in the coefficients below are in the reference level, i.e., V1, ni and negative context. Its estimate tells me how people rated this condition – 2.7574. And if we look at the table with descriptive findings, it is also there. Why is it significant though? Because for now I compare the result to 0 and it is indeed much higher than 0.
+
+-   verbV2: easy. Compared to V1, V2 raises the ratings of the items by 1.4154 and it is very significant. Significance in this case means that we can reject H0 that V2 has no effect on the dependent variable.
+
+-   indefnibud and contextneutral: same as for verbV2
+
+-   verbV2:indefnibud interaction: the negative interaction coefficient (-1.5699) tells us that the effect of `verbV2` is weaker when `indef = nibud.`
+
+```{}
 ```
 
 ### Cumulative Link Model and Cumulative Link Mixed Model

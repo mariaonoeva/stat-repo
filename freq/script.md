@@ -13,7 +13,7 @@ Masha Onoeva
 - [Inferential stat](#inferential-stat)
   - [Standard error](#standard-error)
   - [t-test](#t-test)
-  - [ANOVA](#anova)
+  - [ANOVA and lm](#anova-and-lm)
   - [Cumulative Link Model and Cumulative Link Mixed
     Model](#cumulative-link-model-and-cumulative-link-mixed-model)
 
@@ -376,7 +376,7 @@ as_raw_html(raw_summary %>% gt(groupname_col = 'indef',
   cols_label(verb = 'Verb'))
 ```
 
-<div id="tsihrnkrop" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="niyhcymqdk" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mode | Median | Mean | Range | Variance | SD   |
@@ -648,7 +648,7 @@ as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef',
              RSE = 'RSE (%)'))
 ```
 
-<div id="xiqrjykkls" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="jqjzsbvsgj" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mean | SD   | SE     | RSE (%) |
@@ -762,7 +762,7 @@ as_raw_html(t_test_results %>%
                          p.value = 'p-value'))
 ```
 
-<div id="vgpixzwfjn" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="boacgnsbai" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 | Condition | Mean | t-value | p-value | parameter | conf.low | conf.high | method | alternative |
@@ -822,7 +822,7 @@ requires them to be. I have to account for variability in participants
 and in items. There are possibilities how to account for it for t-test
 (aggregate all) but it’s better to do a linear mixed model.
 
-### ANOVA
+### ANOVA and lm
 
 #### One-way ANOVA
 
@@ -1121,6 +1121,30 @@ scat_plot <- ggplot(e1_df, aes(x=context, y=rating1,
 
 scat_plot
 ```
+
+t-value is also clear from above (the difference between my mean and 0
+in SEs). Now I also have coefficents and estimates in this table, let’s
+unpack.
+
+- Intercept: I was so confused with it every time! But it just a
+  reference level for the model. So the factors that are not in the
+  coefficients below are in the reference level, i.e., V1, ni and
+  negative context. Its estimate tells me how people rated this
+  condition – 2.7574. And if we look at the table with descriptive
+  findings, it is also there. Why is it significant though? Because for
+  now I compare the result to 0 and it is indeed much higher than 0.
+
+- verbV2: easy. Compared to V1, V2 raises the ratings of the items by
+  1.4154 and it is very significant. Significance in this case means
+  that we can reject H0 that V2 has no effect on the dependent variable.
+
+- indefnibud and contextneutral: same as for verbV2
+
+- verbV2:indefnibud interaction: the negative interaction coefficient
+  (-1.5699) tells us that the effect of `verbV2` is weaker when
+  `indef = nibud.`
+
+<!-- -->
 
 ### Cumulative Link Model and Cumulative Link Mixed Model
 
