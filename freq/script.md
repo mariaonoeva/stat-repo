@@ -376,7 +376,7 @@ as_raw_html(raw_summary %>% gt(groupname_col = 'indef',
   cols_label(verb = 'Verb'))
 ```
 
-<div id="niyhcymqdk" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="mgxefqtjzh" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mode | Median | Mean | Range | Variance | SD   |
@@ -468,8 +468,9 @@ e1_main_plot1 <- ggplot(e1_df_relevel1, aes(fill = rating1, x = context)) +
   scale_fill_brewer(palette = "RdYlGn", direction = -1) +
   theme(
     legend.position = "right",
-    text = element_text(size = 30),
-    legend.text = element_text(size = 20),
+    # text = element_text(size = 30),
+    text = element_text(size = 15),
+    legend.text = element_text(size = 15),
     legend.key.size = unit(1, 'cm'),
     legend.title = element_blank()
     # axis.text = element_text(size = 25),
@@ -478,32 +479,32 @@ e1_main_plot1 <- ggplot(e1_df_relevel1, aes(fill = rating1, x = context)) +
     # axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))
   ) +
   xlab("Context") +
-  ylab("Proportions of rating") + 
-  geom_rect(data = subset(e1_df_relevel1, verb  %in% c("V2") & indef %in% c("ni")), 
-                          fill = NA, colour = "blue", size = 4,
-                          xmin = -Inf,xmax = Inf,
-                          ymin = -Inf, ymax = Inf) 
+  ylab("Proportions of rating") # + 
+  # for highlighting certain facets in the plot
+  # geom_rect(data = subset(e1_df_relevel1, verb  %in% c("V2") & indef %in% c("ni")), 
+  #                         fill = NA, colour = "blue", size = 4,
+  #                         xmin = -Inf,xmax = Inf,
+  #                         ymin = -Inf, ymax = Inf) 
+
 e1_main_plot1
 ```
 
 ![](script_files/figure-commonmark/unnamed-chunk-19-1.png)
 
-``` r
-ggsave(e1_main_plot1, file="e1_main11.pdf", 
-       width = 25, height = 27, units = "cm", device="pdf")
-```
-
 On the x axis, there are contexts, on the y axis – proportions of
-ratings. The darkness of the bars indicates naturalness (dark means more
-natural). The black line that strikes through the plots is median.
+ratings. The color of the bars indicates naturalness as per legend. The
+black line that strikes through the plots is median.
 
 It is also possible to save the plots using this code:
 
 ``` r
-ggsave(e1_main_plot, file="e1_main1.eps", 
+# as pdf 
+ggsave(e1_main_plot1, file="e1_main11.pdf", 
+       width = 25, height = 27, units = "cm", device="pdf")
+
+# as eps
+ggsave(e1_main_plot1, file="e1_main1.eps", 
        width = 35, height = 37, units = "cm", device="eps")
-ggsave(e1_main_plot, file="e1_main1_pdf.pdf", 
-       width = 20, height = 20, units = "cm", device="pdf")
 ```
 
 ### Interaction plot
@@ -563,8 +564,8 @@ inter_plot
 
 ![](script_files/figure-commonmark/unnamed-chunk-22-1.png)
 
-The same plot as above but for each item. (Perhaps I can use conditions
-as color?)
+One can play with that of course. Below for example is a the same plot
+as above but for each item. (Perhaps I can use conditions as color?)
 
 ``` r
 tab_inter_items <- summarySE(inter_df, measurevar="rating1", 
@@ -648,7 +649,7 @@ as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef',
              RSE = 'RSE (%)'))
 ```
 
-<div id="jqjzsbvsgj" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="aaifgummlr" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mean | SD   | SE     | RSE (%) |
@@ -762,7 +763,7 @@ as_raw_html(t_test_results %>%
                          p.value = 'p-value'))
 ```
 
-<div id="boacgnsbai" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="xviqfyognt" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 | Condition | Mean | t-value | p-value | parameter | conf.low | conf.high | method | alternative |
@@ -1078,7 +1079,7 @@ estimates coefficients for factor levels whereas ANOVA compares means
 between the groups.
 
 ``` r
-e1_df$rating1 <- as.numeric(e1_df$rating1) # data need to be factorial
+e1_df$rating1 <- as.numeric(e1_df$rating1) # data need to be numeric
 e1_df.lm <- lm(rating1~verb*indef*context, data=e1_df)
 summary(e1_df.lm)
 ```
@@ -1108,25 +1109,11 @@ summary(e1_df.lm)
     Multiple R-squared:  0.196, Adjusted R-squared:  0.194 
     F-statistic: 75.6 on 7 and 2168 DF,  p-value: <2e-16
 
-``` r
-e1_df$rating1 = as.factor(e1_df$rating1)
-e1_df$condition1 = as.factor(e1_df$condition1)
-e1_df$context = as.factor(e1_df$context)
-
-scat_plot <- ggplot(e1_df, aes(x=context, y=rating1, 
-                               fill=condition1, group=condition1)) +
-  geom_boxplot() +  
-  geom_jitter(width = 0.2, alpha = 0.4)+
-  facet_wrap(~verb+indef)
-
-scat_plot
-```
-
 t-value is also clear from above (the difference between my mean and 0
-in SEs). Now I also have coefficents and estimates in this table, let’s
+in SEs). Now I also have coefficients and estimates in this table, let’s
 unpack.
 
-- Intercept: I was so confused with it every time! But it just a
+- `Intercept`: I was so confused with it every time! But it just a
   reference level for the model. So the factors that are not in the
   coefficients below are in the reference level, i.e., V1, ni and
   negative context. Its estimate tells me how people rated this
@@ -1134,39 +1121,35 @@ unpack.
   findings, it is also there. Why is it significant though? Because for
   now I compare the result to 0 and it is indeed much higher than 0.
 
-- verbV2: easy. Compared to V1, V2 raises the ratings of the items by
+- `verbV2`: easy. Compared to V1, V2 raises the ratings of the items by
   1.4154 and it is very significant. Significance in this case means
   that we can reject H0 that V2 has no effect on the dependent variable.
 
-- indefnibud and contextneutral: same as for verbV2
+- `indefnibud` and `contextneutral`: same as for `verbV2`
 
-- verbV2:indefnibud interaction: the negative interaction coefficient
-  (-1.5699) tells us that the effect of `verbV2` is weaker when
-  `indef = nibud.`
+- `verbV2`:`indefnibud` interaction: the negative interaction
+  coefficient (-1.5699) tells us that the effect of `verbV2` is weaker
+  when indef is nibud. In other words, the main effect of `verbV2` is
+  1.4154 but with `nibud` it’s this much weaker.
 
-<!-- -->
+This is all cool and fun but as I mentioned a hundred times above, my
+data are ordinal and I finally have tot treat them as ordinal. The next
+and final section deals with that and presents a final model for my data
+– CLMM.
 
 ### Cumulative Link Model and Cumulative Link Mixed Model
 
-So far I looked whether my obtained means are different from each other.
-I just found out that some conditions significantly more natural then
-the others. But why? Well, maybe it’s a chance or maybe these three
-independent variables that I had impacted their naturalness. Just to
-remind:
+https://marissabarlaz.github.io/portfolio/ols/
 
-- rating from 1 to 7 is my dependent variable, it is ordinal type of
-  data (very important!)
+In the beginning, I looked whether my obtained means are different from
+each other. I just found out that some conditions significantly more
+natural then the others. But for this experiment it doesn’t make much
+sense because I had the variables that I predict to have more impact on
+the dependent variable – rating of the items.
 
-- three variables each with two levels are independent
-
-  - indef: ni/nibud
-
-  - context: neutral/negative
-
-  - verb: V1/V2
-
-Maybe one of the independent variables affected the dependent, maybe
-their combinations did.
+To check the impact of the independent variables I applied ANOVA and
+lm(). Maybe one of the independent variables affected the dependent,
+maybe their combinations did.
 
 One issue that was neglected above is data type. My data are ordinal and
 not continuous, I mentioned it there. For me it was important to
@@ -1176,26 +1159,34 @@ library.
 
 ``` r
 library(ordinal)
+```
+
+Here is the model that is developed for ordinal type of data. The output
+table looks familiar, there are coefficients, estimates, SEs and now
+z-value. The results are in some cases very similar to those from lm,
+but in others very different.
+
+``` r
 e1_df$rating1 = as.factor(e1_df$rating1)
-e1.clm <- clm(rating1 ~ indef * verb * context, data = e1_df)
+e1.clm <- clm(rating1 ~ verb * indef * context, data = e1_df)
 summary(e1.clm)
 ```
 
-    formula: rating1 ~ indef * verb * context
+    formula: rating1 ~ verb * indef * context
     data:    e1_df
 
      link  threshold nobs logLik   AIC     niter max.grad cond.H 
-     logit flexible  2176 -3887.37 7800.74 5(0)  3.70e-13 6.8e+02
+     logit flexible  2176 -3887.37 7800.74 5(0)  3.00e-13 6.8e+02
 
     Coefficients:
                                      Estimate Std. Error z value Pr(>|z|)    
-    indefnibud                          1.952      0.157   12.46  < 2e-16 ***
     verbV2                              1.218      0.154    7.91  2.5e-15 ***
+    indefnibud                          1.952      0.157   12.46  < 2e-16 ***
     contextneutral                      0.471      0.154    3.05   0.0023 ** 
-    indefnibud:verbV2                  -1.385      0.216   -6.42  1.4e-10 ***
-    indefnibud:contextneutral           0.319      0.218    1.46   0.1435    
+    verbV2:indefnibud                  -1.385      0.216   -6.42  1.4e-10 ***
     verbV2:contextneutral              -0.284      0.218   -1.31   0.1917    
-    indefnibud:verbV2:contextneutral   -0.156      0.305   -0.51   0.6106    
+    indefnibud:contextneutral           0.319      0.218    1.46   0.1435    
+    verbV2:indefnibud:contextneutral   -0.156      0.305   -0.51   0.6106    
     ---
     Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -1217,6 +1208,8 @@ one and everyone disliked, so that influenced the ratings. Or some
 participants were somehow weird and assessed questions in a particular
 way. What I need to know now, that is my results are reliable even if
 these factors are included, so I need **a mixed model**.
+
+https://marissabarlaz.github.io/portfolio/contrastcoding/
 
 ``` r
 library(modelsummary)
@@ -1255,7 +1248,7 @@ contrasts(e1_df$indef)
 ``` r
 e1_df$rating1 = as.factor(e1_df$rating1)
 
-e1.clmm <- clmm(rating1 ~ verb * context * indef + 
+e1.clmm <- clmm(rating1 ~ verb * indef * context + 
   (1 | participant) + (1 | item), 
   contrasts = list(verb="contr.sum",
                    indef="contr.sum", 
@@ -1267,11 +1260,11 @@ summary(e1.clmm)
 
     Cumulative Link Mixed Model fitted with the Laplace approximation
 
-    formula: rating1 ~ verb * context * indef + (1 | participant) + (1 | item)
+    formula: rating1 ~ verb * indef * context + (1 | participant) + (1 | item)
     data:    e1_df
 
      link  threshold nobs logLik   AIC     niter       max.grad cond.H 
-     logit flexible  2176 -3681.28 7392.57 2729(10920) 4.90e-03 2.8e+02
+     logit flexible  2176 -3681.28 7392.57 2723(10896) 1.71e-03 2.8e+02
 
     Random effects:
      Groups      Name        Variance Std.Dev.
@@ -1282,12 +1275,12 @@ summary(e1.clmm)
     Coefficients:
                           Estimate Std. Error z value Pr(>|z|)    
     verb1                  -0.1795     0.0397   -4.53  6.0e-06 ***
-    context1               -0.2440     0.0401   -6.09  1.1e-09 ***
     indef1                 -0.8142     0.0423  -19.26  < 2e-16 ***
-    verb1:context1         -0.1130     0.0396   -2.85   0.0043 ** 
+    context1               -0.2440     0.0401   -6.09  1.1e-09 ***
     verb1:indef1           -0.4060     0.0404  -10.05  < 2e-16 ***
-    context1:indef1         0.0674     0.0398    1.69   0.0905 .  
-    verb1:context1:indef1   0.0215     0.0396    0.54   0.5872    
+    verb1:context1         -0.1130     0.0396   -2.85   0.0043 ** 
+    indef1:context1         0.0674     0.0398    1.69   0.0905 .  
+    verb1:indef1:context1   0.0215     0.0396    0.54   0.5873    
     ---
     Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -1301,7 +1294,7 @@ summary(e1.clmm)
     6|7    1.464      0.159    9.19
 
 ``` r
-e1.clmm_treat <- clmm(rating1 ~ verb * context * indef + 
+e1.clmm_treat <- clmm(rating1 ~ verb * indef * context + 
   (1 | participant) + (1 | item), 
   contrasts = list(verb="contr.treatment",
                    indef="contr.treatment", 
@@ -1313,11 +1306,11 @@ summary(e1.clmm_treat)
 
     Cumulative Link Mixed Model fitted with the Laplace approximation
 
-    formula: rating1 ~ verb * context * indef + (1 | participant) + (1 | item)
+    formula: rating1 ~ verb * indef * context + (1 | participant) + (1 | item)
     data:    e1_df
 
      link  threshold nobs logLik   AIC     niter      max.grad cond.H 
-     logit flexible  2176 -3681.28 7392.57 1894(7580) 1.86e-03 6.0e+02
+     logit flexible  2176 -3681.28 7392.57 1857(7432) 2.06e-03 6.0e+02
 
     Random effects:
      Groups      Name        Variance Std.Dev.
@@ -1328,12 +1321,12 @@ summary(e1.clmm_treat)
     Coefficients:
                                      Estimate Std. Error z value Pr(>|z|)    
     verbV2                              1.354      0.160    8.48  < 2e-16 ***
-    contextneutral                      0.536      0.161    3.32  0.00089 ***
     indefnibud                          2.263      0.165   13.70  < 2e-16 ***
-    verbV2:contextneutral              -0.366      0.224   -1.63  0.10255    
+    contextneutral                      0.536      0.161    3.32  0.00089 ***
     verbV2:indefnibud                  -1.538      0.224   -6.86  6.8e-12 ***
-    contextneutral:indefnibud           0.355      0.229    1.55  0.12008    
-    verbV2:contextneutral:indefnibud   -0.172      0.317   -0.54  0.58719    
+    verbV2:contextneutral              -0.366      0.224   -1.63  0.10258    
+    indefnibud:contextneutral           0.355      0.229    1.55  0.12007    
+    verbV2:indefnibud:contextneutral   -0.172      0.317   -0.54  0.58704    
     ---
     Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -1343,5 +1336,5 @@ summary(e1.clmm_treat)
     2|3    0.139      0.189    0.73
     3|4    0.782      0.190    4.12
     4|5    1.402      0.192    7.32
-    5|6    2.126      0.194   10.94
+    5|6    2.126      0.194   10.95
     6|7    3.132      0.199   15.74

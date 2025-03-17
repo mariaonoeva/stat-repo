@@ -344,8 +344,9 @@ e1_main_plot1 <- ggplot(e1_df_relevel1, aes(fill = rating1, x = context)) +
   scale_fill_brewer(palette = "RdYlGn", direction = -1) +
   theme(
     legend.position = "right",
-    text = element_text(size = 30),
-    legend.text = element_text(size = 20),
+    # text = element_text(size = 30),
+    text = element_text(size = 15),
+    legend.text = element_text(size = 15),
     legend.key.size = unit(1, 'cm'),
     legend.title = element_blank()
     # axis.text = element_text(size = 25),
@@ -354,27 +355,30 @@ e1_main_plot1 <- ggplot(e1_df_relevel1, aes(fill = rating1, x = context)) +
     # axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))
   ) +
   xlab("Context") +
-  ylab("Proportions of rating") + 
-  geom_rect(data = subset(e1_df_relevel1, verb  %in% c("V2") & indef %in% c("ni")), 
-                          fill = NA, colour = "blue", size = 4,
-                          xmin = -Inf,xmax = Inf,
-                          ymin = -Inf, ymax = Inf) 
-e1_main_plot1
+  ylab("Proportions of rating") # + 
+  # for highlighting certain facets in the plot
+  # geom_rect(data = subset(e1_df_relevel1, verb  %in% c("V2") & indef %in% c("ni")), 
+  #                         fill = NA, colour = "blue", size = 4,
+  #                         xmin = -Inf,xmax = Inf,
+  #                         ymin = -Inf, ymax = Inf) 
 
-ggsave(e1_main_plot1, file="e1_main11.pdf", 
-       width = 25, height = 27, units = "cm", device="pdf")
+e1_main_plot1
 
 ```
 
-On the x axis, there are contexts, on the y axis -- proportions of ratings. The darkness of the bars indicates naturalness (dark means more natural). The black line that strikes through the plots is median.
+On the x axis, there are contexts, on the y axis -- proportions of ratings. The color of the bars indicates naturalness as per legend. The black line that strikes through the plots is median.
 
 It is also possible to save the plots using this code:
 
 ```{r eval=FALSE}
-ggsave(e1_main_plot, file="e1_main1.eps", 
+
+# as pdf 
+ggsave(e1_main_plot1, file="e1_main11.pdf", 
+       width = 25, height = 27, units = "cm", device="pdf")
+
+# as eps
+ggsave(e1_main_plot1, file="e1_main1.eps", 
        width = 35, height = 37, units = "cm", device="eps")
-ggsave(e1_main_plot, file="e1_main1_pdf.pdf", 
-       width = 20, height = 20, units = "cm", device="pdf")
 ```
 
 ### Interaction plot
@@ -432,7 +436,7 @@ inter_plot <- ggplot(tab_inter, aes(x=context, y=rating1,
 inter_plot
 ```
 
-The same plot as above but for each item. (Perhaps I can use conditions as color?)
+One can play with that of course. Below for example is a the same plot as above but for each item. (Perhaps I can use conditions as color?)
 
 ```{r fig.height=4, fig.width=10}
 
@@ -754,12 +758,12 @@ It works! So this model now tells me that all my three factors influence the ind
 So I'm going to try another trick here: instead of aov() I'll use lm(). Results from the bottom of the summary might seem familiar. There are degrees of freedom for residuals, F-statistic/value and p-value. So lm estimates coefficients for factor levels whereas ANOVA compares means between the groups.
 
 ```{r}
-e1_df$rating1 <- as.numeric(e1_df$rating1) # data need to be factorial
+e1_df$rating1 <- as.numeric(e1_df$rating1) # data need to be numeric
 e1_df.lm <- lm(rating1~verb*indef*context, data=e1_df)
 summary(e1_df.lm)
 ```
 
-```{r eval = FALSE}
+```{r eval = FALSE, echo=FALSE}
 e1_df$rating1 = as.factor(e1_df$rating1)
 e1_df$condition1 = as.factor(e1_df$condition1)
 e1_df$context = as.factor(e1_df$context)
@@ -774,47 +778,46 @@ scat_plot
 
 ```
 
-t-value is also clear from above (the difference between my mean and 0 in SEs). Now I also have coefficents and estimates in this table, let's unpack.
+t-value is also clear from above (the difference between my mean and 0 in SEs). Now I also have coefficients and estimates in this table, let's unpack.
 
--   Intercept: I was so confused with it every time! But it just a reference level for the model. So the factors that are not in the coefficients below are in the reference level, i.e., V1, ni and negative context. Its estimate tells me how people rated this condition – 2.7574. And if we look at the table with descriptive findings, it is also there. Why is it significant though? Because for now I compare the result to 0 and it is indeed much higher than 0.
+-   `Intercept`: I was so confused with it every time! But it just a reference level for the model. So the factors that are not in the coefficients below are in the reference level, i.e., V1, ni and negative context. Its estimate tells me how people rated this condition – 2.7574. And if we look at the table with descriptive findings, it is also there. Why is it significant though? Because for now I compare the result to 0 and it is indeed much higher than 0.
 
--   verbV2: easy. Compared to V1, V2 raises the ratings of the items by 1.4154 and it is very significant. Significance in this case means that we can reject H0 that V2 has no effect on the dependent variable.
+-   `verbV2`: easy. Compared to V1, V2 raises the ratings of the items by 1.4154 and it is very significant. Significance in this case means that we can reject H0 that V2 has no effect on the dependent variable.
 
--   indefnibud and contextneutral: same as for verbV2
+-   `indefnibud` and `contextneutral`: same as for `verbV2`
 
--   verbV2:indefnibud interaction: the negative interaction coefficient (-1.5699) tells us that the effect of `verbV2` is weaker when `indef = nibud.`
+-   `verbV2`:`indefnibud` interaction: the negative interaction coefficient (-1.5699) tells us that the effect of `verbV2` is weaker when indef is nibud. In other words, the main effect of `verbV2` is 1.4154 but with `nibud` it's this much weaker.
 
-```{}
-```
+This is all cool and fun but as I mentioned a hundred times above, my data are ordinal and I finally have tot treat them as ordinal. The next and final section deals with that and presents a final model for my data -- CLMM. 
 
 ### Cumulative Link Model and Cumulative Link Mixed Model
 
-So far I looked whether my obtained means are different from each other. I just found out that some conditions significantly more natural then the others. But why? Well, maybe it's a chance or maybe these three independent variables that I had impacted their naturalness. Just to remind:
+https://marissabarlaz.github.io/portfolio/ols/
 
--   rating from 1 to 7 is my dependent variable, it is ordinal type of data (very important!)
+In the beginning, I looked whether my obtained means are different from each other. I just found out that some conditions significantly more natural then the others. But for this experiment it doesn't make much sense because I had the variables that I predict to have more impact on the dependent variable -- rating of the items.
 
--   three variables each with two levels are independent
-
-    -   indef: ni/nibud
-
-    -   context: neutral/negative
-
-    -   verb: V1/V2
-
-Maybe one of the independent variables affected the dependent, maybe their combinations did.
+To check the impact of the independent variables I applied ANOVA and lm(). Maybe one of the independent variables affected the dependent, maybe their combinations did.
 
 One issue that was neglected above is data type. My data are ordinal and not continuous, I mentioned it there. For me it was important to understand how all these models (Anova and lm) work, so I just played with them. For the real analysis of my data and need **ordinal** library.
 
 ```{r}
 library(ordinal)
+```
+
+Here is the model that is developed for ordinal type of data. The output table looks familiar, there are coefficients, estimates, SEs and now z-value. The results are in some cases very similar to those from lm, but in others very different. 
+
+```{r}
 e1_df$rating1 = as.factor(e1_df$rating1)
-e1.clm <- clm(rating1 ~ indef * verb * context, data = e1_df)
+e1.clm <- clm(rating1 ~ verb * indef * context, data = e1_df)
 summary(e1.clm)
 ```
 
 Is that it? Is this the final model? No :smiling_imp:
 
 Now we want to be sure that the effects we see come from the independent variables but not from random participant variation or bad items. You see, some items could have been very bad, e.g., there was an error in one and everyone disliked, so that influenced the ratings. Or some participants were somehow weird and assessed questions in a particular way. What I need to know now, that is my results are reliable even if these factors are included, so I need **a mixed model**.
+
+https://marissabarlaz.github.io/portfolio/contrastcoding/
+
 
 ```{r}
 library(modelsummary)
@@ -835,7 +838,7 @@ contrasts(e1_df$indef)
 ```{r}
 e1_df$rating1 = as.factor(e1_df$rating1)
 
-e1.clmm <- clmm(rating1 ~ verb * context * indef + 
+e1.clmm <- clmm(rating1 ~ verb * indef * context + 
   (1 | participant) + (1 | item), 
   contrasts = list(verb="contr.sum",
                    indef="contr.sum", 
@@ -847,7 +850,7 @@ summary(e1.clmm)
 
 ```{r}
 
-e1.clmm_treat <- clmm(rating1 ~ verb * context * indef + 
+e1.clmm_treat <- clmm(rating1 ~ verb * indef * context + 
   (1 | participant) + (1 | item), 
   contrasts = list(verb="contr.treatment",
                    indef="contr.treatment", 
