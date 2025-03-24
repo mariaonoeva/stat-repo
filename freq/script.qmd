@@ -612,21 +612,6 @@ ANOVA (Analysis of Variance) suits a bit better for the experiment but it's stil
 
 One of the requirements for this test is to have a continuous quantitative dependent variable. I have a Lickert scale, it's an ordinal scale and those are considered categorical but let's pretend that it's continuous. As for the independent variables, they have to be qualitative with at least two levels.
 
-Other requirements are normality and equality of variances. For the first one, with this sample size distribution should not be necessary normal, but the second requirement has to be checked. Levene's test suits for this which is run below. p-value is pretty small, so the null hypothesis that the variances are equal is rejected. I need to consider for that in the model and use Welch ANOVA.
-
-```{r}
-e1_df$condition = as.factor(e1_df$condition)
-car::leveneTest(rating1~condition, e1_df)
-```
-
-Welch ANOVA is present below.
-
-```{r}
-oneway.test(rating1~condition, 
-            data = e1_df, 
-            var.equal = FALSE) # Welch ANOVA as variances aren't equal
-```
-
 Below is the most common output from ANOVA. Once again I violate perhaps all conditions that can be violated but who cares. p-value is small, so we reject H0 that all groups are equal.
 
 ```{r}
@@ -755,7 +740,7 @@ sum2_verb
 
 It works! So this model now tells me that all my three factors influence the independent variable. There is also an interaction between verb and indef and a weaker interaction of verb and context. It is not ideal but it already deals with the independent variables. What it does it compares these three groups and their means to the grand mean but it doesn't tell how much the independent variables affect the dependent one.
 
-So I'm going to try another trick here: instead of aov() I'll use lm(). Results from the bottom of the summary might seem familiar. There are degrees of freedom for residuals, F-statistic/value and p-value. So lm estimates coefficients for factor levels whereas ANOVA compares means between the groups.
+So I'm going to try another trick here: instead of aov() I'll use lm(). Results from the bottom of the summary seem familiar. There are degrees of freedom for residuals, F-statistic/value and p-value. So lm estimates coefficients for factor levels whereas ANOVA compares means between the groups.
 
 ```{r}
 e1_df$rating1 <- as.numeric(e1_df$rating1) # data need to be numeric
@@ -772,7 +757,8 @@ scat_plot <- ggplot(e1_df, aes(x=context, y=rating1,
                                fill=condition1, group=condition1)) +
   geom_boxplot() +  
   geom_jitter(width = 0.2, alpha = 0.4)+
-  facet_wrap(~verb+indef)
+  facet_wrap(~verb+indef) +
+  theme_bw()
 
 scat_plot
 
@@ -780,7 +766,7 @@ scat_plot
 
 t-value is also clear from above (the difference between my mean and 0 in SEs). Now I also have coefficients and estimates in this table, let's unpack.
 
--   `Intercept`: I was so confused with it every time! But it just a reference level for the model. So the factors that are not in the coefficients below are in the reference level, i.e., V1, ni and negative context. Its estimate tells me how people rated this condition – 2.7574. And if we look at the table with descriptive findings, it is also there. Why is it significant though? Because for now I compare the result to 0 and it is indeed much higher than 0.
+-   `Intercept`: I was so confused with it every time! But it just a reference level for the model. So the factors that are not in the coefficients below are in the reference level, i.e., V1, ni and negative context, or condition e. Its estimate tells me how people rated this condition – 2.7574. And if we look at the table with descriptive findings, it is also there. Why is it significant though? Because for now I compare the result to 0 and it is indeed much higher than 0.
 
 -   `verbV2`: easy. Compared to V1, V2 raises the ratings of the items by 1.4154 and it is very significant. Significance in this case means that we can reject H0 that V2 has no effect on the dependent variable.
 
@@ -788,36 +774,50 @@ t-value is also clear from above (the difference between my mean and 0 in SEs). 
 
 -   `verbV2`:`indefnibud` interaction: the negative interaction coefficient (-1.5699) tells us that the effect of `verbV2` is weaker when indef is nibud. In other words, the main effect of `verbV2` is 1.4154 but with `nibud` it's this much weaker.
 
-This is all cool and fun but as I mentioned a hundred times above, my data are ordinal and I finally have tot treat them as ordinal. The next and final section deals with that and presents a final model for my data -- CLMM. 
+This is all cool and fun but as I mentioned a hundred times above, my data are ordinal and I finally have tot treat them as ordinal. The next and final section deals with that and presents a final model for my data -- CLMM.
 
 ### Cumulative Link Model and Cumulative Link Mixed Model
 
-https://marissabarlaz.github.io/portfolio/ols/
-https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=ebbe4c4abe64c3889bc3309311790c367fd9bf51 
+https://marissabarlaz.github.io/portfolio/ols/ https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=ebbe4c4abe64c3889bc3309311790c367fd9bf51
 
-In the beginning, I looked whether my obtained means are different from each other. I just found out that some conditions significantly more natural then the others. But for this experiment it doesn't make much sense because I had the variables that I predict to have more impact on the dependent variable -- rating of the items.
+In the beginning, I looked whether my obtained means are different from each other. I just found out that some conditions significantly more natural then the others. But for this experiment it doesn't make much sense because I had the variables that I predict to have more impact on rating of the items, aka my dependent variable.
 
-To check the impact of the independent variables I applied ANOVA and lm(). Maybe one of the independent variables affected the dependent, maybe their combinations did.
+To check the impact of the independent variables, I applied ANOVA and lm(). Maybe one of the independent variables affected the dependent, maybe their combinations did.
 
-One issue that was neglected above is data type. My data are ordinal and not continuous, I mentioned it there. For me it was important to understand how all these models (Anova and lm) work, so I just played with them. For the real analysis of my data and need **ordinal** library.
+One issue that was neglected above is **data type**. My data are **ordinal**, not continuous. For me it was important to understand how all these other models (Anova and lm) work, so I just played with them. For the real analysis of my data and need **ordinal** library.
 
 ```{r}
 library(ordinal)
 ```
 
-Here is the model that is developed for ordinal type of data. The output table looks familiar, there are coefficients, estimates, SEs and now z-value. The results are in some cases very similar to those from lm, but in others very different. 
+Cumulative Link Model (CLM) that is developed for ordinal type of data. "Cumulative" means the model estimates the probability that the response falls in a certain category or any lower one (here from 1 to 7). "Link" is a special type of function (logit, probit, cloglog, etc.), that is used for the model. 
+
+The output table looks familiar, there are coefficients, estimates, SEs and now z-value. The results are in some cases very similar to those from lm, but in others very different. 
 
 ```{r}
 e1_df$rating1 = as.factor(e1_df$rating1)
 e1.clm <- clm(rating1 ~ verb * indef * context, data = e1_df)
 summary(e1.clm)
 ```
+
 Is that it? Is this the final model? No :smiling_imp:
 
 Now we want to be sure that the effects we see come from the independent variables but not from random participant variation or bad items. You see, some items could have been very bad, e.g., there was an error in one and everyone disliked, so that influenced the ratings. Or some participants were somehow weird and assessed questions in a particular way. What I need to know now, that is my results are reliable even if these factors are included, so I need **a mixed model**.
 
-https://marissabarlaz.github.io/portfolio/contrastcoding/
+#### Contrast coding
 
+https://marissabarlaz.github.io/portfolio/contrastcoding/ One last theory piece, I promise!
+
+First of all, I didn't quite get why we didn't use the treatment/dummy coding for my experiment. When I learned more about what it does, I realized that it doesn't make sense to compare all my data to one reference level. It is something like having a control placebo group to which everything is compared. In this experiment, I didn't have such a group, so I need to make my comparisons to the grand mean with no baseline. But I did it for lm(), there was an intercept--condition e, `V1`, `negative` and `ni`. But all of the stuff there was just practicing, so that's fine. If one looks at their coding, they all have 0.
+
+```{r}
+e1_df$verb = as.factor(e1_df$verb)
+e1_df$context = as.factor(e1_df$context)
+e1_df$indef = as.factor(e1_df$indef)
+contrasts(e1_df$verb)
+contrasts(e1_df$context)
+contrasts(e1_df$indef)
+```
 
 ```{r}
 library(modelsummary)
@@ -826,13 +826,6 @@ library(gtsummary)
 ```
 
 ```{r}
-e1_df$verb = as.factor(e1_df$verb)
-e1_df$context = as.factor(e1_df$context)
-e1_df$indef = as.factor(e1_df$indef)
-
-contrasts(e1_df$verb)
-contrasts(e1_df$context)
-contrasts(e1_df$indef)
 ```
 
 ```{r}
@@ -849,7 +842,6 @@ summary(e1.clmm)
 ```
 
 ```{r}
-
 e1.clmm_treat <- clmm(rating1 ~ verb * indef * context + 
   (1 | participant) + (1 | item), 
   contrasts = list(verb="contr.treatment",
@@ -859,3 +851,7 @@ e1.clmm_treat <- clmm(rating1 ~ verb * indef * context +
 
 summary(e1.clmm_treat)
 ```
+
+## Summary
+
+In this notebook, I analyzed in detail the naturalness judgment experiment. with the fully crossed 2 x 2 x 2 design. First I looked at descriptive stat and then explored various models for inferential stat using the frequentist approach. The next step is to perform the Bayesian approach but this is going to be a different story.

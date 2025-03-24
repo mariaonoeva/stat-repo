@@ -16,6 +16,7 @@ Masha Onoeva
   - [ANOVA and lm](#anova-and-lm)
   - [Cumulative Link Model and Cumulative Link Mixed
     Model](#cumulative-link-model-and-cumulative-link-mixed-model)
+- [Summary](#summary)
 
 ## Info
 
@@ -376,7 +377,7 @@ as_raw_html(raw_summary %>% gt(groupname_col = 'indef',
   cols_label(verb = 'Verb'))
 ```
 
-<div id="dkjofsvgfc" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="ngcniqsvbh" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mode | Median | Mean | Range | Variance | SD   |
@@ -649,7 +650,7 @@ as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef',
              RSE = 'RSE (%)'))
 ```
 
-<div id="vlpadtbvhq" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="demmttiwjd" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mean | SD   | SE     | RSE (%) |
@@ -763,7 +764,7 @@ as_raw_html(t_test_results %>%
                          p.value = 'p-value'))
 ```
 
-<div id="oemtlwbfrz" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="seeeiuezty" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 | Condition | Mean | t-value | p-value | parameter | conf.low | conf.high | method | alternative |
@@ -858,39 +859,6 @@ quantitative dependent variable. I have a Lickert scale, it’s an ordinal
 scale and those are considered categorical but let’s pretend that it’s
 continuous. As for the independent variables, they have to be
 qualitative with at least two levels.
-
-Other requirements are normality and equality of variances. For the
-first one, with this sample size distribution should not be necessary
-normal, but the second requirement has to be checked. Levene’s test
-suits for this which is run below. p-value is pretty small, so the null
-hypothesis that the variances are equal is rejected. I need to consider
-for that in the model and use Welch ANOVA.
-
-``` r
-e1_df$condition = as.factor(e1_df$condition)
-car::leveneTest(rating1~condition, e1_df)
-```
-
-    Levene's Test for Homogeneity of Variance (center = median)
-            Df F value Pr(>F)    
-    group    7    14.8 <2e-16 ***
-          2168                   
-    ---
-    Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-Welch ANOVA is present below.
-
-``` r
-oneway.test(rating1~condition, 
-            data = e1_df, 
-            var.equal = FALSE) # Welch ANOVA as variances aren't equal
-```
-
-
-        One-way analysis of means (not assuming equal variances)
-
-    data:  rating1 and condition
-    F = 90, num df = 7, denom df = 927, p-value <2e-16
 
 Below is the most common output from ANOVA. Once again I violate perhaps
 all conditions that can be violated but who cares. p-value is small, so
@@ -1073,10 +1041,10 @@ doesn’t tell how much the independent variables affect the dependent
 one.
 
 So I’m going to try another trick here: instead of aov() I’ll use lm().
-Results from the bottom of the summary might seem familiar. There are
-degrees of freedom for residuals, F-statistic/value and p-value. So lm
-estimates coefficients for factor levels whereas ANOVA compares means
-between the groups.
+Results from the bottom of the summary seem familiar. There are degrees
+of freedom for residuals, F-statistic/value and p-value. So lm estimates
+coefficients for factor levels whereas ANOVA compares means between the
+groups.
 
 ``` r
 e1_df$rating1 <- as.numeric(e1_df$rating1) # data need to be numeric
@@ -1116,10 +1084,11 @@ unpack.
 - `Intercept`: I was so confused with it every time! But it just a
   reference level for the model. So the factors that are not in the
   coefficients below are in the reference level, i.e., V1, ni and
-  negative context. Its estimate tells me how people rated this
-  condition – 2.7574. And if we look at the table with descriptive
-  findings, it is also there. Why is it significant though? Because for
-  now I compare the result to 0 and it is indeed much higher than 0.
+  negative context, or condition e. Its estimate tells me how people
+  rated this condition – 2.7574. And if we look at the table with
+  descriptive findings, it is also there. Why is it significant though?
+  Because for now I compare the result to 0 and it is indeed much higher
+  than 0.
 
 - `verbV2`: easy. Compared to V1, V2 raises the ratings of the items by
   1.4154 and it is very significant. Significance in this case means
@@ -1146,26 +1115,30 @@ In the beginning, I looked whether my obtained means are different from
 each other. I just found out that some conditions significantly more
 natural then the others. But for this experiment it doesn’t make much
 sense because I had the variables that I predict to have more impact on
-the dependent variable – rating of the items.
+rating of the items, aka my dependent variable.
 
-To check the impact of the independent variables I applied ANOVA and
+To check the impact of the independent variables, I applied ANOVA and
 lm(). Maybe one of the independent variables affected the dependent,
 maybe their combinations did.
 
-One issue that was neglected above is data type. My data are ordinal and
-not continuous, I mentioned it there. For me it was important to
-understand how all these models (Anova and lm) work, so I just played
-with them. For the real analysis of my data and need **ordinal**
-library.
+One issue that was neglected above is **data type**. My data are
+**ordinal**, not continuous. For me it was important to understand how
+all these other models (Anova and lm) work, so I just played with them.
+For the real analysis of my data and need **ordinal** library.
 
 ``` r
 library(ordinal)
 ```
 
-Here is the model that is developed for ordinal type of data. The output
-table looks familiar, there are coefficients, estimates, SEs and now
-z-value. The results are in some cases very similar to those from lm,
-but in others very different.
+Cumulative Link Model (CLM) that is developed for ordinal type of data.
+“Cumulative” means the model estimates the probability that the response
+falls in a certain category or any lower one (here from 1 to 7). “Link”
+is a special type of function (logit, probit, cloglog, etc.), that is
+used for the model.
+
+The output table looks familiar, there are coefficients, estimates, SEs
+and now z-value. The results are in some cases very similar to those
+from lm, but in others very different.
 
 ``` r
 e1_df$rating1 = as.factor(e1_df$rating1)
@@ -1210,19 +1183,26 @@ participants were somehow weird and assessed questions in a particular
 way. What I need to know now, that is my results are reliable even if
 these factors are included, so I need **a mixed model**.
 
-https://marissabarlaz.github.io/portfolio/contrastcoding/
+#### Contrast coding
 
-``` r
-library(modelsummary)
-library(lmerTest)
-library(gtsummary)
-```
+https://marissabarlaz.github.io/portfolio/contrastcoding/ One last
+theory piece, I promise!
+
+First of all, I didn’t quite get why we didn’t use the treatment/dummy
+coding for my experiment. When I learned more about what it does, I
+realized that it doesn’t make sense to compare all my data to one
+reference level. It is something like having a control placebo group to
+which everything is compared. In this experiment, I didn’t have such a
+group, so I need to make my comparisons to the grand mean with no
+baseline. But I did it for lm(), there was an intercept–condition e,
+`V1`, `negative` and `ni`. But all of the stuff there was just
+practicing, so that’s fine. If one looks at their coding, they all have
+0.
 
 ``` r
 e1_df$verb = as.factor(e1_df$verb)
 e1_df$context = as.factor(e1_df$context)
 e1_df$indef = as.factor(e1_df$indef)
-
 contrasts(e1_df$verb)
 ```
 
@@ -1245,6 +1225,12 @@ contrasts(e1_df$indef)
           nibud
     ni        0
     nibud     1
+
+``` r
+library(modelsummary)
+library(lmerTest)
+library(gtsummary)
+```
 
 ``` r
 e1_df$rating1 = as.factor(e1_df$rating1)
@@ -1339,3 +1325,11 @@ summary(e1.clmm_treat)
     4|5    1.402      0.192    7.32
     5|6    2.126      0.194   10.95
     6|7    3.132      0.199   15.74
+
+## Summary
+
+In this notebook, I analyzed in detail the naturalness judgment
+experiment. with the fully crossed 2 x 2 x 2 design. First I looked at
+descriptive stat and then explored various models for inferential stat
+using the frequentist approach. The next step is to perform the Bayesian
+approach but this is going to be a different story.
