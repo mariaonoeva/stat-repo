@@ -377,7 +377,7 @@ as_raw_html(raw_summary %>% gt(groupname_col = 'indef',
   cols_label(verb = 'Verb'))
 ```
 
-<div id="ngcniqsvbh" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="csttnhuwal" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mode | Median | Mean | Range | Variance | SD   |
@@ -650,7 +650,7 @@ as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef',
              RSE = 'RSE (%)'))
 ```
 
-<div id="demmttiwjd" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="riqlkbgtxp" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mean | SD   | SE     | RSE (%) |
@@ -764,7 +764,7 @@ as_raw_html(t_test_results %>%
                          p.value = 'p-value'))
 ```
 
-<div id="seeeiuezty" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="fqctnxtgrv" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 | Condition | Mean | t-value | p-value | parameter | conf.low | conf.high | method | alternative |
@@ -1108,29 +1108,33 @@ and final section deals with that and presents a final model for my data
 
 ### Cumulative Link Model and Cumulative Link Mixed Model
 
-https://marissabarlaz.github.io/portfolio/ols/
-https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=ebbe4c4abe64c3889bc3309311790c367fd9bf51
+Sources:
+
+- [Ordinal logistic regression in R by Marissa
+  Barlaz](https://marissabarlaz.github.io/portfolio/ols/)
+- [Analysis of ordinal data with cumulative link models by Rune Haubo B
+  Christensen](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=ebbe4c4abe64c3889bc3309311790c367fd9bf51)
 
 In the beginning, I looked whether my obtained means are different from
 each other. I just found out that some conditions significantly more
 natural then the others. But for this experiment it doesn’t make much
 sense because I had the variables that I predict to have more impact on
-rating of the items, aka my dependent variable.
+rating of the items, aka my dependent variable.To check the impact of
+the independent variables, I applied ANOVA and lm(). Maybe one of the
+independent variables affected the dependent, maybe their combinations
+did.
 
-To check the impact of the independent variables, I applied ANOVA and
-lm(). Maybe one of the independent variables affected the dependent,
-maybe their combinations did.
-
-One issue that was neglected above is **data type**. My data are
-**ordinal**, not continuous. For me it was important to understand how
-all these other models (Anova and lm) work, so I just played with them.
-For the real analysis of my data and need **ordinal** library.
+One issue that was neglected above is **data type**. For me it was
+important to understand how all these other models (Anova and lm) work,
+so I just played with them. But that models need continuous type of
+data, my data are **ordinal**. So for the real analysis of my data and
+need **ordinal** library.
 
 ``` r
 library(ordinal)
 ```
 
-Cumulative Link Model (CLM) that is developed for ordinal type of data.
+First, I’m going to use Cumulative Link Model (CLM) from the library.
 “Cumulative” means the model estimates the probability that the response
 falls in a certain category or any lower one (here from 1 to 7). “Link”
 is a special type of function (logit, probit, cloglog, etc.), that is
@@ -1143,7 +1147,7 @@ from lm, but in others very different.
 ``` r
 e1_df$rating1 = as.factor(e1_df$rating1)
 e1.clm <- clm(rating1 ~ verb * indef * context, data = e1_df)
-summary(e1.clm)
+summary(e1.clm) 
 ```
 
     formula: rating1 ~ verb * indef * context
@@ -1172,6 +1176,30 @@ summary(e1.clm)
     4|5    1.312      0.115   11.45
     5|6    1.908      0.118   16.19
     6|7    2.714      0.123   22.10
+
+``` r
+library(ggeffects)
+ggpredict_e1.clm = ggpredict(e1.clm, terms = c("verb", "indef", "context"))
+df_pred <- as.data.frame(ggpredict_e1.clm) 
+```
+
+``` r
+ggplot(df_pred, aes(x = response.level, y = predicted, color = x, group = response.level)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.1) +
+  facet_wrap(facet~group) +  # facet = context, group = indef
+  theme_bw()
+```
+
+![](script_files/figure-commonmark/unnamed-chunk-42-1.png)
+
+``` r
+pred_resp <- predict_response(e1.clm, terms = c("verb", "indef", "context"))
+
+plot(pred_resp, colors = "flat")
+```
+
+![](script_files/figure-commonmark/unnamed-chunk-43-1.png)
 
 Is that it? Is this the final model? No :smiling_imp:
 
@@ -1225,12 +1253,6 @@ contrasts(e1_df$indef)
           nibud
     ni        0
     nibud     1
-
-``` r
-library(modelsummary)
-library(lmerTest)
-library(gtsummary)
-```
 
 ``` r
 e1_df$rating1 = as.factor(e1_df$rating1)

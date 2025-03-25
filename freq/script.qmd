@@ -749,6 +749,13 @@ summary(e1_df.lm)
 ```
 
 ```{r eval = FALSE, echo=FALSE}
+library(modelsummary)
+modelsummary(e1_df.lm, output = "gt", 
+             estimate = "{estimate}{stars}",
+             statistic = "{std.error} ({p.value})")
+```
+
+```{r eval = FALSE, echo=FALSE}
 e1_df$rating1 = as.factor(e1_df$rating1)
 e1_df$condition1 = as.factor(e1_df$condition1)
 e1_df$context = as.factor(e1_df$context)
@@ -778,28 +785,47 @@ This is all cool and fun but as I mentioned a hundred times above, my data are o
 
 ### Cumulative Link Model and Cumulative Link Mixed Model
 
-https://marissabarlaz.github.io/portfolio/ols/ https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=ebbe4c4abe64c3889bc3309311790c367fd9bf51
+Sources:
 
-In the beginning, I looked whether my obtained means are different from each other. I just found out that some conditions significantly more natural then the others. But for this experiment it doesn't make much sense because I had the variables that I predict to have more impact on rating of the items, aka my dependent variable.
+-   [Ordinal logistic regression in R by Marissa Barlaz](https://marissabarlaz.github.io/portfolio/ols/)
+-   [Analysis of ordinal data with cumulative link models by Rune Haubo B Christensen](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=ebbe4c4abe64c3889bc3309311790c367fd9bf51)
 
-To check the impact of the independent variables, I applied ANOVA and lm(). Maybe one of the independent variables affected the dependent, maybe their combinations did.
+In the beginning, I looked whether my obtained means are different from each other. I just found out that some conditions significantly more natural then the others. But for this experiment it doesn't make much sense because I had the variables that I predict to have more impact on rating of the items, aka my dependent variable.To check the impact of the independent variables, I applied ANOVA and lm(). Maybe one of the independent variables affected the dependent, maybe their combinations did.
 
-One issue that was neglected above is **data type**. My data are **ordinal**, not continuous. For me it was important to understand how all these other models (Anova and lm) work, so I just played with them. For the real analysis of my data and need **ordinal** library.
+One issue that was neglected above is **data type**. For me it was important to understand how all these other models (Anova and lm) work, so I just played with them. But that models need continuous type of data, my data are **ordinal**. So for the real analysis of my data and need **ordinal** library.
 
 ```{r}
 library(ordinal)
 ```
 
-Cumulative Link Model (CLM) that is developed for ordinal type of data. "Cumulative" means the model estimates the probability that the response falls in a certain category or any lower one (here from 1 to 7). "Link" is a special type of function (logit, probit, cloglog, etc.), that is used for the model. 
+First, I'm going to use Cumulative Link Model (CLM) from the library. "Cumulative" means the model estimates the probability that the response falls in a certain category or any lower one (here from 1 to 7). "Link" is a special type of function (logit, probit, cloglog, etc.), that is used for the model.
 
-The output table looks familiar, there are coefficients, estimates, SEs and now z-value. The results are in some cases very similar to those from lm, but in others very different. 
+The output table looks familiar, there are coefficients, estimates, SEs and now z-value. The results are in some cases very similar to those from lm, but in others very different.
 
 ```{r}
 e1_df$rating1 = as.factor(e1_df$rating1)
 e1.clm <- clm(rating1 ~ verb * indef * context, data = e1_df)
-summary(e1.clm)
+summary(e1.clm) 
+```
+```{r}
+library(ggeffects)
+ggpredict_e1.clm = ggpredict(e1.clm, terms = c("verb", "indef", "context"))
+df_pred <- as.data.frame(ggpredict_e1.clm) 
 ```
 
+```{r}
+ggplot(df_pred, aes(x = response.level, y = predicted, color = x, group = response.level)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.1) +
+  facet_wrap(facet~group) +  # facet = context, group = indef
+  theme_bw()
+```
+```{r}
+pred_resp <- predict_response(e1.clm, terms = c("verb", "indef", "context"))
+
+plot(pred_resp, colors = "flat")
+
+```
 Is that it? Is this the final model? No :smiling_imp:
 
 Now we want to be sure that the effects we see come from the independent variables but not from random participant variation or bad items. You see, some items could have been very bad, e.g., there was an error in one and everyone disliked, so that influenced the ratings. Or some participants were somehow weird and assessed questions in a particular way. What I need to know now, that is my results are reliable even if these factors are included, so I need **a mixed model**.
@@ -817,15 +843,6 @@ e1_df$indef = as.factor(e1_df$indef)
 contrasts(e1_df$verb)
 contrasts(e1_df$context)
 contrasts(e1_df$indef)
-```
-
-```{r}
-library(modelsummary)
-library(lmerTest)
-library(gtsummary)
-```
-
-```{r}
 ```
 
 ```{r}
