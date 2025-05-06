@@ -9,20 +9,6 @@ author: "Masha Onoeva"
 
 ## Info
 
-Hi! This R notebook describes the steps that are required for the analysis of naturalness/acceptability judgment linguistic experiments. I use the experiment that I did with Radek Šimík testing Russian negated polar questions in different contexts as the example data (see [Onoeva and Šimík 2023](https://mariaonoeva.github.io/assets/pdf/FDSL16_RuNPQs_Onoeva_Simik.pdf)). We had several sub-experiments, here I report on one because code is the same for all of them. The experiment was run on [LRex](https://www.l-rex.de/).
-
-#### Design
-
-The goal of the experiment was to find out how natural are various negated polar questions in different contexts. There were three independent variables, each had two manipulations, so the design was 2 x 2 x 2. There variables were:
-
-1.  verb: V1 li and V2
-2.  indefinite: ni and nibud
-3.  context: neutral and negative
-
-Participants had to assess questions in different context on the scale from 1 very unnatural to 7 very natural. It was the dependent variable.
-
-Within-items, between subjects?
-
 #### Files
 
 The csv file with raw results is available in this repo (perhaps I can also load a spreadsheet with all conditions that I used for LRex?). There are also two files with the script -- qmd and md. The first one is a Quarto RMarkdown script from RStudio, the second one is a pretty version for GitHub (it is easier to follow online).
@@ -206,26 +192,33 @@ The conditions were coded as letters in the spreadsheet for LRex, so first, I as
 
 ```{r}
 # accessing the first experiment from the groups  
-e1_df <- split_main_df1[[1]]
+f1_df <- split_main_df1[[2]]
+```
 
+```{r}
+f1_df %>%
+  distinct(condition)
+```
+
+```{r}
 # creating a new column for the first variable 'verb' and recoding 
 # to the readable form 4 conditions were V1 li, 4 -- V2 
-e1_df$verb <- 0 
-e1_df$verb[e1_df$condition %in% c("a", "c", "e", "g")] <- "V1 li"
-e1_df$verb[e1_df$verb != "V1 li"] <- "V2"
+f1_df$verb <- 0 
+f1_df$verb[f1_df$condition %in% c("e", "f", "g", "h")] <- "V1 li"
+f1_df$verb[f1_df$verb != "V1 li"] <- "V2" # a, b, c, d
 
 # the same as above for the second variable 'context'
-e1_df$context <- 0 
-e1_df$context[e1_df$condition %in% c("a", "b", "c", "d")] <- "neutral"
-e1_df$context[e1_df$context != "neutral"] <- "negative"
+f1_df$context <- 0 
+f1_df$context[f1_df$condition %in% c("a", "b", "e", "f")] <- "positive"
+f1_df$context[f1_df$context != "positive"] <- "neutral" # c, d, g, h
 
-# the same as above for the third variable 'indefinite'
-e1_df$indef <- 0 
-e1_df$indef[e1_df$condition %in% c("a", "b", "e", "f")] <- "ni"
-e1_df$indef[e1_df$indef != "ni"] <- "nibud"
+# the same as above for the third variable 'polarity'
+f1_df$polarity <- 0 
+f1_df$polarity[f1_df$condition %in% c("a", "c", "g", "e")] <- "aff"
+f1_df$polarity[f1_df$polarity != "aff"] <- "neg" # b, d, f, h
 
 # ChatGPT version: idk case_when function 
-# e1_df <- e1_df %>%
+# f1_df <- f1_df %>%
 #   mutate(
 #     indef = case_when(
 #       condition %in% c("a", "b", "e", "f") ~ "ni",
@@ -242,14 +235,14 @@ There are two ways how to look at my data: check how they are similar and how th
 ```{r}
 # creating one GIGA condition
 # not necessary though, group_by() works just fine, but I'll need it further
-e1_df <- e1_df %>%
- mutate(condition1 = paste(condition, context, verb, indef))
+f1_df <- f1_df %>%
+ mutate(condition1 = paste(condition, context, verb, polarity))
 
 library(DescTools) # for Mode() 
-e1_df$rating1 <- as.numeric(e1_df$rating1)
+f1_df$rating1 <- as.numeric(f1_df$rating1)
 
-raw_summary <- e1_df %>%
-  dplyr::group_by(indef, verb, context) %>%
+raw_summary <- f1_df %>%
+  dplyr::group_by(polarity, verb, context) %>%
   dplyr::summarize(Mode = Mode(rating1),
             Median = median(rating1),
             Mean = mean(rating1),
@@ -258,18 +251,11 @@ raw_summary <- e1_df %>%
             SD = sd(rating1), # sd = sqrt(var(rating1))
             )
 
-as_raw_html(raw_summary %>% gt(groupname_col = 'indef', 
+as_raw_html(raw_summary %>% gt(groupname_col = 'polarity', 
                                rowname_col = 'context') %>%
   cols_label(verb = 'Verb'))
 
 ```
-
--   **Mode** is the most popular ~~dude~~ number in the set. It's usually not a very useful value but here why not :grin:
--   **Median** is a true central tendency value as it's in the middle but it's necessary to order the values first. It's resilient to outliers which can be good and bad at the same time.
--   **Mean** is also known as average. It's like a parent who loves their kids equally, or ideal socialism, it shows the sum of all values divided by their number, so if everybody should get the same, they get mean.
--   **Range** is min and max values, not super telling here but can be useful with different data.
--   For **variance** mean is required. To calculate that one, each observed value has to be compared to the mean, then this difference must be squared (because it can be negative), after the sum of all of these squared differences should be divided by the number of observed values (I'm aware about n and n-1 stuff, but there is no space for that). So it's average for squared differences from the mean. It's possible to do from median, I guess, but here it's calculated from mean.
--   **Standard deviation (SD)** is the easiest, it's a square root from variance. Since differences from the mean were squared in the previous step, one needs to 'unsquare' that result. Perhaps my SDs are too high in some cases but this is what I'm going to investigate in my dissertation (Masha Razguliaeva's comment: for naturalness judgments SD might be higher than for grammaticality).
 
 ### Stacked bar plot
 
@@ -278,28 +264,25 @@ The table is cool but the next step is to plot the results. Before I do that I n
 ```{r}
 
 # have to make as factor, otherwise error 
-e1_df$rating1 <- as.factor(e1_df$rating1)
+f1_df$rating1 <- as.factor(f1_df$rating1)
 
 # re-leveling ratings (I have this code from Anička Staňková)
-e1_df_relevel <- e1_df %>%
+f1_df_relevel <- f1_df %>%
   mutate(rating1 = fct_relevel(rating1,"7","6","5","4","3","2","1")) 
 
 # re-leveling verbs so they are showed differently in the plot
-e1_df_relevel1 <- e1_df_relevel %>%
+f1_df_relevel1 <- f1_df_relevel %>%
   mutate(verb = fct_relevel(verb,"V1 li", "V2"))
 
 ```
 
 I have commented out some lines for the plot but they are mostly cosmetics that change size of text, etc. These might be useful for specific cases but here I don't need them.
 
-```         
-```
-
 ```{r fig.height=5, fig.width=5, include = FALSE}
-e1_main_plot <- ggplot(e1_df_relevel1, aes(fill=rating1, x=context)) + 
+f1_main_plot <- ggplot(f1_df_relevel1, aes(fill=rating1, x=context)) + 
     geom_bar(position = "fill") +
     geom_hline(aes(yintercept=0.5), size=0.5) +
-    facet_wrap(~verb+indef) +
+    facet_wrap(~verb+polarity) +
   # coloring
     theme_bw() +
     scale_fill_brewer(palette = "RdPu", direction=-1) +
@@ -316,30 +299,29 @@ e1_main_plot <- ggplot(e1_df_relevel1, aes(fill=rating1, x=context)) +
     xlab("Context") +
     ylab("Proportions of raiting")
 
-e1_main_plot
+f1_main_plot
 ```
 
 ```{r fig.height=5, fig.width=5}
 facet_labels <- c('V1 li' = "LiPQs", 
                      'V2' = "IntonPQs", 
-                     'ni' = "NCIs", 
-                     'nibud' = "nibud")
+                     'aff' = "Affirmative", 
+                     'neg' = "Negated")
 
 verb.labs <- c("LiPQs", "IntonPQs")
 names(verb.labs) <- c("V1 li", "V2")
-indef.labs <- c("NCIs", "nibud")
-names(indef.labs) <- c("ni", "nibud")
+polarity.labs <- c("Affirmative", "Negated")
+names(polarity.labs) <- c("aff", "neg")
 
-facet_border <- data.frame(
-  xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf, 
-  verb = 'V1 li', indef = 'NCIs'
-)
+# facet_border <- data.frame(
+#   xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf, 
+#   verb = 'V1 li', indef = 'NCIs'
+# )
 
-
-e1_main_plot1 <- ggplot(e1_df_relevel1, aes(fill = rating1, x = context)) + 
+f1_main_plot1 <- ggplot(f1_df_relevel1, aes(fill = rating1, x = context)) + 
   geom_bar(position = "fill") +
   geom_hline(aes(yintercept = 0.5), size = 0.5) +
-  facet_wrap(~verb + indef, labeller = labeller(verb = verb.labs, indef = indef.labs)) +
+  facet_wrap(~verb + polarity, labeller = labeller(verb = verb.labs, polarity = polarity.labs)) +
   theme_bw() +
   scale_fill_brewer(palette = "RdYlGn", direction = -1) +
   theme(
@@ -357,12 +339,12 @@ e1_main_plot1 <- ggplot(e1_df_relevel1, aes(fill = rating1, x = context)) +
   xlab("Context") +
   ylab("Proportions of rating") # + 
   # for highlighting certain facets in the plot
-  # geom_rect(data = subset(e1_df_relevel1, verb  %in% c("V2") & indef %in% c("ni")), 
+  # geom_rect(data = subset(f1_df_relevel1, verb  %in% c("V2") & indef %in% c("ni")), 
   #                         fill = NA, colour = "blue", size = 4,
   #                         xmin = -Inf,xmax = Inf,
   #                         ymin = -Inf, ymax = Inf) 
 
-e1_main_plot1
+f1_main_plot1
 
 ```
 
@@ -373,12 +355,8 @@ It is also possible to save the plots using this code:
 ```{r eval=FALSE}
 
 # as pdf 
-ggsave(e1_main_plot1, file="e1_main11.pdf", 
+ggsave(f1_main_plot1, file="f1_main.pdf", 
        width = 12, height = 12, units = "cm", device="pdf")
-
-# as eps
-ggsave(e1_main_plot1, file="e1_main1.eps", 
-       width = 35, height = 37, units = "cm", device="eps")
 ```
 
 ### Interaction plot
@@ -393,14 +371,14 @@ The next step is to create an interaction plot. First, I do the calculations and
 library(Rmisc) # for summarySE, needed just here
 
 # I load the df to inter_df
-inter_df <- e1_df
+inter_df_f1 <- f1_df
 
 # changing rating1 to numeric 
-inter_df$rating1 <- as.numeric(inter_df$rating1)
+inter_df_f1$rating1 <- as.numeric(inter_df_f1$rating1)
 
 # calculating interactions 
-tab_inter <- summarySE(inter_df, measurevar="rating1", 
-                         groupvars = c("context", "verb", "indef"))
+tab_inter_e1 <- summarySE(inter_df_f1, measurevar="rating1", 
+                         groupvars = c("context", "verb", "polarity"))
 
 ```
 
@@ -409,8 +387,8 @@ The plot code might look crazy, but I've commented things out and most of the li
 ```{r fig.height=5, fig.width=5}
 
 # plotting 
-inter_plot <- ggplot(tab_inter, aes(x=context, y=rating1, 
-                                    colour=indef, group=indef)) + 
+inter_plot_f1 <- ggplot(tab_inter_e1, aes(x=context, y=rating1, 
+                                    colour=polarity, group=polarity)) + 
     geom_errorbar(aes(ymin=rating1-se, ymax=rating1+se), width=.1) +
     facet_wrap(~verb) +
     theme_bw() +
@@ -418,9 +396,9 @@ inter_plot <- ggplot(tab_inter, aes(x=context, y=rating1,
     theme(
         text = element_text(size = 15),
         # legend.text = element_text(size=30),
-        # legend.key.size = unit(1, 'cm'),
-        legend.position = c(0.8, 0.15),
-        legend.title=element_blank())+
+        #legend.key.size = unit(1, 'cm'),
+        legend.title=element_blank(),
+        legend.position = c(0.8, 0.15))+
         # axis.text = element_text(size = 25),
         # axis.title = element_text(size = 25),
 # axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
@@ -430,13 +408,12 @@ inter_plot <- ggplot(tab_inter, aes(x=context, y=rating1,
     ylab("Naturalness (SE)") +
     coord_cartesian(ylim = c(1, 7)) +
     #scale_y_continuous(breaks = pretty_breaks(4)) +
-    guides(colour = guide_legend(reverse=TRUE))  +
     scale_color_brewer(palette = "Set2")
 
-inter_plot
+inter_plot_f1
 
 # as pdf 
-ggsave(inter_plot, file="e1_inter.pdf", 
+ggsave(inter_plot_f1, file="f1_inter.pdf", 
        width = 12, height = 12, units = "cm", device="pdf")
 ```
 
@@ -490,10 +467,10 @@ Unlike SD, SE is an inferential statistic in this case, so it can only be estima
 In the table below, there are means from the descriptive table together with Standard Deviations (SD), Standard Errors (SE) and Relative SEs. SEs were already present in the interaction plot, it's represented as those little bars around the dots. There is an option to plot SD but those plots look crazy.
 
 ```{r}
-e1_df$rating1 <- as.numeric(e1_df$rating1)
+f1_df$rating1 <- as.numeric(f1_df$rating1)
 
 # using dplyr:: here as the functions interfere with plyr
-raw_summary1 <- e1_df %>%
+raw_summary1 <- f1_df %>%
   dplyr::group_by(indef, verb, context) %>% 
   dplyr::summarize(Mean = mean(rating1), 
             SD = sd(rating1), # sd = sqrt(var(rating1))
@@ -544,7 +521,7 @@ I'm going to use here a one sample t-test because I have one sample. There are a
 t-test can be run like this for one condition. The output says that it is unlikely that the observed mean was due to chance as t = 25 and p \< 2e-16.
 
 ```{r}
-cond_1 <- e1_df %>% filter(condition1 == 'a neutral V1 li ni')
+cond_1 <- f1_df %>% filter(condition1 == 'a neutral V1 li ni')
 t.test(cond_1$rating1)
 ```
 
@@ -554,13 +531,13 @@ Or it can be done for all 8 conditions at once. All t-values are huge, up to t =
 library(broom)
 
 # packing all conditions into a vector 
-conditions <- e1_df %>%
+conditions <- f1_df %>%
   dplyr::distinct(condition1) %>%
   pull(condition1)
 
 # applying t.test function to each condition and creating a table 
 t_test_results <- map_df(conditions, function(cond) {
-  result <- e1_df %>% 
+  result <- f1_df %>% 
     filter(condition1 == cond) %>% 
     pull(rating1) %>% 
     t.test() %>%
@@ -619,9 +596,9 @@ One of the requirements for this test is to have a continuous quantitative depen
 Below is the most common output from ANOVA. Once again I violate perhaps all conditions that can be violated but who cares. p-value is small, so we reject H0 that all groups are equal.
 
 ```{r}
-e1_df$rating1 <- as.numeric(e1_df$rating1)
-e1_df.aov <- aov(rating1~condition1, data=e1_df)
-summary(e1_df.aov)
+f1_df$rating1 <- as.numeric(f1_df$rating1)
+f1_df.aov <- aov(rating1~condition1, data=f1_df)
+summary(f1_df.aov)
 ```
 
 ##### Df (degree of freedom)
@@ -657,7 +634,7 @@ sum2_condition
 
 ```{r}
 # all obtained values from E1
-all_rating <- e1_df$rating1
+all_rating <- f1_df$rating1
 
 # how far was the value from the overall grand mean, squaring and summing all
 sum2_total <- sum((all_rating-overall_mean)^2)
@@ -718,8 +695,8 @@ But it only means that at least one is different but which one? And what is the 
 Wait a sec, where is a two-way ANOVA? Well, since we moved to the independent variables (finally!), ANOVA is three way now. Seems clear, if there are two variables, then it's two way ANOVA.
 
 ```{r}
-e1_df.aov3 <- aov(rating1~verb*indef*context, data = e1_df)
-summary(e1_df.aov3)
+f1_df.aov3 <- aov(rating1~verb*indef*context, data = f1_df)
+summary(f1_df.aov3)
 ```
 
 In principle, it does all of the described steps above but for each group. I'll do it for verb here.
@@ -727,10 +704,10 @@ In principle, it does all of the described steps above but for each group. I'll 
 ```{r}
 overall_mean <- mean(raw_summary1$Mean)
 
-verb_V1 <- e1_df %>%
+verb_V1 <- f1_df %>%
   filter(verb == "V1 li")
 
-verb_V2 <- e1_df %>%
+verb_V2 <- f1_df %>%
   filter(verb == "V2")
 
 mean_V1 <- mean(verb_V1$rating1)
@@ -747,24 +724,24 @@ It works! So this model now tells me that all my three factors influence the ind
 So I'm going to try another trick here: instead of aov() I'll use lm(). Results from the bottom of the summary seem familiar. There are degrees of freedom for residuals, F-statistic/value and p-value. So lm estimates coefficients for factor levels whereas ANOVA compares means between the groups.
 
 ```{r}
-e1_df$rating1 <- as.numeric(e1_df$rating1) # data need to be numeric
-e1_df.lm <- lm(rating1~verb*indef*context, data=e1_df)
-summary(e1_df.lm)
+f1_df$rating1 <- as.numeric(f1_df$rating1) # data need to be numeric
+f1_df.lm <- lm(rating1~verb*indef*context, data=f1_df)
+summary(f1_df.lm)
 ```
 
 ```{r eval = FALSE, echo=FALSE}
 library(modelsummary)
-modelsummary(e1_df.lm, output = "gt", 
+modelsummary(f1_df.lm, output = "gt", 
              estimate = "{estimate}{stars}",
              statistic = "{std.error} ({p.value})")
 ```
 
 ```{r eval = FALSE, echo=FALSE}
-e1_df$rating1 = as.factor(e1_df$rating1)
-e1_df$condition1 = as.factor(e1_df$condition1)
-e1_df$context = as.factor(e1_df$context)
+f1_df$rating1 = as.factor(f1_df$rating1)
+f1_df$condition1 = as.factor(f1_df$condition1)
+f1_df$context = as.factor(f1_df$context)
 
-scat_plot <- ggplot(e1_df, aes(x=context, y=rating1, 
+scat_plot <- ggplot(f1_df, aes(x=context, y=rating1, 
                                fill=condition1, group=condition1)) +
   geom_boxplot() +  
   geom_jitter(width = 0.2, alpha = 0.4)+
@@ -807,8 +784,8 @@ First, I'm going to use Cumulative Link Model (CLM) from the library. "Cumulativ
 The output table looks familiar, there are coefficients, estimates, SEs and now z-value. The results are in some cases very similar to those from lm, but in others very different.
 
 ```{r}
-e1_df$rating1 = as.factor(e1_df$rating1)
-e1.clm <- clm(rating1 ~ verb * indef * context, data = e1_df)
+f1_df$rating1 = as.factor(f1_df$rating1)
+e1.clm <- clm(rating1 ~ verb * indef * context, data = f1_df)
 summary(e1.clm) 
 ```
 ```{r}
@@ -841,27 +818,23 @@ https://marissabarlaz.github.io/portfolio/contrastcoding/ One last theory piece,
 First of all, I didn't quite get why we didn't use the treatment/dummy coding for my experiment. When I learned more about what it does, I realized that it doesn't make sense to compare all my data to one reference level. It is something like having a control placebo group to which everything is compared. In this experiment, I didn't have such a group, so I need to make my comparisons to the grand mean with no baseline. But I did it for lm(), there was an intercept--condition e, `V1`, `negative` and `ni`. But all of the stuff there was just practicing, so that's fine. If one looks at their coding, they all have 0.
 
 ```{r}
-e1_df$verb = as.factor(e1_df$verb)
-e1_df$context = as.factor(e1_df$context)
-e1_df$indef = as.factor(e1_df$indef)
-contrasts(e1_df$verb) 
-contrasts(e1_df$context)
-contrasts(e1_df$indef)
-
-levels(e1_df$verb)
-levels(e1_df$indef)
-levels(e1_df$context)
+f1_df$verb = as.factor(f1_df$verb)
+f1_df$context = as.factor(f1_df$context)
+f1_df$indef = as.factor(f1_df$indef)
+contrasts(f1_df$verb)
+contrasts(f1_df$context)
+contrasts(f1_df$indef)
 ```
 
 ```{r}
-e1_df$rating1 = as.factor(e1_df$rating1)
+f1_df$rating1 = as.factor(f1_df$rating1)
 
 e1.clmm <- clmm(rating1 ~ verb * indef * context + 
   (1 | participant) + (1 | item), 
   contrasts = list(verb="contr.sum",
                    indef="contr.sum", 
                    context="contr.sum"), 
-  data=e1_df)
+  data=f1_df)
 
 summary(e1.clmm)
 ```
@@ -872,7 +845,7 @@ e1.clmm_treat <- clmm(rating1 ~ verb * indef * context +
   contrasts = list(verb="contr.treatment",
                    indef="contr.treatment", 
                    context="contr.treatment"), 
-  data=e1_df)
+  data=f1_df)
 
 summary(e1.clmm_treat)
 ```
