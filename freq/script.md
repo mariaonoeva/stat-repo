@@ -377,7 +377,7 @@ as_raw_html(raw_summary %>% gt(groupname_col = 'indef',
   cols_label(verb = 'Verb'))
 ```
 
-<div id="ywkpmuctny" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="kqvahawnkd" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mode | Median | Mean | Range | Variance | SD   |
@@ -471,8 +471,8 @@ e1_main_plot1 <- ggplot(e1_df_relevel1, aes(fill = rating1, x = context)) +
     legend.position = "right",
     # text = element_text(size = 30),
     text = element_text(size = 15),
-    legend.text = element_text(size = 15),
-    legend.key.size = unit(1, 'cm'),
+    legend.text = element_text(size = 10),
+    legend.key.size = unit(.5, 'cm'),
     legend.title = element_blank()
     # axis.text = element_text(size = 25),
     # axis.title = element_text(size = 25),
@@ -501,7 +501,7 @@ It is also possible to save the plots using this code:
 ``` r
 # as pdf 
 ggsave(e1_main_plot1, file="e1_main11.pdf", 
-       width = 25, height = 27, units = "cm", device="pdf")
+       width = 12, height = 12, units = "cm", device="pdf")
 
 # as eps
 ggsave(e1_main_plot1, file="e1_main1.eps", 
@@ -546,8 +546,8 @@ inter_plot <- ggplot(tab_inter, aes(x=context, y=rating1,
         text = element_text(size = 15),
         # legend.text = element_text(size=30),
         # legend.key.size = unit(1, 'cm'),
+        legend.position = c(0.8, 0.15),
         legend.title=element_blank())+
-        # legend.position = c(0.8, 0.15),
         # axis.text = element_text(size = 25),
         # axis.title = element_text(size = 25),
 # axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
@@ -564,6 +564,12 @@ inter_plot
 ```
 
 ![](script_files/figure-commonmark/unnamed-chunk-22-1.png)
+
+``` r
+# as pdf 
+ggsave(inter_plot, file="e1_inter.pdf", 
+       width = 12, height = 12, units = "cm", device="pdf")
+```
 
 One can play with that of course. Below for example is a the same plot
 as above but for each item. (Perhaps I can use conditions as color?)
@@ -650,7 +656,7 @@ as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef',
              RSE = 'RSE (%)'))
 ```
 
-<div id="bnkxsgdocn" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="zlmgmutert" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mean | SD   | SE     | RSE (%) |
@@ -764,7 +770,7 @@ as_raw_html(t_test_results %>%
                          p.value = 'p-value'))
 ```
 
-<div id="qfekppkiqu" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="ignwcdtkwh" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 | Condition | Mean | t-value | p-value | parameter | conf.low | conf.high | method | alternative |
@@ -1228,33 +1234,7 @@ practicing, so that’s fine. If one looks at their coding, they all have
 0.
 
 ``` r
-e1_df$verb = as.factor(e1_df$verb)
-e1_df$context = as.factor(e1_df$context)
-e1_df$indef = as.factor(e1_df$indef)
-contrasts(e1_df$verb)
-```
-
-          V2
-    V1 li  0
-    V2     1
-
-``` r
-contrasts(e1_df$context)
-```
-
-             neutral
-    negative       0
-    neutral        1
-
-``` r
-contrasts(e1_df$indef)
-```
-
-          nibud
-    ni        0
-    nibud     1
-
-``` r
+# contrast coding -- needs a GM!! (not a chess GM but a grand mean)
 e1_df$rating1 = as.factor(e1_df$rating1)
 
 e1.clmm <- clmm(rating1 ~ verb * indef * context + 
@@ -1303,6 +1283,54 @@ summary(e1.clmm)
     6|7    1.464      0.159    9.19
 
 ``` r
+# for dummy/treatment coding 1/0
+e1_df$verb = as.factor(e1_df$verb)
+e1_df$context = as.factor(e1_df$context)
+e1_df$indef = as.factor(e1_df$indef)
+
+contrasts(e1_df$verb) 
+```
+
+          V2
+    V1 li  0
+    V2     1
+
+``` r
+contrasts(e1_df$context)
+```
+
+             neutral
+    negative       0
+    neutral        1
+
+``` r
+contrasts(e1_df$indef)
+```
+
+          nibud
+    ni        0
+    nibud     1
+
+``` r
+# need reference level, here it is the first one
+levels(e1_df$verb)
+```
+
+    [1] "V1 li" "V2"   
+
+``` r
+levels(e1_df$indef)
+```
+
+    [1] "ni"    "nibud"
+
+``` r
+levels(e1_df$context)
+```
+
+    [1] "negative" "neutral" 
+
+``` r
 e1.clmm_treat <- clmm(rating1 ~ verb * indef * context + 
   (1 | participant) + (1 | item), 
   contrasts = list(verb="contr.treatment",
@@ -1347,6 +1375,110 @@ summary(e1.clmm_treat)
     4|5    1.402      0.192    7.32
     5|6    2.126      0.194   10.95
     6|7    3.132      0.199   15.74
+
+``` r
+e1_df_LI <- e1_df %>%
+  filter(verb=='V1 li')
+
+e1_df_LI$rating1 = as.factor(e1_df_LI$rating1)
+
+e1_LI.clmm <- clmm(rating1 ~ indef * context + 
+  (1 | participant) + (1 | item), 
+  contrasts = list(indef="contr.sum", 
+                   context="contr.sum"), 
+  data=e1_df_LI)
+
+summary(e1_LI.clmm)
+```
+
+    Cumulative Link Mixed Model fitted with the Laplace approximation
+
+    formula: rating1 ~ indef * context + (1 | participant) + (1 | item)
+    data:    e1_df_LI
+
+     link  threshold nobs logLik   AIC     niter      max.grad cond.H 
+     logit flexible  1088 -1795.38 3612.76 1368(4107) 1.64e-03 1.3e+02
+
+    Random effects:
+     Groups      Name        Variance Std.Dev.
+     participant (Intercept) 0.967    0.983   
+     item        (Intercept) 0.136    0.369   
+    Number of groups:  participant 68,  item 32 
+
+    Coefficients:
+                    Estimate Std. Error z value Pr(>|z|)    
+    indef1           -1.2224     0.0663  -18.43  < 2e-16 ***
+    context1         -0.3720     0.0578   -6.43  1.2e-10 ***
+    indef1:context1   0.0918     0.0570    1.61     0.11    
+    ---
+    Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+    Threshold coefficients:
+        Estimate Std. Error z value
+    1|2  -2.1743     0.1689  -12.87
+    2|3  -1.2442     0.1596   -7.79
+    3|4  -0.6469     0.1564   -4.14
+    4|5  -0.0553     0.1551   -0.36
+    5|6   0.6221     0.1559    3.99
+    6|7   1.6266     0.1621   10.03
+
+``` r
+levels(e1_df_LI$indef)
+```
+
+    [1] "ni"    "nibud"
+
+``` r
+levels(e1_df_LI$context)
+```
+
+    [1] "negative" "neutral" 
+
+``` r
+e1_df_V2 <- e1_df %>%
+  filter(verb=='V2')
+
+e1_df_V2$rating1 = as.factor(e1_df_V2$rating1)
+
+e1_V2.clmm <- clmm(rating1 ~ indef * context + 
+  (1 | participant) + (1 | item), 
+  contrasts = list(indef="contr.sum", 
+                   context="contr.sum"), 
+  data=e1_df_V2)
+
+summary(e1_V2.clmm)
+```
+
+    Cumulative Link Mixed Model fitted with the Laplace approximation
+
+    formula: rating1 ~ indef * context + (1 | participant) + (1 | item)
+    data:    e1_df_V2
+
+     link  threshold nobs logLik   AIC     niter      max.grad cond.H 
+     logit flexible  1088 -1900.23 3822.46 1198(4796) 1.93e-03 1.9e+02
+
+    Random effects:
+     Groups      Name        Variance Std.Dev.
+     participant (Intercept) 1.31     1.146   
+     item        (Intercept) 0.35     0.591   
+    Number of groups:  participant 68,  item 32 
+
+    Coefficients:
+                    Estimate Std. Error z value Pr(>|z|)    
+    indef1           -0.4329     0.0574   -7.54  4.6e-14 ***
+    context1         -0.1449     0.0566   -2.56     0.01 *  
+    indef1:context1   0.0531     0.0566    0.94     0.35    
+    ---
+    Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+    Threshold coefficients:
+        Estimate Std. Error z value
+    1|2   -2.668      0.208  -12.84
+    2|3   -1.881      0.197   -9.56
+    3|4   -1.163      0.191   -6.08
+    4|5   -0.495      0.188   -2.63
+    5|6    0.305      0.188    1.62
+    6|7    1.353      0.192    7.04
 
 ## Summary
 

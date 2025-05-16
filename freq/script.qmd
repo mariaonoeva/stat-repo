@@ -841,9 +841,14 @@ https://marissabarlaz.github.io/portfolio/contrastcoding/ One last theory piece,
 First of all, I didn't quite get why we didn't use the treatment/dummy coding for my experiment. When I learned more about what it does, I realized that it doesn't make sense to compare all my data to one reference level. It is something like having a control placebo group to which everything is compared. In this experiment, I didn't have such a group, so I need to make my comparisons to the grand mean with no baseline. But I did it for lm(), there was an intercept--condition e, `V1`, `negative` and `ni`. But all of the stuff there was just practicing, so that's fine. If one looks at their coding, they all have 0.
 
 ```{r}
-# contrast coding -- needs a GM!! (not a chess GM but a grand mean)
-e1_df$rating1 = as.factor(e1_df$rating1)
+c(levels(e1_df$verb), levels(e1_df$indef), levels(e1_df$context))
 
+# contrast coding -- needs a GM!! (not a chess GM but a grand mean)
+GM_e1 <- mean(as.numeric(e1_df$rating1))
+```
+
+```{r}
+e1_df$rating1 = as.factor(e1_df$rating1)
 e1.clmm <- clmm(rating1 ~ verb * indef * context + 
   (1 | participant) + (1 | item), 
   contrasts = list(verb="contr.sum",
@@ -853,6 +858,20 @@ e1.clmm <- clmm(rating1 ~ verb * indef * context +
 
 summary(e1.clmm)
 ```
+```{r}
+V1_mean <- e1_df %>% 
+  filter(verb=='V1 li') %>%
+  summarise(mean_rating = mean(as.numeric(rating1), na.rm = TRUE))
+
+V2_mean <- e1_df %>% 
+  filter(verb=='V2') %>%
+  summarise(mean_rating = mean(as.numeric(rating1), na.rm = TRUE))
+
+GM_e1-V1_mean
+GM_e1-V2_mean
+
+V2_mean
+```
 
 ```{r}
 # for dummy/treatment coding 1/0
@@ -860,17 +879,8 @@ e1_df$verb = as.factor(e1_df$verb)
 e1_df$context = as.factor(e1_df$context)
 e1_df$indef = as.factor(e1_df$indef)
 
-contrasts(e1_df$verb) 
-contrasts(e1_df$context)
-contrasts(e1_df$indef)
+c(contrasts(e1_df$verb), contrasts(e1_df$context), contrasts(e1_df$indef))
 
-# need reference level, here it is the first one
-levels(e1_df$verb)
-levels(e1_df$indef)
-levels(e1_df$context)
-```
-
-```{r}
 e1.clmm_treat <- clmm(rating1 ~ verb * indef * context + 
   (1 | participant) + (1 | item), 
   contrasts = list(verb="contr.treatment",
@@ -908,8 +918,8 @@ e1_df_V2$rating1 = as.factor(e1_df_V2$rating1)
 
 e1_V2.clmm <- clmm(rating1 ~ indef * context + 
   (1 | participant) + (1 | item), 
-  contrasts = list(indef="contr.treatment", 
-                   context="contr.treatment"), 
+  contrasts = list(indef="contr.sum", 
+                   context="contr.sum"), 
   data=e1_df_V2)
 
 summary(e1_V2.clmm)
