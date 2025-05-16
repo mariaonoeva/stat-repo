@@ -479,7 +479,6 @@ all_tab_inter <- bind_rows(
 )
 all_tab_inter
 ```
-
 ```{r}
 all_plot <- ggplot(all_tab_inter, aes(x=context, y=rating1, 
                                     colour=indef, group=indef)) + 
@@ -508,6 +507,37 @@ all_plot <- ggplot(all_tab_inter, aes(x=context, y=rating1,
 
 all_plot
 ```
+
+```{r}
+all_plot1 <- ggplot(all_tab_inter, aes(x = context, y = rating1, 
+    colour = lang, group = interaction(lang, indef), 
+    linetype = indef))+
+    geom_errorbar(aes(ymin=rating1-se, ymax=rating1+se), width=.1) +
+    facet_wrap(~strategy+indef) +
+    theme_bw() +
+    geom_line(size = 1) +
+    theme(
+        text = element_text(size = 20),
+        # legend.text = element_text(size=30),
+        # legend.key.size = unit(1, 'cm'),
+        # legend.position = c(0.8, 0.15),
+        legend.position = "top", 
+        legend.title=element_blank())+
+        # axis.text = element_text(size = 25),
+        # axis.title = element_text(size = 25),
+# axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+# axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
+    geom_point() + 
+    xlab("Context") +
+    ylab("Rating (SE)") +
+    coord_cartesian(ylim = c(1, 7)) +
+    #scale_y_continuous(breaks = pretty_breaks(4)) +
+    guides(colour = guide_legend(reverse=TRUE))  +
+    scale_color_brewer(palette = "Set2")
+
+all_plot1
+```
+
 ```{r}
 # as pdf 
 ggsave(all_plot, file="all_plot.pdf", 
