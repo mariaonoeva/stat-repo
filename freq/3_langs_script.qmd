@@ -542,4 +542,22 @@ all_plot1
 # as pdf 
 ggsave(all_plot, file="all_plot.pdf", 
        width = 20, height = 20, units = "cm", device="pdf")
+
+```
+
+```{r}
+level(cz_df_e1$verb)
+```
+
+```{r}
+library(ordinal)
+cz_df_e1$rating1 = as.factor(cz_df_e1$rating1)
+cz_df_e1.clmm <- clmm(rating1 ~ verb * indef * context + 
+  (1 | participant) + (1 | item), 
+  contrasts = list(verb="contr.sum",
+                   indef="contr.sum", 
+                   context="contr.sum"), 
+  data=e1_df)
+
+summary(cz_df_e1.clmm)
 ```
