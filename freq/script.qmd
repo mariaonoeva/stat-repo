@@ -23,6 +23,8 @@ Participants had to assess questions in different context on the scale from 1 ve
 
 Within-items, between subjects?
 
+The design was also within-subjects (i.e., all participants saw all conditions) and within-items (i.e., all items had 8 conditions). 
+
 #### Files
 
 The csv file with raw results is available in this repo (perhaps I can also load a spreadsheet with all conditions that I used for LRex?). There are also two files with the script -- qmd and md. The first one is a Quarto RMarkdown script from RStudio, the second one is a pretty version for GitHub (it is easier to follow online).
@@ -203,6 +205,19 @@ The design for this experiment was 2 x 2 x 2.
 | V2    | negative | nibud      |
 
 The conditions were coded as letters in the spreadsheet for LRex, so first, I assign new comprehensible conditions, so it's easier to read the results. Not sure if it can be done in a more sophisticated way (ChatGPT says otherwise :unamused: :expressionless:).
+
+Here are the conditions in a table format:
+
+|   | verb  | indef | contex   |
+|---|-------|-------|----------|
+| a | V1 li | ni    | neutral  |
+| b | V2    | ni    | neutral  |
+| c | V1 li | nibud | neutral  |
+| d | V2    | nibud | neutral  |
+| e | V1 li | ni    | negative |
+| f | V2    | ni    | negative |
+| g | V1 li | nibud | negative |
+| h | V2    | nibud | negative |
 
 ```{r}
 # accessing the first experiment from the groups  
@@ -614,7 +629,7 @@ ANOVA (Analysis of Variance) suits a bit better for the experiment but it's stil
 
 -   H1: **at least one** of them is different
 
-One of the requirements for this test is to have a continuous quantitative dependent variable. I have a Lickert scale, it's an ordinal scale and those are considered categorical but let's pretend that it's continuous. As for the independent variables, they have to be qualitative with at least two levels.
+One of the requirements for this test is to have a continuous quantitative dependent variable. I have a Likert scale, it's an ordinal scale and those are considered categorical but let's pretend that it's continuous. As for the independent variables, they have to be qualitative with at least two levels.
 
 Below is the most common output from ANOVA. Once again I violate perhaps all conditions that can be violated but who cares. p-value is small, so we reject H0 that all groups are equal.
 
@@ -742,7 +757,7 @@ sum2_verb <- observ_verb * (mean_V1-overall_mean)^2 + observ_verb * (mean_V2-ove
 sum2_verb
 ```
 
-It works! So this model now tells me that all my three factors influence the independent variable. There is also an interaction between verb and indef and a weaker interaction of verb and context. It is not ideal but it already deals with the independent variables. What it does it compares these three groups and their means to the grand mean but it doesn't tell how much the independent variables affect the dependent one.
+It works! So this model now tells me that all my three factors influence the independent variable. There is also an interaction between `verb` and `indef` and a weaker interaction of `verb` and `context`. It is not ideal but it already deals with the independent variables. What it does it compares these three groups and their means to the grand mean (a spoiler to sum coding!) but it doesn't tell how much the independent variables affect the dependent one.
 
 So I'm going to try another trick here: instead of aov() I'll use lm(). Results from the bottom of the summary seem familiar. There are degrees of freedom for residuals, F-statistic/value and p-value. So lm estimates coefficients for factor levels whereas ANOVA compares means between the groups.
 
@@ -750,13 +765,6 @@ So I'm going to try another trick here: instead of aov() I'll use lm(). Results 
 e1_df$rating1 <- as.numeric(e1_df$rating1) # data need to be numeric
 e1_df.lm <- lm(rating1~verb*indef*context, data=e1_df)
 summary(e1_df.lm)
-```
-
-```{r eval = FALSE, echo=FALSE}
-library(modelsummary)
-modelsummary(e1_df.lm, output = "gt", 
-             estimate = "{estimate}{stars}",
-             statistic = "{std.error} ({p.value})")
 ```
 
 ```{r eval = FALSE, echo=FALSE}
@@ -785,7 +793,16 @@ t-value is also clear from above (the difference between my mean and 0 in SEs). 
 
 -   `verbV2`:`indefnibud` interaction: the negative interaction coefficient (-1.5699) tells us that the effect of `verbV2` is weaker when indef is nibud. In other words, the main effect of `verbV2` is 1.4154 but with `nibud` it's this much weaker.
 
-This is all cool and fun but as I mentioned a hundred times above, my data are ordinal and I finally have tot treat them as ordinal. The next and final section deals with that and presents a final model for my data -- CLMM.
+One can save the table above to a prettier version. (I have this code from Mishi Chirpanlieva's thesis!)
+```{r}
+library(gtsummary)
+
+tbl_regression(e1_df.lm) %>%
+add_significance_stars(hide_p = FALSE, hide_ci = FALSE)
+
+```
+
+This is all cool and fun but as I mentioned a hundred times above, my data are ordinal and I finally have to treat them as ordinal. The next and final section deals with that and presents a final model for my data -- CLMM.
 
 ### Cumulative Link Model and Cumulative Link Mixed Model
 
@@ -794,7 +811,7 @@ Sources:
 -   [Ordinal logistic regression in R by Marissa Barlaz](https://marissabarlaz.github.io/portfolio/ols/)
 -   [Analysis of ordinal data with cumulative link models by Rune Haubo B Christensen](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=ebbe4c4abe64c3889bc3309311790c367fd9bf51)
 
-In the beginning, I looked whether my obtained means are different from each other. I just found out that some conditions significantly more natural then the others. But for this experiment it doesn't make much sense because I had the variables that I predict to have more impact on rating of the items, aka my dependent variable.To check the impact of the independent variables, I applied ANOVA and lm(). Maybe one of the independent variables affected the dependent, maybe their combinations did.
+In the beginning, I looked whether my obtained means are different from each other. I just found out that some conditions significantly more natural then the others. But for this experiment it doesn't make much sense because I had the variables that I predict to have more impact on rating of the items, aka my dependent variable. To check the impact of the independent variables, I applied ANOVA and lm(). Maybe one of the independent variables affected the dependent, maybe their combinations did.
 
 One issue that was neglected above is **data type**. For me it was important to understand how all these other models (Anova and lm) work, so I just played with them. But that models need continuous type of data, my data are **ordinal**. So for the real analysis of my data and need **ordinal** library.
 
@@ -807,48 +824,75 @@ First, I'm going to use Cumulative Link Model (CLM) from the library. "Cumulativ
 The output table looks familiar, there are coefficients, estimates, SEs and now z-value. The results are in some cases very similar to those from lm, but in others very different.
 
 ```{r}
+
+cols_to_factor = c("verb", "indef", "context", "rating1")
+e1_df[cols_to_factor] <- lapply(e1_df[cols_to_factor], as.factor)
+
+contrasts(e1_df$verb) <- contr.sum
+contrasts(e1_df$indef) <- contr.sum
+contrasts(e1_df$context) <- contr.sum
+
 e1_df$rating1 = as.factor(e1_df$rating1)
 e1.clm <- clm(rating1 ~ verb * indef * context, data = e1_df)
 summary(e1.clm) 
 ```
+This plot is showing the probability of obtaining a specific response in the given conditions. It is based on the threshold coefficients in the summary of CLM. 
 ```{r}
 library(ggeffects)
-ggpredict_e1.clm = ggpredict(e1.clm, terms = c("verb", "indef", "context"))
-df_pred <- as.data.frame(ggpredict_e1.clm) 
-```
 
-```{r}
-ggplot(df_pred, aes(x = response.level, y = predicted, color = x, group = response.level)) +
+cols_to_factor = c("verb", "indef", "context")
+e1_df[cols_to_factor] <- lapply(e1_df[cols_to_factor], as.factor)
+
+ggpredict_e1.clm = ggpredict(e1.clm, terms = cols_to_factor)
+df_pred_clm <- as.data.frame(ggpredict_e1.clm) 
+
+plot_pred_clm <- ggplot(df_pred_clm, aes(x = response.level, y = predicted, color = x, group = response.level)) +
   geom_point() +
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.1) +
   facet_wrap(facet~group) +  # facet = context, group = indef
+  ggtitle("CLM: Predicted probabilities of rating1") +
   theme_bw()
-```
-```{r}
-pred_resp <- predict_response(e1.clm, terms = c("verb", "indef", "context"))
 
-plot(pred_resp, colors = "flat")
+# as pdf 
+ggsave(plot_pred_clm, file="plot_pred_clm.pdf", 
+       width = 12, height = 12, units = "cm", device="pdf")
 
 ```
+
+
 Is that it? Is this the final model? No :smiling_imp:
 
 Now we want to be sure that the effects we see come from the independent variables but not from random participant variation or bad items. You see, some items could have been very bad, e.g., there was an error in one and everyone disliked, so that influenced the ratings. Or some participants were somehow weird and assessed questions in a particular way. What I need to know now, that is my results are reliable even if these factors are included, so I need **a mixed model**.
 
 #### Contrast coding
+Scaled sum contrast 0.5/-0.5 -- попробовать вот это
+еще попробовать нестинг
+treatment contrast no go with interactions
 
-https://marissabarlaz.github.io/portfolio/contrastcoding/ One last theory piece, I promise!
+One last theory piece, I promise! -- [Source](https://marissabarlaz.github.io/portfolio/contrastcoding/) and other places.
 
-First of all, I didn't quite get why we didn't use the treatment/dummy coding for my experiment. When I learned more about what it does, I realized that it doesn't make sense to compare all my data to one reference level. It is something like having a control placebo group to which everything is compared. In this experiment, I didn't have such a group, so I need to make my comparisons to the grand mean with no baseline. But I did it for lm(), there was an intercept--condition e, `V1`, `negative` and `ni`. But all of the stuff there was just practicing, so that's fine. If one looks at their coding, they all have 0.
+First of all, I didn't quite get why we didn't use the treatment/dummy (0 and 1 are "dummy" apparently, hehe) coding for my experiment. When I learned more about what it does, I realized that it doesn't make sense to compare all my data to one reference level. It is something like having a control placebo group to which everything is compared.
+
+In this experiment, I didn't have such a group, so I need to make my comparisons to the grand mean and not to a baseline. I had a baseline condition for lm(), there was an intercept--condition e, `V1`, `negative` and `ni`. But for ANOVA, all was compared to a grand mean (GM) and it is the intercept for sum/effect coding. 
+
+Although I of course had predictions which combinations are going to be worse, I will not bother with setting the contrasts myself. It makes sense for continuous data I guess but for ordinal I am not sure. So I let R to decide which level is what. Or it is not actually R's job, it is settled alphabetically, so the levels are: 
+
+- V1 li and V2
+- ni and nibud
+- negative and neutral
 
 ```{r}
 c(levels(e1_df$verb), levels(e1_df$indef), levels(e1_df$context))
-
-# contrast coding -- needs a GM!! (not a chess GM but a grand mean)
-GM_e1 <- mean(as.numeric(e1_df$rating1))
+contrasts(e1_df$verb) <- c(-0.5, 0.5)
+contrasts(e1_df$indef) <- c(-0.5, 0.5)
+contrasts(e1_df$context) <- c(-0.5, 0.5)
 ```
 
 ```{r}
-e1_df$rating1 = as.factor(e1_df$rating1)
+
+cols_to_factor = c("verb", "indef", "context", "rating1")
+e1_df[cols_to_factor] <- lapply(e1_df[cols_to_factor], as.factor)
+
 e1.clmm <- clmm(rating1 ~ verb * indef * context + 
   (1 | participant) + (1 | item), 
   contrasts = list(verb="contr.sum",
@@ -858,28 +902,35 @@ e1.clmm <- clmm(rating1 ~ verb * indef * context +
 
 summary(e1.clmm)
 ```
-```{r}
-V1_mean <- e1_df %>% 
-  filter(verb=='V1 li') %>%
-  summarise(mean_rating = mean(as.numeric(rating1), na.rm = TRUE))
+This is the final model for my results, congrats!
 
-V2_mean <- e1_df %>% 
-  filter(verb=='V2') %>%
-  summarise(mean_rating = mean(as.numeric(rating1), na.rm = TRUE))
+Once again, the coding is sum, so everything is compared to the GM. The first effect is a main effect of `verb` (z=-4.53, p<.001). It says there that `verb1` = `V1 li` worsens the rating by 0.1795 and `verb2` = `V2` makes the rating by 0.1795 better. And it works the same for two other independent variables. 
 
-GM_e1-V1_mean
-GM_e1-V2_mean
+I also have two interactions. The combinations of `V1`+ `ni` and `V1`+ `negative` worsen the dependent variable. And since it is symmetrical (coding must be equal to 0, so -0.5 + 0.5), there is the same interaction for `V2` + `nibud` and `V2` + `neutral`. 
 
-V2_mean
+The same plot as for CLM about predicted probabilities of rating1. 
+
+```{r eval = FALSE}
+
+ggpredict_e1.clmm = ggpredict(e1.clmm, terms = c("verb", "indef", "context"))
+df_pred_clmm <- as.data.frame(ggpredict_e1.clmm) 
+
+plot_pred_clmm <- ggplot(df_pred_clmm, aes(x = response.level, y = predicted, color = x, group = response.level)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.1) +
+  facet_wrap(facet~group) +  # facet = context, group = indef
+  ggtitle("CLMM: Predicted probabilities of rating1") +
+  theme_bw()
+
+# as pdf 
+ggsave(plot_pred_clmm, file="plot_pred_clmm.pdf", 
+       width = 12, height = 12, units = "cm", device="pdf")
 ```
+
+Just for the test purposes, let's make the treatment coding.
 
 ```{r}
 # for dummy/treatment coding 1/0
-e1_df$verb = as.factor(e1_df$verb)
-e1_df$context = as.factor(e1_df$context)
-e1_df$indef = as.factor(e1_df$indef)
-
-c(contrasts(e1_df$verb), contrasts(e1_df$context), contrasts(e1_df$indef))
 
 e1.clmm_treat <- clmm(rating1 ~ verb * indef * context + 
   (1 | participant) + (1 | item), 
@@ -890,6 +941,8 @@ e1.clmm_treat <- clmm(rating1 ~ verb * indef * context +
 
 summary(e1.clmm_treat)
 ```
+
+
 ```{r}
 e1_df_LI <- e1_df %>%
   filter(verb=='V1 li')

@@ -46,6 +46,9 @@ from 1 very unnatural to 7 very natural. It was the dependent variable.
 
 Within-items, between subjects?
 
+The design was also within-subjects (i.e., all participants saw all
+conditions) and within-items (i.e., all items had 8 conditions).
+
 #### Files
 
 The csv file with raw results is available in this repo (perhaps I can
@@ -316,6 +319,19 @@ first, I assign new comprehensible conditions, so it’s easier to read
 the results. Not sure if it can be done in a more sophisticated way
 (ChatGPT says otherwise :unamused: :expressionless:).
 
+Here are the conditions in a table format:
+
+|     | verb  | indef | contex   |
+|-----|-------|-------|----------|
+| a   | V1 li | ni    | neutral  |
+| b   | V2    | ni    | neutral  |
+| c   | V1 li | nibud | neutral  |
+| d   | V2    | nibud | neutral  |
+| e   | V1 li | ni    | negative |
+| f   | V2    | ni    | negative |
+| g   | V1 li | nibud | negative |
+| h   | V2    | nibud | negative |
+
 ``` r
 # accessing the first experiment from the groups  
 e1_df <- split_main_df1[[1]]
@@ -377,7 +393,7 @@ as_raw_html(raw_summary %>% gt(groupname_col = 'indef',
   cols_label(verb = 'Verb'))
 ```
 
-<div id="kqvahawnkd" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="ezdpcckvqa" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mode | Median | Mean | Range | Variance | SD   |
@@ -656,7 +672,7 @@ as_raw_html(raw_summary1 %>% gt(groupname_col = 'indef',
              RSE = 'RSE (%)'))
 ```
 
-<div id="zlmgmutert" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="lqegnyjgaw" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 |          | Verb  | Mean | SD   | SE     | RSE (%) |
@@ -770,7 +786,7 @@ as_raw_html(t_test_results %>%
                          p.value = 'p-value'))
 ```
 
-<div id="ignwcdtkwh" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="okuyjzxhvx" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   &#10;  
 
 | Condition | Mean | t-value | p-value | parameter | conf.low | conf.high | method | alternative |
@@ -861,7 +877,7 @@ are:
 - H1: **at least one** of them is different
 
 One of the requirements for this test is to have a continuous
-quantitative dependent variable. I have a Lickert scale, it’s an ordinal
+quantitative dependent variable. I have a Likert scale, it’s an ordinal
 scale and those are considered categorical but let’s pretend that it’s
 continuous. As for the independent variables, they have to be
 qualitative with at least two levels.
@@ -1039,12 +1055,12 @@ sum2_verb
     [1] 95.6
 
 It works! So this model now tells me that all my three factors influence
-the independent variable. There is also an interaction between verb and
-indef and a weaker interaction of verb and context. It is not ideal but
-it already deals with the independent variables. What it does it
-compares these three groups and their means to the grand mean but it
-doesn’t tell how much the independent variables affect the dependent
-one.
+the independent variable. There is also an interaction between `verb`
+and `indef` and a weaker interaction of `verb` and `context`. It is not
+ideal but it already deals with the independent variables. What it does
+it compares these three groups and their means to the grand mean (a
+spoiler to sum coding!) but it doesn’t tell how much the independent
+variables affect the dependent one.
 
 So I’m going to try another trick here: instead of aov() I’ll use lm().
 Results from the bottom of the summary seem familiar. There are degrees
@@ -1107,8 +1123,614 @@ unpack.
   when indef is nibud. In other words, the main effect of `verbV2` is
   1.4154 but with `nibud` it’s this much weaker.
 
+One can save the table above to a prettier version. (I have this code
+from Mishi Chirpanlieva’s thesis!)
+
+``` r
+library(gtsummary)
+
+tbl_regression(e1_df.lm) %>%
+add_significance_stars(hide_p = FALSE, hide_ci = FALSE)
+```
+
+<div id="guegyzhbih" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#guegyzhbih table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+&#10;#guegyzhbih thead, #guegyzhbih tbody, #guegyzhbih tfoot, #guegyzhbih tr, #guegyzhbih td, #guegyzhbih th {
+  border-style: none;
+}
+&#10;#guegyzhbih p {
+  margin: 0;
+  padding: 0;
+}
+&#10;#guegyzhbih .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+&#10;#guegyzhbih .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+&#10;#guegyzhbih .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+&#10;#guegyzhbih .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+&#10;#guegyzhbih .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+&#10;#guegyzhbih .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+&#10;#guegyzhbih .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+&#10;#guegyzhbih .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+&#10;#guegyzhbih .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+&#10;#guegyzhbih .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+&#10;#guegyzhbih .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+&#10;#guegyzhbih .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+&#10;#guegyzhbih .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+&#10;#guegyzhbih .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+&#10;#guegyzhbih .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+&#10;#guegyzhbih .gt_from_md > :first-child {
+  margin-top: 0;
+}
+&#10;#guegyzhbih .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+&#10;#guegyzhbih .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+&#10;#guegyzhbih .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+&#10;#guegyzhbih .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+&#10;#guegyzhbih .gt_row_group_first td {
+  border-top-width: 2px;
+}
+&#10;#guegyzhbih .gt_row_group_first th {
+  border-top-width: 2px;
+}
+&#10;#guegyzhbih .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+&#10;#guegyzhbih .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+&#10;#guegyzhbih .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+&#10;#guegyzhbih .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+&#10;#guegyzhbih .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+&#10;#guegyzhbih .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+&#10;#guegyzhbih .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+&#10;#guegyzhbih .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+&#10;#guegyzhbih .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+&#10;#guegyzhbih .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+&#10;#guegyzhbih .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+&#10;#guegyzhbih .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+&#10;#guegyzhbih .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+&#10;#guegyzhbih .gt_left {
+  text-align: left;
+}
+&#10;#guegyzhbih .gt_center {
+  text-align: center;
+}
+&#10;#guegyzhbih .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+&#10;#guegyzhbih .gt_font_normal {
+  font-weight: normal;
+}
+&#10;#guegyzhbih .gt_font_bold {
+  font-weight: bold;
+}
+&#10;#guegyzhbih .gt_font_italic {
+  font-style: italic;
+}
+&#10;#guegyzhbih .gt_super {
+  font-size: 65%;
+}
+&#10;#guegyzhbih .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+&#10;#guegyzhbih .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+&#10;#guegyzhbih .gt_indent_1 {
+  text-indent: 5px;
+}
+&#10;#guegyzhbih .gt_indent_2 {
+  text-indent: 10px;
+}
+&#10;#guegyzhbih .gt_indent_3 {
+  text-indent: 15px;
+}
+&#10;#guegyzhbih .gt_indent_4 {
+  text-indent: 20px;
+}
+&#10;#guegyzhbih .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+
+<table class="gt_table" data-quarto-postprocess="true"
+data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="gt_col_headings">
+<th id="&lt;strong&gt;Characteristic&lt;/strong&gt;"
+class="gt_col_heading gt_columns_bottom_border gt_left"
+data-quarto-table-cell-role="th"
+scope="col"><strong>Characteristic</strong></th>
+<th
+id="&lt;strong&gt;Beta&lt;/strong&gt;&lt;span class=&quot;gt_footnote_marks&quot; style=&quot;white-space:nowrap;font-style:italic;font-weight:normal;&quot;&gt;&lt;sup&gt;1&lt;/sup&gt;&lt;/span&gt;"
+class="gt_col_heading gt_columns_bottom_border gt_center"
+data-quarto-table-cell-role="th" scope="col"><strong>Beta</strong><span
+class="gt_footnote_marks"
+style="white-space:nowrap;font-style:italic;font-weight:normal;"><sup>1</sup></span></th>
+<th
+id="&lt;strong&gt;SE&lt;/strong&gt;&lt;span class=&quot;gt_footnote_marks&quot; style=&quot;white-space:nowrap;font-style:italic;font-weight:normal;&quot;&gt;&lt;sup&gt;2&lt;/sup&gt;&lt;/span&gt;"
+class="gt_col_heading gt_columns_bottom_border gt_center"
+data-quarto-table-cell-role="th" scope="col"><strong>SE</strong><span
+class="gt_footnote_marks"
+style="white-space:nowrap;font-style:italic;font-weight:normal;"><sup>2</sup></span></th>
+<th
+id="&lt;strong&gt;95% CI&lt;/strong&gt;&lt;span class=&quot;gt_footnote_marks&quot; style=&quot;white-space:nowrap;font-style:italic;font-weight:normal;&quot;&gt;&lt;sup&gt;2&lt;/sup&gt;&lt;/span&gt;"
+class="gt_col_heading gt_columns_bottom_border gt_center"
+data-quarto-table-cell-role="th" scope="col"><strong>95%
+CI</strong><span class="gt_footnote_marks"
+style="white-space:nowrap;font-style:italic;font-weight:normal;"><sup>2</sup></span></th>
+<th id="&lt;strong&gt;p-value&lt;/strong&gt;"
+class="gt_col_heading gt_columns_bottom_border gt_center"
+data-quarto-table-cell-role="th"
+scope="col"><strong>p-value</strong></th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr>
+<td class="gt_row gt_left" headers="label">verb</td>
+<td class="gt_row gt_center" headers="estimate"><br />
+</td>
+<td class="gt_row gt_center" headers="std.error"><br />
+</td>
+<td class="gt_row gt_center" headers="ci"><br />
+</td>
+<td class="gt_row gt_center" headers="p.value"><br />
+</td>
+</tr>
+<tr>
+<td class="gt_row gt_left" headers="label">    V1 li</td>
+<td class="gt_row gt_center" headers="estimate">—</td>
+<td class="gt_row gt_center" headers="std.error">—</td>
+<td class="gt_row gt_center" headers="ci">—</td>
+<td class="gt_row gt_center" headers="p.value"><br />
+</td>
+</tr>
+<tr>
+<td class="gt_row gt_left" headers="label">    V2</td>
+<td class="gt_row gt_center" headers="estimate">1.4***</td>
+<td class="gt_row gt_center" headers="std.error">0.168</td>
+<td class="gt_row gt_center" headers="ci">1.1, 1.7</td>
+<td class="gt_row gt_center" headers="p.value">&lt;0.001</td>
+</tr>
+<tr>
+<td class="gt_row gt_left" headers="label">indef</td>
+<td class="gt_row gt_center" headers="estimate"><br />
+</td>
+<td class="gt_row gt_center" headers="std.error"><br />
+</td>
+<td class="gt_row gt_center" headers="ci"><br />
+</td>
+<td class="gt_row gt_center" headers="p.value"><br />
+</td>
+</tr>
+<tr>
+<td class="gt_row gt_left" headers="label">    ni</td>
+<td class="gt_row gt_center" headers="estimate">—</td>
+<td class="gt_row gt_center" headers="std.error">—</td>
+<td class="gt_row gt_center" headers="ci">—</td>
+<td class="gt_row gt_center" headers="p.value"><br />
+</td>
+</tr>
+<tr>
+<td class="gt_row gt_left" headers="label">    nibud</td>
+<td class="gt_row gt_center" headers="estimate">2.3***</td>
+<td class="gt_row gt_center" headers="std.error">0.168</td>
+<td class="gt_row gt_center" headers="ci">1.9, 2.6</td>
+<td class="gt_row gt_center" headers="p.value">&lt;0.001</td>
+</tr>
+<tr>
+<td class="gt_row gt_left" headers="label">context</td>
+<td class="gt_row gt_center" headers="estimate"><br />
+</td>
+<td class="gt_row gt_center" headers="std.error"><br />
+</td>
+<td class="gt_row gt_center" headers="ci"><br />
+</td>
+<td class="gt_row gt_center" headers="p.value"><br />
+</td>
+</tr>
+<tr>
+<td class="gt_row gt_left" headers="label">    negative</td>
+<td class="gt_row gt_center" headers="estimate">—</td>
+<td class="gt_row gt_center" headers="std.error">—</td>
+<td class="gt_row gt_center" headers="ci">—</td>
+<td class="gt_row gt_center" headers="p.value"><br />
+</td>
+</tr>
+<tr>
+<td class="gt_row gt_left" headers="label">    neutral</td>
+<td class="gt_row gt_center" headers="estimate">0.58***</td>
+<td class="gt_row gt_center" headers="std.error">0.168</td>
+<td class="gt_row gt_center" headers="ci">0.25, 0.91</td>
+<td class="gt_row gt_center" headers="p.value">&lt;0.001</td>
+</tr>
+<tr>
+<td class="gt_row gt_left" headers="label">verb * indef</td>
+<td class="gt_row gt_center" headers="estimate"><br />
+</td>
+<td class="gt_row gt_center" headers="std.error"><br />
+</td>
+<td class="gt_row gt_center" headers="ci"><br />
+</td>
+<td class="gt_row gt_center" headers="p.value"><br />
+</td>
+</tr>
+<tr>
+<td class="gt_row gt_left" headers="label">    V2 * nibud</td>
+<td class="gt_row gt_center" headers="estimate">-1.6***</td>
+<td class="gt_row gt_center" headers="std.error">0.237</td>
+<td class="gt_row gt_center" headers="ci">-2.0, -1.1</td>
+<td class="gt_row gt_center" headers="p.value">&lt;0.001</td>
+</tr>
+<tr>
+<td class="gt_row gt_left" headers="label">verb * context</td>
+<td class="gt_row gt_center" headers="estimate"><br />
+</td>
+<td class="gt_row gt_center" headers="std.error"><br />
+</td>
+<td class="gt_row gt_center" headers="ci"><br />
+</td>
+<td class="gt_row gt_center" headers="p.value"><br />
+</td>
+</tr>
+<tr>
+<td class="gt_row gt_left" headers="label">    V2 * neutral</td>
+<td class="gt_row gt_center" headers="estimate">-0.39</td>
+<td class="gt_row gt_center" headers="std.error">0.237</td>
+<td class="gt_row gt_center" headers="ci">-0.85, 0.07</td>
+<td class="gt_row gt_center" headers="p.value">0.10</td>
+</tr>
+<tr>
+<td class="gt_row gt_left" headers="label">indef * context</td>
+<td class="gt_row gt_center" headers="estimate"><br />
+</td>
+<td class="gt_row gt_center" headers="std.error"><br />
+</td>
+<td class="gt_row gt_center" headers="ci"><br />
+</td>
+<td class="gt_row gt_center" headers="p.value"><br />
+</td>
+</tr>
+<tr>
+<td class="gt_row gt_left" headers="label">    nibud * neutral</td>
+<td class="gt_row gt_center" headers="estimate">0.31</td>
+<td class="gt_row gt_center" headers="std.error">0.237</td>
+<td class="gt_row gt_center" headers="ci">-0.16, 0.77</td>
+<td class="gt_row gt_center" headers="p.value">0.2</td>
+</tr>
+<tr>
+<td class="gt_row gt_left" headers="label">verb * indef * context</td>
+<td class="gt_row gt_center" headers="estimate"><br />
+</td>
+<td class="gt_row gt_center" headers="std.error"><br />
+</td>
+<td class="gt_row gt_center" headers="ci"><br />
+</td>
+<td class="gt_row gt_center" headers="p.value"><br />
+</td>
+</tr>
+<tr>
+<td class="gt_row gt_left" headers="label">    V2 * nibud * neutral</td>
+<td class="gt_row gt_center" headers="estimate">-0.07</td>
+<td class="gt_row gt_center" headers="std.error">0.335</td>
+<td class="gt_row gt_center" headers="ci">-0.72, 0.59</td>
+<td class="gt_row gt_center" headers="p.value">0.8</td>
+</tr>
+</tbody><tfoot class="gt_footnotes">
+<tr>
+<td colspan="5" class="gt_footnote"><span class="gt_footnote_marks"
+style="white-space:nowrap;font-style:italic;font-weight:normal;"><sup>1</sup></span>
+*p&lt;0.05; **p&lt;0.01; ***p&lt;0.001</td>
+</tr>
+<tr>
+<td colspan="5" class="gt_footnote"><span class="gt_footnote_marks"
+style="white-space:nowrap;font-style:italic;font-weight:normal;"><sup>2</sup></span>
+SE = Standard Error, CI = Confidence Interval</td>
+</tr>
+</tfoot>
+&#10;</table>
+
+</div>
+
 This is all cool and fun but as I mentioned a hundred times above, my
-data are ordinal and I finally have tot treat them as ordinal. The next
+data are ordinal and I finally have to treat them as ordinal. The next
 and final section deals with that and presents a final model for my data
 – CLMM.
 
@@ -1125,7 +1747,7 @@ In the beginning, I looked whether my obtained means are different from
 each other. I just found out that some conditions significantly more
 natural then the others. But for this experiment it doesn’t make much
 sense because I had the variables that I predict to have more impact on
-rating of the items, aka my dependent variable.To check the impact of
+rating of the items, aka my dependent variable. To check the impact of
 the independent variables, I applied ANOVA and lm(). Maybe one of the
 independent variables affected the dependent, maybe their combinations
 did.
@@ -1151,6 +1773,13 @@ and now z-value. The results are in some cases very similar to those
 from lm, but in others very different.
 
 ``` r
+cols_to_factor = c("verb", "indef", "context", "rating1")
+e1_df[cols_to_factor] <- lapply(e1_df[cols_to_factor], as.factor)
+
+contrasts(e1_df$verb) <- contr.sum
+contrasts(e1_df$indef) <- contr.sum
+contrasts(e1_df$context) <- contr.sum
+
 e1_df$rating1 = as.factor(e1_df$rating1)
 e1.clm <- clm(rating1 ~ verb * indef * context, data = e1_df)
 summary(e1.clm) 
@@ -1160,52 +1789,53 @@ summary(e1.clm)
     data:    e1_df
 
      link  threshold nobs logLik   AIC     niter max.grad cond.H 
-     logit flexible  2176 -3887.37 7800.74 5(0)  3.00e-13 6.8e+02
+     logit flexible  2176 -3887.37 7800.74 5(0)  2.61e-13 2.6e+01
 
     Coefficients:
-                                     Estimate Std. Error z value Pr(>|z|)    
-    verbV2                              1.218      0.154    7.91  2.5e-15 ***
-    indefnibud                          1.952      0.157   12.46  < 2e-16 ***
-    contextneutral                      0.471      0.154    3.05   0.0023 ** 
-    verbV2:indefnibud                  -1.385      0.216   -6.42  1.4e-10 ***
-    verbV2:contextneutral              -0.284      0.218   -1.31   0.1917    
-    indefnibud:contextneutral           0.319      0.218    1.46   0.1435    
-    verbV2:indefnibud:contextneutral   -0.156      0.305   -0.51   0.6106    
+                          Estimate Std. Error z value Pr(>|z|)    
+    verb1                  -0.1720     0.0385   -4.47  7.8e-06 ***
+    indef1                 -0.6897     0.0401  -17.21  < 2e-16 ***
+    context1               -0.2248     0.0384   -5.86  4.6e-09 ***
+    verb1:indef1           -0.3658     0.0388   -9.43  < 2e-16 ***
+    verb1:context1         -0.0906     0.0382   -2.37    0.018 *  
+    indef1:context1         0.0603     0.0382    1.58    0.115    
+    verb1:indef1:context1   0.0194     0.0382    0.51    0.611    
     ---
     Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
     Threshold coefficients:
         Estimate Std. Error z value
-    1|2   -0.496      0.112   -4.44
-    2|3    0.246      0.111    2.22
-    3|4    0.794      0.112    7.08
-    4|5    1.312      0.115   11.45
-    5|6    1.908      0.118   16.19
-    6|7    2.714      0.123   22.10
+    1|2  -1.9596     0.0644  -30.44
+    2|3  -1.2175     0.0528  -23.04
+    3|4  -0.6691     0.0478  -13.99
+    4|5  -0.1509     0.0457   -3.30
+    5|6   0.4443     0.0463    9.59
+    6|7   1.2512     0.0524   23.87
+
+This plot is showing the probability of obtaining a specific response in
+the given conditions. It is based on the threshold coefficients in the
+summary of CLM.
 
 ``` r
 library(ggeffects)
-ggpredict_e1.clm = ggpredict(e1.clm, terms = c("verb", "indef", "context"))
-df_pred <- as.data.frame(ggpredict_e1.clm) 
-```
 
-``` r
-ggplot(df_pred, aes(x = response.level, y = predicted, color = x, group = response.level)) +
+cols_to_factor = c("verb", "indef", "context")
+e1_df[cols_to_factor] <- lapply(e1_df[cols_to_factor], as.factor)
+
+ggpredict_e1.clm = ggpredict(e1.clm, terms = cols_to_factor)
+df_pred_clm <- as.data.frame(ggpredict_e1.clm) 
+
+plot_pred_clm <- ggplot(df_pred_clm, aes(x = response.level, y = predicted, color = x, group = response.level)) +
   geom_point() +
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.1) +
   facet_wrap(facet~group) +  # facet = context, group = indef
+  ggtitle("CLM: Predicted probabilities of rating1") +
   theme_bw()
+
+# as pdf 
+ggsave(plot_pred_clm, file="plot_pred_clm.pdf", 
+       width = 12, height = 12, units = "cm", device="pdf")
 ```
-
-![](script_files/figure-commonmark/unnamed-chunk-42-1.png)
-
-``` r
-pred_resp <- predict_response(e1.clm, terms = c("verb", "indef", "context"))
-
-plot(pred_resp, colors = "flat")
-```
-
-![](script_files/figure-commonmark/unnamed-chunk-43-1.png)
 
 Is that it? Is this the final model? No :smiling_imp:
 
@@ -1219,23 +1849,50 @@ these factors are included, so I need **a mixed model**.
 
 #### Contrast coding
 
-https://marissabarlaz.github.io/portfolio/contrastcoding/ One last
-theory piece, I promise!
+Scaled sum contrast 0.5/-0.5 – попробовать вот это еще попробовать
+нестинг treatment contrast no go with interactions
+
+One last theory piece, I promise! –
+[Source](https://marissabarlaz.github.io/portfolio/contrastcoding/) and
+other places.
 
 First of all, I didn’t quite get why we didn’t use the treatment/dummy
-coding for my experiment. When I learned more about what it does, I
-realized that it doesn’t make sense to compare all my data to one
-reference level. It is something like having a control placebo group to
-which everything is compared. In this experiment, I didn’t have such a
-group, so I need to make my comparisons to the grand mean with no
-baseline. But I did it for lm(), there was an intercept–condition e,
-`V1`, `negative` and `ni`. But all of the stuff there was just
-practicing, so that’s fine. If one looks at their coding, they all have
-0.
+(0 and 1 are “dummy” apparently, hehe) coding for my experiment. When I
+learned more about what it does, I realized that it doesn’t make sense
+to compare all my data to one reference level. It is something like
+having a control placebo group to which everything is compared.
+
+In this experiment, I didn’t have such a group, so I need to make my
+comparisons to the grand mean and not to a baseline. I had a baseline
+condition for lm(), there was an intercept–condition e, `V1`, `negative`
+and `ni`. But for ANOVA, all was compared to a grand mean (GM) and it is
+the intercept for sum/effect coding.
+
+Although I of course had predictions which combinations are going to be
+worse, I will not bother with setting the contrasts myself. It makes
+sense for continuous data I guess but for ordinal I am not sure. So I
+let R to decide which level is what. Or it is not actually R’s job, it
+is settled alphabetically, so the levels are:
+
+- V1 li and V2
+- ni and nibud
+- negative and neutral
 
 ``` r
-# contrast coding -- needs a GM!! (not a chess GM but a grand mean)
-e1_df$rating1 = as.factor(e1_df$rating1)
+c(levels(e1_df$verb), levels(e1_df$indef), levels(e1_df$context))
+```
+
+    [1] "V1 li"    "V2"       "ni"       "nibud"    "negative" "neutral" 
+
+``` r
+contrasts(e1_df$verb) <- c(-0.5, 0.5)
+contrasts(e1_df$indef) <- c(-0.5, 0.5)
+contrasts(e1_df$context) <- c(-0.5, 0.5)
+```
+
+``` r
+cols_to_factor = c("verb", "indef", "context", "rating1")
+e1_df[cols_to_factor] <- lapply(e1_df[cols_to_factor], as.factor)
 
 e1.clmm <- clmm(rating1 ~ verb * indef * context + 
   (1 | participant) + (1 | item), 
@@ -1282,55 +1939,42 @@ summary(e1.clmm)
     5|6    0.458      0.157    2.93
     6|7    1.464      0.159    9.19
 
+This is the final model for my results, congrats!
+
+Once again, the coding is sum, so everything is compared to the GM. The
+first effect is a main effect of `verb` (z=-4.53, p\<.001). It says
+there that `verb1` = `V1 li` worsens the rating by 0.1795 and `verb2` =
+`V2` makes the rating by 0.1795 better. And it works the same for two
+other independent variables.
+
+I also have two interactions. The combinations of `V1`+ `ni` and `V1`+
+`negative` worsen the dependent variable. And since it is symmetrical
+(coding must be equal to 0, so -0.5 + 0.5), there is the same
+interaction for `V2` + `nibud` and `V2` + `neutral`.
+
+The same plot as for CLM about predicted probabilities of rating1.
+
+``` r
+ggpredict_e1.clmm = ggpredict(e1.clmm, terms = c("verb", "indef", "context"))
+df_pred_clmm <- as.data.frame(ggpredict_e1.clmm) 
+
+plot_pred_clmm <- ggplot(df_pred_clmm, aes(x = response.level, y = predicted, color = x, group = response.level)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.1) +
+  facet_wrap(facet~group) +  # facet = context, group = indef
+  ggtitle("CLMM: Predicted probabilities of rating1") +
+  theme_bw()
+
+# as pdf 
+ggsave(plot_pred_clmm, file="plot_pred_clmm.pdf", 
+       width = 12, height = 12, units = "cm", device="pdf")
+```
+
+Just for the test purposes, let’s make the treatment coding.
+
 ``` r
 # for dummy/treatment coding 1/0
-e1_df$verb = as.factor(e1_df$verb)
-e1_df$context = as.factor(e1_df$context)
-e1_df$indef = as.factor(e1_df$indef)
 
-contrasts(e1_df$verb) 
-```
-
-          V2
-    V1 li  0
-    V2     1
-
-``` r
-contrasts(e1_df$context)
-```
-
-             neutral
-    negative       0
-    neutral        1
-
-``` r
-contrasts(e1_df$indef)
-```
-
-          nibud
-    ni        0
-    nibud     1
-
-``` r
-# need reference level, here it is the first one
-levels(e1_df$verb)
-```
-
-    [1] "V1 li" "V2"   
-
-``` r
-levels(e1_df$indef)
-```
-
-    [1] "ni"    "nibud"
-
-``` r
-levels(e1_df$context)
-```
-
-    [1] "negative" "neutral" 
-
-``` r
 e1.clmm_treat <- clmm(rating1 ~ verb * indef * context + 
   (1 | participant) + (1 | item), 
   contrasts = list(verb="contr.treatment",
