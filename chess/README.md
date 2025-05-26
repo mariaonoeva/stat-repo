@@ -8,4 +8,4 @@ Puzzle Rush is a puzzle solving mode on `chess.com` where one has to solve as ma
 The initial idea was to simply scrap my data from `chess.com` API, but it's unfortunately not enough for me. So I created two Jupyter files to track my progress.  
 
 1. **[Puzzle rush progress for the current month](puzzle-rush/puzzle_rush.ipynb):** a script that takes an input from the command line, adds it to a csv and then creates a plot for the current month. 
-2. **[Total puzzle rush stat:](puzzle-rush/total_stat_puzzle_rush.ipynb)** some basic descriptive stat for the whole journey.
+2. **[Total puzzle rush stat](puzzle-rush/total_stat_puzzle_rush.ipynb):** some basic descriptive stat for the whole journey.
