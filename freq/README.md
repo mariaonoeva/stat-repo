@@ -1,6 +1,6 @@
 # stat-repo
 
-My freq stat notebook for naturalness/acceptability judgment -- [HERE](freq/script.md)
+My freq stat notebook for naturalness/acceptability judgment -- [HERE](script.md)
 
 Materials: 
 - I like this web about statistics https://www.crumplab.com/statistics/ 
