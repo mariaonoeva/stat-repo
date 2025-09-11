@@ -56,9 +56,9 @@ Checking participants and how many items they completed
 ```{r}
 
 langs_participants <- bind_rows(
-  cz_df %>% count(participant, name = "items") %>% mutate(lang = "CZ"),
-  ru_df %>% count(participant, name = "items") %>% mutate(lang = "RU"),
-  pol_df %>% count(participant, name = "items") %>% mutate(lang = "POL")
+  cz_df %>% dplyr::count(participant, name = "items") %>% mutate(lang = "CZ"),
+  ru_df %>% dplyr::count(participant, name = "items") %>% mutate(lang = "RU"),
+  pol_df %>% dplyr::count(participant, name = "items") %>% mutate(lang = "POL")
 )
 
 ```
@@ -86,6 +86,19 @@ cz_df_reliable <- cz_df %>%
     filter(participant != "123")
 
 cz_df_reliable %>%
+  ungroup() %>%
+  summarise(total_part = n_distinct(participant)) # 129 as per Anicka's thesis
+
+```
+
+```{r}
+cz_reliable_75 <- head(unique(cz_df_reliable$participant), 75) # i need 75 first 
+cz_df_reliable_75 <- cz_df_reliable[cz_df_reliable$participant %in% cz_reliable_75, ]
+```
+
+
+```{r}
+cz_df_reliable_75 %>%
   ungroup() %>%
   summarise(total_part = n_distinct(participant)) # 129 as per Anicka's thesis
 ```
@@ -148,7 +161,7 @@ fillers_only$filler_answer[which(grepl('good', fillers_only$condition) &
 
 filler_results <- fillers_only %>% 
   group_by(participant) %>%
-  summarize(Mean = mean(filler_answer, na.rm=TRUE))
+  dplyr::summarize(Mean = mean(filler_answer, na.rm=TRUE))
 
 # filler_results
 
@@ -169,12 +182,12 @@ ru_df_reliable <- anti_join(ru_df, unreliable_participants,
 
 ru_df_reliable %>%
   distinct(participant) %>%
-  summarize(total_part = n()) # 68 as per my results
+  dplyr::summarize(total_part = n()) # 68 as per my results
 ```
 ## Descriptive for all langs
 Exporting E1 from each 
 ```{r}
-cz_df_e1 <- cz_df_reliable %>%
+cz_df_e1 <- cz_df_reliable_75 %>%
   filter(materials == "qb_E1_main") 
 
 pol_df_e1 <- pol_df_reliable %>%
@@ -184,12 +197,12 @@ ru_df_e1 <- ru_df_reliable %>%
   filter(materials == "e1_main") 
 
 bind_rows( # how many items each participant made for sanity check 
-  cz_df_e1 %>% count(participant, name = "items") %>% mutate(lang = "CZ"),
-  pol_df_e1 %>% count(participant, name = "items") %>% mutate(lang = "POL"),
-  ru_df_e1 %>% count(participant, name = "items") %>% mutate(lang = "RU") )
+  cz_df_e1 %>% dplyr::count(participant, name = "items") %>% mutate(lang = "CZ"),
+  pol_df_e1 %>% dplyr::count(participant, name = "items") %>% mutate(lang = "POL"),
+  ru_df_e1 %>% dplyr::count(participant, name = "items") %>% mutate(lang = "RU") )
 ```
 
-Q: Should I address the fact that we have much more input from Cz? 
+Q: Should I address the fact that we have much more input from Cz? -- yes, i did above
 
 ```{r}
 bind_rows(
@@ -390,8 +403,47 @@ cz_plot_70 <- ggplot(cz_tab_inter_70, aes(x=context, y=rating1,
     scale_color_brewer(palette = "Set2")
 
 cz_plot_70
+```
+
+
+```{r}
+# changing rating1 to numeric 
+cz_df_e1$rating1 <- as.numeric(cz_df_e1$rating1)
+
+# calculating interactions 
+cz_tab_inter <- summarySE(cz_df_e1, measurevar="rating1", 
+                         groupvars = c("context", "verb", "indef", "strategy"))
+
+# plotting 
+cz_plot <- ggplot(cz_tab_inter, aes(x=context, y=rating1, 
+                                    colour=indef, group=indef)) + 
+    geom_errorbar(aes(ymin=rating1-se, ymax=rating1+se), width=.1) +
+    facet_wrap(~verb) +
+    theme_bw() +
+    geom_line(size = 1) +
+    theme(
+        text = element_text(size = 15),
+        # legend.text = element_text(size=30),
+        # legend.key.size = unit(1, 'cm'),
+        legend.position = c(0.8, 0.15),
+        legend.title=element_blank())+
+        # axis.text = element_text(size = 25),
+        # axis.title = element_text(size = 25),
+# axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+# axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
+    geom_point() + 
+    xlab("Context") +
+    ylab("Likert scale (SE)") +
+    coord_cartesian(ylim = c(1, 7)) +
+    #scale_y_continuous(breaks = pretty_breaks(4)) +
+    guides(colour = guide_legend(reverse=TRUE))  +
+    scale_color_brewer(palette = "Set2")
+
+cz_plot
 
 ```
+
+
 
 ### Polish
 ```{r}
@@ -469,43 +521,278 @@ ru_plot <- ggplot(ru_tab_inter, aes(x=context, y=rating1,
 ru_plot
 ```
 
+
+
+## Inferential for each lang
+
+### Czech
+```{r}
+cz_df_e1$rating1 <- as.factor(cz_df_e1$rating1)
+library(ordinal)
+cz_clmm <- clmm(rating1 ~ strategy * indef * context + 
+                  (1 | item) + 
+                  (1 | participant), 
+        contrasts = list(strategy="contr.sum",
+                   indef="contr.sum", 
+                   context="contr.sum"), 
+                data = cz_df_e1)
+```
+
+
+```{r}
+library(emmeans)
+cz_emmeans <- emmeans(cz_clmm, ~ strategy * indef * context, mode = "mean.class")
+cz_emmeans
+```
+```{r}
+cz_emmeans_strategy <- pairs(emmeans(cz_clmm, ~ strategy))
+cz_emmeans_strategy
+```
+```{r}
+cz_emmeans_pairs <- pairs(emmeans(cz_clmm, ~indef | strategy * context))
+cz_emmeans_pairs
+```
+
+#### Cz separate models 
+```{r}
+cz_df_e1_overt <- cz_df_e1 %>%
+  filter(strategy == "overt")
+
+cz_df_e1_svo <- cz_df_e1 %>%
+  filter(strategy == "SVO")
+
+cz_df_e1_overt$rating1 <- as.factor(cz_df_e1_overt$rating1)
+cz_df_e1_svo$rating1 <- as.factor(cz_df_e1_svo$rating1)
+```
+
+```{r}
+library(ordinal)
+cz_df_e1_overt.clmm <- clmm(rating1 ~ indef * context +  
+                              (1 | item) +
+                              (1 | participant), 
+  contrasts = list(indef="contr.sum", 
+                   context="contr.sum"), 
+  data=cz_df_e1_overt)
+
+summary(cz_df_e1_overt.clmm)
+
+cz_df_e1_svo.clmm <- clmm(rating1 ~ indef * context +  
+                              (1 | item) +
+                              (1 | participant), 
+  contrasts = list(indef="contr.sum", 
+                   context="contr.sum"), 
+  data=cz_df_e1_svo)
+
+summary(cz_df_e1_svo.clmm)
+```
+
+
+### Polish
+```{r}
+pol_df_e1$rating1 <- as.factor(pol_df_e1$rating1)
+
+pol_clmm <- clmm(rating1 ~ strategy * indef * context + 
+                  (1 | item) + 
+                  (1 | participant), 
+        contrasts = list(strategy="contr.sum",
+                   indef="contr.sum", 
+                   context="contr.sum"), 
+                data = pol_df_e1)
+```
+```{r}
+pol_emmeans <- emmeans(pol_clmm, ~ strategy * indef * context, mode = "mean.class")
+pol_emmeans
+```
+```{r}
+pol_emmeans_strategy <- pairs(emmeans(pol_clmm, ~ strategy))
+pol_emmeans_strategy
+```
+```{r}
+pol_emmeans_pairs <- pairs(emmeans(pol_clmm, ~strategy | indef * context, mode = "mean.class"))
+pol_emmeans_pairs
+```
+
+
+#### Pol separate models 
+```{r}
+pol_df_e1_overt <- pol_df_e1 %>%
+  filter(strategy == "overt")
+
+pol_df_e1_svo <- pol_df_e1 %>%
+  filter(strategy == "SVO")
+
+pol_df_e1_overt$rating1 <- as.factor(pol_df_e1_overt$rating1)
+pol_df_e1_svo$rating1 <- as.factor(pol_df_e1_svo$rating1)
+```
+
+```{r}
+library(ordinal)
+pol_df_e1_overt.clmm <- clmm(rating1 ~ indef * context +  
+                              (1 | item) +
+                              (1 | participant), 
+  contrasts = list(indef="contr.sum", 
+                   context="contr.sum"), 
+  data=pol_df_e1_overt)
+
+summary(pol_df_e1_overt.clmm)
+
+pol_df_e1_svo.clmm <- clmm(rating1 ~ indef * context +  
+                              (1 | item) +
+                              (1 | participant), 
+  contrasts = list(indef="contr.sum", 
+                   context="contr.sum"), 
+  data=pol_df_e1_svo)
+
+summary(pol_df_e1_svo.clmm)
+```
+
+```{r}
+levels(as.factor(pol_df_e1_overt$context))
+```
+
+### Russian 
+```{r}
+ru_df_e1$rating1 <- as.factor(ru_df_e1$rating1)
+
+ru_clmm <- clmm(rating1 ~ strategy * indef * context + 
+                  (1 | item) + 
+                  (1 | participant), 
+        contrasts = list(strategy="contr.sum",
+                   indef="contr.sum", 
+                   context="contr.sum"), 
+                data = ru_df_e1)
+```
+```{r}
+summary(ru_clmm)
+```
+```{r}
+ru_emmeans <- emmeans(ru_clmm, ~ strategy * indef * context, mode = "mean.class")
+ru_emmeans
+```
+```{r}
+ru_emmeans_strategy <- pairs(emmeans(ru_clmm, ~ strategy))
+ru_emmeans_strategy
+```
+```{r}
+ru_emmeans_pairs <- pairs(emmeans(ru_clmm, ~context | strategy * indef, mode = "mean.class"))
+ru_emmeans_pairs
+```
+
+#### Ru separate models 
+```{r}
+ru_df_e1_overt <- ru_df_e1 %>%
+  filter(strategy == "overt")
+
+ru_df_e1_svo <- ru_df_e1 %>%
+  filter(strategy == "SVO")
+```
+
+```{r}
+ru_df_e1_overt$rating1 <- as.factor(ru_df_e1_overt$rating1)
+ru_df_e1_svo$rating1 <- as.factor(ru_df_e1_svo$rating1)
+```
+
+```{r}
+library(ordinal)
+ru_df_e1_overt.clmm <- clmm(rating1 ~ indef * context +  
+                              (1 | item) +
+                              (1 | participant), 
+  contrasts = list(indef="contr.sum", 
+                   context="contr.sum"), 
+  data=ru_df_e1_overt)
+
+summary(ru_df_e1_overt.clmm)
+```
+```{r}
+ru_df_e1_svo.clmm <- clmm(rating1 ~ indef * context +  
+                              (1 | item) +
+                              (1 | participant), 
+  contrasts = list(indef="contr.sum", 
+                   context="contr.sum"), 
+  data=ru_df_e1_svo)
+
+summary(ru_df_e1_svo.clmm)
+```
+
+
 ## All three in one 
 ```{r}
-
 all_tab_inter <- bind_rows(
   cz_tab_inter %>% mutate(lang = "Czech"), 
   pol_tab_inter %>% mutate(lang = "Polish"), 
   ru_tab_inter %>% mutate(lang = "Russian")
 )
-all_tab_inter
 ```
 ```{r}
+library(RColorBrewer)
+
+# pick 2 colors from the "Set1" palette
+my_colors <- brewer.pal(9, "Set1")
+
+my_colors
+
+```
+
+
+```{r}
+plot_colors <- my_colors[c(2,8)]
+
 all_plot <- ggplot(all_tab_inter, aes(x=context, y=rating1, 
                                     colour=indef, group=indef)) + 
     geom_errorbar(aes(ymin=rating1-se, ymax=rating1+se), width=.1) +
     facet_grid(strategy~lang) +
-    theme_bw() +
-    geom_line(size = 1) +
-    theme(
-        text = element_text(size = 20),
-        # legend.text = element_text(size=30),
-        # legend.key.size = unit(1, 'cm'),
-        # legend.position = c(0.8, 0.15),
-        legend.position = "top", 
-        legend.title=element_blank())+
-        # axis.text = element_text(size = 25),
-        # axis.title = element_text(size = 25),
-# axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
-# axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
+    geom_line(size = .8) +
     geom_point() + 
     xlab("Context") +
     ylab("Rating (SE)") +
     coord_cartesian(ylim = c(1, 7)) +
     #scale_y_continuous(breaks = pretty_breaks(4)) +
     guides(colour = guide_legend(reverse=TRUE))  +
-    scale_color_brewer(palette = "Set2")
+  #ggtitle("Descriptive results for Cz, Pol, Ru") +
+    theme_light(base_size = 15) +
+    theme(legend.position = "top", 
+            legend.title = element_blank()) +
+    scale_color_manual(values = plot_colors) +
+    # scale_color_viridis(discrete=TRUE, option="plasma")
+    # scale_color_brewer(palette = "PuOr")
+  
+    scale_x_discrete(labels = c("negative" = "neg", 
+                              "neutral" = "neut"))
 
 all_plot
+
+ggsave(all_plot, file="all_plot_descriptive.pdf", 
+       width = 13, height = 13, units = "cm", device="pdf")
+```
+```{r}
+all_plot_cz <- all_plot +   # for highlighting certain facets in the plot
+   geom_rect(data = subset(all_tab_inter, lang  %in% c("Czech")), 
+                           fill = NA, colour = "orange", size = 2,
+                            xmin = -Inf,xmax = Inf,
+                            ymin = -Inf, ymax = Inf) 
+
+ggsave(all_plot_cz, file="all_plot_cz.pdf", 
+       width = 12, height = 14, units = "cm", device="pdf")
+```
+```{r}
+all_plot_pol <- all_plot +   # for highlighting certain facets in the plot
+   geom_rect(data = subset(all_tab_inter, lang  %in% c("Polish")), 
+                           fill = NA, colour = "orange", size = 2,
+                            xmin = -Inf,xmax = Inf,
+                            ymin = -Inf, ymax = Inf) 
+
+ggsave(all_plot_pol, file="all_plot_pol.pdf", 
+       width = 12, height = 14, units = "cm", device="pdf")
+```
+```{r}
+all_plot_ru <- all_plot +   # for highlighting certain facets in the plot
+   geom_rect(data = subset(all_tab_inter, lang  %in% c("Russian")), 
+                           fill = NA, colour = "orange", size = 2,
+                            xmin = -Inf,xmax = Inf,
+                            ymin = -Inf, ymax = Inf) 
+
+ggsave(all_plot_ru, file="all_plot_ru.pdf", 
+       width = 12, height = 14, units = "cm", device="pdf")
 ```
 
 ```{r}
@@ -513,7 +800,7 @@ all_plot1 <- ggplot(all_tab_inter, aes(x = context, y = rating1,
     colour = lang, group = interaction(lang, indef), 
     linetype = indef))+
     geom_errorbar(aes(ymin=rating1-se, ymax=rating1+se), width=.1) +
-    facet_wrap(~strategy+indef) +
+    facet_wrap(~strategy) +
     theme_bw() +
     geom_line(size = 1) +
     theme(
@@ -545,19 +832,599 @@ ggsave(all_plot, file="all_plot.pdf",
 
 ```
 
+
+# Model for all three -- OVERT
 ```{r}
-level(cz_df_e1$verb)
+df_e1_all <- bind_rows(
+  cz_df_e1 %>% mutate(lang = "Czech"), 
+  pol_df_e1 %>% mutate(lang = "Polish"), 
+  ru_df_e1 %>% mutate(lang = "Russian")
+)
+
+df_e1_all_overt <- df_e1_all %>%
+  filter(strategy == "overt")
+```
+
+
+```{r}
+df_e1_all_overt$indef <- as.factor(df_e1_all_overt$indef)
+df_e1_all_overt$lang <- as.factor(df_e1_all_overt$lang)
+df_e1_all_overt$context <- as.factor(df_e1_all_overt$context)
+
+df_e1_all_overt$rating1 <- ordered(df_e1_all_overt$rating1, levels = 1:7)
+is.ordered(df_e1_all_overt$rating1)  # should now be TRUE
+
+levels(df_e1_all_overt$indef)
+levels(df_e1_all_overt$lang)
+levels(df_e1_all_overt$context)
+```
+### Testing 
+No participants random effect
+```{r}
+library(ordinal)
+df_e1_all_overt$rating1 = as.factor(df_e1_all_overt$rating1)
+
+df_e1_all_overt.clmm <- clmm(rating1 ~lang * indef * context +  (1 | item), 
+  contrasts = list(lang="contr.sum",
+                   indef="contr.sum", 
+                   context="contr.sum"), 
+  data=df_e1_all_overt)
+
+summary(df_e1_all_overt.clmm)
+```
+```{r}
+# Estimated marginal means for each factor combination
+emm_overt <- emmeans(df_e1_all_overt.clmm, ~ lang * indef * context)
+
+# Look at them
+emm_overt
+
+# Pairwise comparisons among languages (averaging over indef and context)
+emm_tab_overt_langs <- pairs(emmeans(df_e1_all_overt.clmm, ~ lang))
+emm_tab_overt_langs
+
+# Or simple effects of language within each indef × context combination
+emm_tab_overt_all <- pairs(emmeans(df_e1_all_overt.clmm, ~ lang | indef * context))
+emm_tab_overt_all
+```
+
+Yes participants random effect
+```{r}
+df_e1_all_overt_participants.clmm1 <- clmm(rating1 ~ lang * indef * context + 
+                                            (1|participant) + (1|item), 
+  contrasts = list(lang="contr.sum",
+                   indef="contr.sum", 
+                   context="contr.sum"), 
+  data=df_e1_all_overt)
+
+summary(df_e1_all_overt_participants.clmm1)
+
+```
+```{r}
+
+library(emmeans)
+# Estimated marginal means for each factor combination
+emm_overt_participants1 <- emmeans(df_e1_all_overt_participants.clmm1, ~ lang * indef * context, 
+                                   mode = "mean.class")
+
+# Look at them
+emm_overt_participants1
+
+# Pairwise comparisons among languages (averaging over indef and context)
+emm_tab_overt_langs_participants1 <- pairs(emmeans(df_e1_all_overt_participants.clmm1, ~ lang, 
+                                                   mode = "mean.class"))
+emm_tab_overt_langs_participants1
+
+# Or simple effects of language within each indef × context combination
+emm_tab_overt_all_participants1 <- pairs(emmeans(df_e1_all_overt_participants.clmm1, ~ lang | indef * context, 
+                                                 mode = "mean.class"))
+emm_tab_overt_all_participants1
+```
+
+```{r}
+df_emm_overt_participants <- as.data.frame(emm_overt_participants1)
+plot_df_emm_overt_participants <- ggplot(df_emm_overt_participants, aes(x = context, y = mean.class, color = lang, group = lang)) +
+  geom_point(position = position_dodge(width = 0.3)) +
+  geom_line(size=.5, position = position_dodge(width = 0.3)) +
+  geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),
+                width = 0.2, position = position_dodge(width = 0.3)) +
+  facet_wrap(~ indef) + 
+  scale_color_brewer(palette = "Set1") + 
+  theme_light(base_size = 12) +
+  theme(legend.position = "bottom", 
+            legend.title = element_blank()) +
+  ggtitle("Overt strategy: estimated marginal means from CLMM") +
+  ylab("EMM on the ordinal response scale")
+
+plot_df_emm_overt_participants
+```
+
+
+```{r}
+ggsave(plot_df_emm_overt_participants, file="plot_df_emm_overt_participants.pdf",
+       width = 15, height = 10, units = "cm", device="pdf")
+```
+
+
+```{r}
+ggsave(plot_df_emm_overt_participants, file="plot_df_emm_overt_y_ordinal.pdf", 
+       width = 15, height = 10, units = "cm", device="pdf")
+```
+
+Yes participants random effect but with (0 + lang|item)
+```{r}
+df_e1_all_overt_participants.clmm <- clmm(rating1 ~ lang * indef * context + 
+                                            (1|participant) + 
+                                            (1|item) +
+                                            (0 + lang | item), 
+  contrasts = list(lang="contr.sum",
+                   indef="contr.sum", 
+                   context="contr.sum"), 
+  data=df_e1_all_overt)
+
+summary(df_e1_all_overt_participants.clmm)
+```
+```{r}
+library(emmeans)
+# Estimated marginal means for each factor combination
+emm_overt_participants <- emmeans(df_e1_all_overt_participants.clmm, ~ lang * indef * context)
+
+# Look at them
+emm_overt_participants
+
+# Pairwise comparisons among languages (averaging over indef and context)
+emm_tab_overt_langs_participants <- pairs(emmeans(df_e1_all_overt_participants.clmm, ~ lang))
+emm_tab_overt_langs_participants
+
+# Or simple effects of language within each indef × context combination
+emm_tab_overt_all_participants <- pairs(emmeans(df_e1_all_overt_participants.clmm, ~ lang | indef * context))
+emm_tab_overt_all_participants
+```
+
+```{r}
+dat <- droplevels(df_e1_all_overt)
+
+# each item seen in how many languages?
+table_per_item <- with(dat, tapply(lang, item, function(x) length(unique(x))))
+summary(table_per_item)               # lots of 1’s or 2’s → trouble for slopes
+
+# 3-way fixed-effects balance
+with(dat, xtabs(~ lang + indef + context))  # look for zeros / tiny cells
+
+# response OK?
+is.ordered(dat$rating1); table(dat$rating1, useNA="ifany")
+
+```
+
+```{r}
+library(kableExtra)
+library(knitr)
+
+emm_tab_overt_langs_participants1 %>%
+  kable("latex", booktabs = TRUE, digits = 3,
+        caption = "Overt strategy: pairwise comparisons among languages (averaging over \textsc{indef} and \textsc{context})") %>%
+  kable_styling(latex_options = c("hold_position")) %>%
+  save_kable("emmeans_table_overt_lang_participants.tex")
+```
+
+```{r}
+emm_tab_overt_all %>%
+  kable("latex", booktabs = TRUE, digits = 3,
+        caption = "Overt: simple effects of language within each indefinite vs. context combination") %>%
+  kable_styling(latex_options = c("hold_position")) %>%
+  save_kable("emmeans_table_overt_all.tex")
+```
+
+```{r}
+# Estimated marginal means for each factor combination
+emm_overt_response <- emmeans(df_e1_all_overt.clmm, ~ lang * indef * context, type = "response")
+emm_overt_response
+emm_overt
+```
+```{r}
+emm_prob <- emmeans(
+  df_e1_all_overt.clmm,
+  ~ lang * indef * context | rating1,   # <-- put your response variable here
+  mode = "prob"                        # probabilities by category
+)
+```
+```{r}
+plot_dat <- as.data.frame(emm_prob)
+
+ggplot(plot_dat,
+       aes(x = context, y = prob, fill = rating1)) +
+  geom_col(position = "fill") +
+  facet_grid(lang ~ indef) +
+  labs(y = "Predicted probability", x = "Context") +
+  scale_fill_brewer(palette = "RdYlGn", direction = 1) +
+  ggtitle("Overt strategy: estimated ratings")
+
+```
+
+```{r}
+# Or ggplot version
+df_emm_overt <- as.data.frame(emm_overt)
+ggplot(df_emm_overt, aes(x = context, y = emmean, color = indef)) +
+  geom_point(position = position_dodge(width = 0.3)) +
+  geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),
+                width = 0.2, position = position_dodge(width = 0.3)) +
+  facet_wrap(~ lang) +
+  labs(y = "Estimated marginal mean (log-odds)") +
+  theme_light()
+```
+```{r}
+plot_df_emm_overt <- ggplot(df_emm_overt, aes(x = context, y = emmean, color = lang, group = lang)) +
+  geom_point(position = position_dodge(width = 0.3)) +
+  geom_line(size=.5, position = position_dodge(width = 0.3)) +
+  geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),
+                width = 0.2, position = position_dodge(width = 0.3)) +
+  facet_wrap(~ indef) + 
+  scale_color_brewer(palette = "Set1") + 
+  theme_light(base_size = 12) +
+  theme(legend.position = "bottom", 
+            legend.title = element_blank()) +
+  ggtitle("Overt strategy: esmated marginal means from GLMM") +
+  ylab("EMM on the latent logit scale")
+
+ggsave(plot_df_emm_overt, file="plot_df_emm_overt.pdf", 
+       width = 15, height = 10, units = "cm", device="pdf")
+```
+
+```{r}
+ggplot(plot_dat,
+       aes(x = rating1, y = prob,
+           color = lang, group = context)) +
+  geom_point(position = position_dodge(width = 0.3)) +
+  geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),
+                width = 0.1,
+                position = position_dodge(width = 0.3)) +
+  facet_wrap(~indef+context) +
+  labs(y = "Predicted probability",
+       x = "Rating (7 = high, 1 = low)") +
+  theme_light() +
+  ggtitle("Overt predicted probabilities")
+```
+
+
+### Final model OVERT 
+```{r}
+df_e1_all_overt$rating1 = as.factor(df_e1_all_overt$rating1)
+
+df_e1_all_overt_big.clmm <- clmm(rating1 ~lang * indef * context + 
+                             (1 + indef + context + indef:context | participant) +
+                             (1 + indef + context + indef:context | item), 
+  contrasts = list(lang="contr.sum",
+                   indef="contr.sum", 
+                   context="contr.sum"), 
+  data=df_e1_all_overt,
+  Hess = TRUE)
+```
+
+```{r}
+# Estimated marginal means for each factor combination
+emm_overt_big <- emmeans(df_e1_all_overt_big.clmm, ~ lang * indef * context, 
+                         mode = "mean.class", 
+                         adjust = "holm")
+
+# Look at them
+emm_overt_big
+
+# Pairwise comparisons among languages (averaging over indef and context)
+emm_df_langs_overt_big <- pairs(emmeans(df_e1_all_overt_big.clmm, ~ lang, 
+                                        mode = "mean.class", 
+                                        adjust = "holm"))
+emm_df_langs_overt_big
+
+# Or simple effects of language within each indef × context combination
+emm_df_all_overt_big <- pairs(emmeans(df_e1_all_overt_big.clmm,
+                                      ~ lang | indef * context, 
+                                      mode = "mean.class", 
+                                      adjust = "holm"))
+emm_df_all_overt_big
+```
+Save tables as tex 
+```{r}
+library(kableExtra)
+library(knitr)
+
+emm_overt_big %>%
+  kable("latex", booktabs = TRUE, digits = 3,
+        caption = "Overt strategy: Estimated marginal means by \textsc{language}, \textsc{pi} and \textsc{context} (Plot \ref{fig:model_overt} source; mean-class scale; $p$-value adjustment: Holm method)") %>%
+  kable_styling(latex_options = c("hold_position")) %>%
+  save_kable("emmeans_table_overt_big.tex")
+
+emm_df_langs_overt_big %>%
+  kable("latex", booktabs = TRUE, digits = 3,
+        caption = "Overt strategy: Pairwise language contrasts averaging over \textsc{pi} and \textsc{context} (mean-class scale; $p$-value adjustment: Holm method)") %>%
+  kable_styling(latex_options = c("hold_position")) %>%
+  save_kable("emmeans_table_overt_lang_big.tex")
+
+emm_df_all_overt_big %>%
+  kable("latex", booktabs = TRUE, digits = 3,
+        caption = "Overt strategy: Pairwise language contrasts by \textsc{pi} and \textsc{context} (mean-class scale; $p$-value adjustment: Holm method)") %>%
+  kable_styling(latex_options = c("hold_position")) %>%
+  save_kable("emmeans_table_all_overt_lang_big.tex")
+```
+
+Plot the results 
+```{r}
+df_emm_overt_big <- as.data.frame(emm_overt_big)
+
+plot_df_emm_overt <- ggplot(df_emm_overt_big, aes(x = context, y = mean.class, color = lang, group = lang)) +
+  geom_point(position = position_dodge(width = 0.3)) +
+  geom_line(size=.5, position = position_dodge(width = 0.3))+
+  geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),
+                width = 0.2, position = position_dodge(width = 0.3)) +
+  facet_wrap(~ indef) + 
+  scale_color_brewer(palette = "Set1") + 
+  theme_light() +
+  theme(legend.position = "bottom", 
+            legend.title = element_blank()) +
+  xlab("Context") +
+  ggtitle("Overt strategy: estimated marginal means from CLMM") +
+  ylab("EMM on the ordinal response scale (CI)")
+
+plot_df_emm_overt
+```
+
+
+```{r}
+ggsave(plot_df_emm_overt, file="plot_df_emm_overt_big.pdf",  
+       width = 15, height = 10, units = "cm", device="pdf")
+```
+
+
+# Model for all three -- SVO
+### Testing 
+```{r}
+df_e1_all <- bind_rows(
+  cz_df_e1 %>% mutate(lang = "Czech"), 
+  pol_df_e1 %>% mutate(lang = "Polish"), 
+  ru_df_e1 %>% mutate(lang = "Russian")
+)
+
+df_e1_all_svo <- df_e1_all %>%
+  filter(strategy == "SVO")
+```
+
+
+```{r}
+df_e1_all_svo$indef <- as.factor(df_e1_all_svo$indef)
+df_e1_all_svo$lang <- as.factor(df_e1_all_svo$lang)
+df_e1_all_svo$context <- as.factor(df_e1_all_svo$context)
+
+df_e1_all_svo$rating1 <- ordered(df_e1_all_svo$rating1, levels = 1:7)
+is.ordered(df_e1_all_svo$rating1)  # should now be TRUE
+
+levels(df_e1_all_svo$indef)
+levels(df_e1_all_svo$lang)
+levels(df_e1_all_svo$context)
 ```
 
 ```{r}
 library(ordinal)
-cz_df_e1$rating1 = as.factor(cz_df_e1$rating1)
-cz_df_e1.clmm <- clmm(rating1 ~ verb * indef * context + 
-  (1 | participant) + (1 | item), 
-  contrasts = list(verb="contr.sum",
+df_e1_all_svo$rating1 = as.factor(df_e1_all_svo$rating1)
+
+df_e1_all_svo.clmm <- clmm(rating1 ~lang * indef * context + 
+                             (1 | participant) +
+                             (1 | item), 
+  contrasts = list(lang="contr.sum",
                    indef="contr.sum", 
                    context="contr.sum"), 
-  data=e1_df)
+  data=df_e1_all_svo)
 
-summary(cz_df_e1.clmm)
+summary(df_e1_all_svo.clmm)
+```
+
+```{r}
+library(emmeans)
+
+# Estimated marginal means for each factor combination
+emm_svo <- emmeans(df_e1_all_svo.clmm, ~ lang * indef * context)
+
+# Look at them
+emm_svo
+
+# Pairwise comparisons among languages (averaging over indef and context)
+emm_df_langs_svo <- pairs(emmeans(df_e1_all_svo.clmm, ~ lang))
+emm_df_langs_svo
+
+# Or simple effects of language within each indef × context combination
+emm_df_all_svo <- pairs(emmeans(df_e1_all_svo.clmm, ~ lang | indef * context))
+
+```
+```{r}
+emm_df_langs_svo %>%
+  kable("latex", booktabs = TRUE, digits = 3,
+        caption = "SVO strategy: pairwise comparisons among languages (averaging over indef and context)") %>%
+  kable_styling(latex_options = c("hold_position")) %>%
+  save_kable("emmeans_table_svo_lang_participants.tex")
+```
+
+```{r}
+emm_df_all_svo %>%
+  kable("latex", booktabs = TRUE, digits = 3,
+        caption = "SVO: simple effects of language within each indefinite vs. context combination") %>%
+  kable_styling(latex_options = c("hold_position")) %>%
+  save_kable("emmeans_table_svo_all.tex")
+```
+
+
+```{r}
+# Or ggplot version
+df_emm_svo <- as.data.frame(emm_svo)
+ggplot(df_emm_svo, aes(x = context, y = emmean, color = indef)) +
+  geom_point(position = position_dodge(width = 0.3)) +
+  geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),
+                width = 0.2, position = position_dodge(width = 0.3)) +
+  facet_wrap(~ lang) +
+  labs(y = "Estimated marginal mean (log-odds)") +
+  theme_light()
+```
+
+
+```{r}
+emm_probs <- emmeans(df_e1_all_svo.clmm, ~ lang * indef * context, mode = "mean.class")
+plot(emm_probs, comparisons = TRUE)
+```
+
+```{r}
+# Get predicted probabilities
+emm_resp_svo <- emmeans(df_e1_all_svo.clmm, ~ lang * indef * context, type = "response")
+
+# Convert to tidy data frame
+df_probs_svo <- as.data.frame(emm_resp_svo)
+
+# Inspect what it looks like
+df_probs_svo
+
+```
+```{r}
+plot_df_emm_svo <- ggplot(df_emm_svo, aes(x = context, y = emmean, color = lang, group = lang)) +
+  geom_point(position = position_dodge(width = 0.3)) +
+  geom_line(size=.5, position = position_dodge(width = 0.3))+
+  geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),
+                width = 0.2, position = position_dodge(width = 0.3)) +
+  facet_wrap(~ indef) + 
+  scale_color_brewer(palette = "Set1") + 
+  theme_light() +
+  theme(legend.position = "bottom", 
+            legend.title = element_blank()) +
+  ggtitle("SVO strategy: estimated marginal means from CLMM") +
+  ylab("EMM on the latent logit scale")
+
+ggsave(plot_df_emm_svo, file="plot_df_emm_svo_participants.pdf",  
+       width = 15, height = 10, units = "cm", device="pdf")
+```
+
+```{r}
+emm_prob_svo <- emmeans(
+  df_e1_all_svo.clmm,
+  ~ lang * indef * context | rating1,   # <-- put your response variable here
+  mode = "prob"                        # probabilities by category
+)
+
+plot_dat_svo <- as.data.frame(emm_prob_svo)
+
+ggplot(plot_dat_svo,
+       aes(x = indef, y = prob, fill = rating1)) +
+  geom_col(position = "fill") +
+  facet_grid(lang ~ context) +
+  labs(y = "Predicted probability", x = "Context") +
+  scale_fill_brewer(palette = "RdYlGn", direction = 1) +
+  ggtitle("SVO strategy: estimated ratings")
+```
+
+```{r}
+ggplot(plot_dat_svo,
+       aes(x = rating1, y = prob,
+           color = context, group = context)) +
+  geom_point(position = position_dodge(width = 0.3)) +
+  geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),
+                width = 0.1,
+                position = position_dodge(width = 0.3)) +
+  facet_grid(lang ~ indef) +
+  labs(y = "Predicted probability",
+       x = "Rating (7 = high, 1 = low)") +
+  theme_light(base_size = 12) +
+  ggtitle("SVO predicted probabilities")
+```
+
+```{r}
+emmip(df_e1_all_svo.clmm, lang~rating1  / indef + context, 
+      mode = 'prob', 
+      CI=TRUE, 
+      style= 'factor') +
+  facet_grid(~indef+context) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_discrete(limits = rev) +
+  theme_light(base_size=12)
+  
+```
+
+### Final model SVO
+```{r}
+df_e1_all_svo$rating1 = as.factor(df_e1_all_svo$rating1)
+
+df_e1_all_svo_big.clmm <- clmm(rating1 ~lang * indef * context + 
+                             (1 + indef + context + indef:context | participant) +
+                             (1 + indef + context + indef:context | item), 
+  contrasts = list(lang="contr.sum",
+                   indef="contr.sum", 
+                   context="contr.sum"), 
+  data=df_e1_all_svo,
+  Hess = TRUE)
+
+summary(df_e1_all_svo_big.clmm)
+```
+```{r}
+# Estimated marginal means for each factor combination
+emm_svo_big <- emmeans(df_e1_all_svo_big.clmm, ~ lang * indef * context, 
+                         mode = "mean.class", 
+                         adjust = "holm")
+
+# Look at them
+emm_svo_big
+
+# Pairwise comparisons among languages (averaging over indef and context)
+emm_df_langs_svo_big <- pairs(emmeans(df_e1_all_svo_big.clmm, ~ lang, 
+                         mode = "mean.class", 
+                         adjust = "holm"))
+emm_df_langs_svo_big
+
+# Or simple effects of language within each indef × context combination
+emm_df_all_svo_big <- pairs(emmeans(df_e1_all_svo_big.clmm, ~ lang | indef * context, 
+                         mode = "mean.class", 
+                         adjust = "holm"))
+emm_df_all_svo_big
+```
+Save tables as tex 
+```{r}
+library(kableExtra)
+library(knitr)
+
+emm_svo_big %>%
+  kable("latex", booktabs = TRUE, digits = 3,
+        caption = "SVO strategy: Estimated marginal means by \textsc{language}, \textsc{pi} and \textsc{context} (Plot \ref{fig:model_svo} source; mean-class scale; $p$-value adjustment: Holm method)") %>%
+  kable_styling(latex_options = c("hold_position")) %>%
+  save_kable("emmeans_table_svo_big.tex")
+
+emm_df_langs_svo_big %>%
+  kable("latex", booktabs = TRUE, digits = 3,
+        caption = "SVO strategy: Pairwise language contrasts averaging over \textsc{pi} and \textsc{context} (mean-class scale; $p$-value adjustment: Holm method)") %>%
+  kable_styling(latex_options = c("hold_position")) %>%
+  save_kable("emmeans_table_svo_lang_big.tex")
+
+emm_df_all_svo_big %>%
+  kable("latex", booktabs = TRUE, digits = 3,
+        caption = "SVO strategy: Pairwise language contrasts by \textsc{pi} and \textsc{context} (mean-class scale; $p$-value adjustment: Holm method)") %>%
+  kable_styling(latex_options = c("hold_position")) %>%
+  save_kable("emmeans_table_all_svo_lang_big.tex")
+```
+
+Plot the results 
+```{r}
+df_emm_svo_big <- as.data.frame(emm_svo_big)
+
+plot_df_emm_svo <- ggplot(df_emm_svo_big, aes(x = context, y = mean.class, color = lang, group = lang)) +
+  geom_point(position = position_dodge(width = 0.3)) +
+  geom_line(size=.5, position = position_dodge(width = 0.3))+
+  geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),
+                width = 0.2, position = position_dodge(width = 0.3)) +
+  facet_wrap(~ indef) + 
+  scale_color_brewer(palette = "Set1") + 
+  theme_light() +
+  theme(legend.position = "bottom", 
+            legend.title = element_blank()) +
+  xlab("Context") +
+  ggtitle("SVO strategy: estimated marginal means from CLMM") +
+  ylab("EMM on the ordinal response scale (CI)")
+
+plot_df_emm_svo
+```
+
+
+```{r}
+ggsave(plot_df_emm_svo, file="plot_df_emm_svo_big.pdf",  
+       width = 15, height = 10, units = "cm", device="pdf")
 ```

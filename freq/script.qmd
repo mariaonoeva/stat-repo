@@ -23,7 +23,7 @@ Participants had to assess questions in different context on the scale from 1 ve
 
 Within-items, between subjects?
 
-The design was also within-subjects (i.e., all participants saw all conditions) and within-items (i.e., all items had 8 conditions). 
+The design was also within-subjects (i.e., all participants saw all conditions) and within-items (i.e., all items had 8 conditions).
 
 #### Files
 
@@ -208,16 +208,16 @@ The conditions were coded as letters in the spreadsheet for LRex, so first, I as
 
 Here are the conditions in a table format:
 
-|   | verb  | indef | contex   |
-|---|-------|-------|----------|
-| a | V1 li | ni    | neutral  |
-| b | V2    | ni    | neutral  |
-| c | V1 li | nibud | neutral  |
-| d | V2    | nibud | neutral  |
-| e | V1 li | ni    | negative |
-| f | V2    | ni    | negative |
-| g | V1 li | nibud | negative |
-| h | V2    | nibud | negative |
+|     | verb  | indef | contex   |
+|-----|-------|-------|----------|
+| a   | V1 li | ni    | neutral  |
+| b   | V2    | ni    | neutral  |
+| c   | V1 li | nibud | neutral  |
+| d   | V2    | nibud | neutral  |
+| e   | V1 li | ni    | negative |
+| f   | V2    | ni    | negative |
+| g   | V1 li | nibud | negative |
+| h   | V2    | nibud | negative |
 
 ```{r}
 # accessing the first experiment from the groups  
@@ -354,7 +354,7 @@ facet_border <- data.frame(
 e1_main_plot1 <- ggplot(e1_df_relevel1, aes(fill = rating1, x = context)) + 
   geom_bar(position = "fill") +
   geom_hline(aes(yintercept = 0.5), size = 0.5) +
-  facet_wrap(~verb + indef, labeller = labeller(verb = verb.labs, indef = indef.labs)) +
+  facet_wrap(~verb + indef, labeller = labeller(verb = verb.labs, indef = indef.labs), nrow = 1) +
   theme_bw() +
   scale_fill_brewer(palette = "RdYlGn", direction = -1) +
   theme(
@@ -381,6 +381,128 @@ e1_main_plot1
 
 ```
 
+```{r}
+df_summary <- e1_df_relevel1 %>%
+  dplyr::count(verb, indef, context, rating1) %>%
+  group_by(verb, indef, context) %>%
+  arrange(desc(rating1)) %>%
+  ungroup()
+```
+
+```{r}
+# STEP 2: Ensure rating1 is an ordered factor (for line connection)
+df_summary$rating1 <- factor(df_summary$rating1, levels = as.character(7:1), ordered = TRUE)
+
+# STEP 3: Define custom color palette
+custom_colors <- c("neutral" = "#F8766D", "negative" = "#00BFC4")  # red-orange + turquoise
+
+# STEP 4: Plot
+e1_main_plot_with_line <- ggplot(df_summary, aes(x = rating1, y = n, fill = context)) + 
+  geom_col(position = position_dodge(width = 0.7), width = 0.6) +  # bars
+  geom_line(
+    aes(group = context, color = context), 
+    position = position_dodge(width = 0.7), 
+    size = 1
+  ) +  # lines
+  facet_wrap(
+    ~verb + indef,
+    labeller = labeller(verb = verb.labs, indef = indef.labs),
+    nrow = 1
+  ) +
+  scale_fill_manual(values = custom_colors) +
+  scale_color_manual(values = custom_colors) +
+  theme_bw() +
+  theme(
+    legend.position = "right",
+    text = element_text(size = 15),
+    legend.text = element_text(size = 10),
+    legend.key.size = unit(0.5, 'cm'),
+    legend.title = element_blank()
+  ) +
+  xlab("Rating") +
+  ylab("Count") +
+  ggtitle("Rating Distributions by Condition with Line Overlay")
+
+# Print the plot
+e1_main_plot_with_line
+
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Prepare summary table
+df_summary <- e1_df_relevel1 %>%
+  count(verb, indef, context, rating1) %>%
+  group_by(verb, indef, context) %>%
+  arrange(desc(rating1)) %>%  # for reversed x-axis
+  ungroup()
+
+# Ensure rating1 is an ordered factor
+df_summary$rating1 <- factor(df_summary$rating1, levels = as.character(7:1), ordered = TRUE)
+
+# Plot
+ggplot(df_summary, aes(x = rating1, y = n, group = context, fill = context)) +
+  geom_col(position = position_dodge(width = 0.7), width = 0.6) +
+  geom_line(aes(color = context), position = position_dodge(width = 0.7), size = 1) +
+  facet_wrap(~verb + indef, labeller = labeller(verb = verb.labs, indef = indef.labs), nrow = 1) +
+  scale_fill_manual(values = c("neutral" = "#F8766D", "negative" = "#00BFC4")) +
+  scale_color_manual(values = c("neutral" = "#F8766D", "negative" = "#00BFC4")) +
+  theme_bw() +
+  theme(
+    legend.position = "right",
+    text = element_text(size = 15),
+    legend.text = element_text(size = 10),
+    legend.key.size = unit(0.5, 'cm'),
+    legend.title = element_blank()
+  ) +
+  xlab("Rating") +
+  ylab("Count") +
+  ggtitle("Rating Distributions by Condition (Visual Bimodality Check)")
+
+```
+
+
+```{r}
+e1_NCIs <- e1_df_relevel1 %>% filter(indef == 'ni')
+
+e1_NCIs_plot1 <- ggplot(e1_NCIs, aes(fill = rating1, x = context)) + 
+  geom_bar(position = "fill") +
+  geom_hline(aes(yintercept = 0.5), size = 0.5) +
+  facet_wrap(~verb + indef, labeller = labeller(verb = verb.labs, indef = indef.labs)) +
+  theme_bw() +
+  scale_fill_brewer(palette = "RdYlGn", direction = -1) +
+  theme(
+    legend.position = "right",
+    # text = element_text(size = 30),
+    text = element_text(size = 15),
+    legend.text = element_text(size = 10),
+    legend.key.size = unit(.5, 'cm'),
+    legend.title = element_blank()
+    # axis.text = element_text(size = 25),
+    # axis.title = element_text(size = 25),
+    # axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+    # axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))
+  ) +
+  xlab("Context") +
+  ylab("Proportions of rating") # + 
+  # for highlighting certain facets in the plot
+  # geom_rect(data = subset(e1_df_relevel1, verb  %in% c("V2") & indef %in% c("ni")), 
+  #                         fill = NA, colour = "blue", size = 4,
+  #                         xmin = -Inf,xmax = Inf,
+  #                         ymin = -Inf, ymax = Inf) 
+
+e1_NCIs_plot1
+```
+
+```{r}
+# as pdf 
+ggsave(e1_NCIs_plot1, file="e1_NCIs.pdf", 
+       width = 12, height = 9, units = "cm", device="pdf")
+
+```
+
 On the x axis, there are contexts, on the y axis -- proportions of ratings. The color of the bars indicates naturalness as per legend. The black line that strikes through the plots is median.
 
 It is also possible to save the plots using this code:
@@ -389,7 +511,7 @@ It is also possible to save the plots using this code:
 
 # as pdf 
 ggsave(e1_main_plot1, file="e1_main11.pdf", 
-       width = 12, height = 12, units = "cm", device="pdf")
+       width = 20, height = 8, units = "cm", device="pdf")
 
 # as eps
 ggsave(e1_main_plot1, file="e1_main1.eps", 
@@ -794,6 +916,7 @@ t-value is also clear from above (the difference between my mean and 0 in SEs). 
 -   `verbV2`:`indefnibud` interaction: the negative interaction coefficient (-1.5699) tells us that the effect of `verbV2` is weaker when indef is nibud. In other words, the main effect of `verbV2` is 1.4154 but with `nibud` it's this much weaker.
 
 One can save the table above to a prettier version. (I have this code from Mishi Chirpanlieva's thesis!)
+
 ```{r}
 library(gtsummary)
 
@@ -836,7 +959,9 @@ e1_df$rating1 = as.factor(e1_df$rating1)
 e1.clm <- clm(rating1 ~ verb * indef * context, data = e1_df)
 summary(e1.clm) 
 ```
-This plot is showing the probability of obtaining a specific response in the given conditions. It is based on the threshold coefficients in the summary of CLM. 
+
+This plot is showing the probability of obtaining a specific response in the given conditions. It is based on the threshold coefficients in the summary of CLM.
+
 ```{r}
 library(ggeffects)
 
@@ -859,27 +984,25 @@ ggsave(plot_pred_clm, file="plot_pred_clm.pdf",
 
 ```
 
-
 Is that it? Is this the final model? No :smiling_imp:
 
 Now we want to be sure that the effects we see come from the independent variables but not from random participant variation or bad items. You see, some items could have been very bad, e.g., there was an error in one and everyone disliked, so that influenced the ratings. Or some participants were somehow weird and assessed questions in a particular way. What I need to know now, that is my results are reliable even if these factors are included, so I need **a mixed model**.
 
 #### Contrast coding
-Scaled sum contrast 0.5/-0.5 -- попробовать вот это
-еще попробовать нестинг
-treatment contrast no go with interactions
+
+Scaled sum contrast 0.5/-0.5 -- попробовать вот это еще попробовать нестинг treatment contrast no go with interactions
 
 One last theory piece, I promise! -- [Source](https://marissabarlaz.github.io/portfolio/contrastcoding/) and other places.
 
 First of all, I didn't quite get why we didn't use the treatment/dummy (0 and 1 are "dummy" apparently, hehe) coding for my experiment. When I learned more about what it does, I realized that it doesn't make sense to compare all my data to one reference level. It is something like having a control placebo group to which everything is compared.
 
-In this experiment, I didn't have such a group, so I need to make my comparisons to the grand mean and not to a baseline. I had a baseline condition for lm(), there was an intercept--condition e, `V1`, `negative` and `ni`. But for ANOVA, all was compared to a grand mean (GM) and it is the intercept for sum/effect coding. 
+In this experiment, I didn't have such a group, so I need to make my comparisons to the grand mean and not to a baseline. I had a baseline condition for lm(), there was an intercept--condition e, `V1`, `negative` and `ni`. But for ANOVA, all was compared to a grand mean (GM) and it is the intercept for sum/effect coding.
 
-Although I of course had predictions which combinations are going to be worse, I will not bother with setting the contrasts myself. It makes sense for continuous data I guess but for ordinal I am not sure. So I let R to decide which level is what. Or it is not actually R's job, it is settled alphabetically, so the levels are: 
+Although I of course had predictions which combinations are going to be worse, I will not bother with setting the contrasts myself. It makes sense for continuous data I guess but for ordinal I am not sure. So I let R to decide which level is what. Or it is not actually R's job, it is settled alphabetically, so the levels are:
 
-- V1 li and V2
-- ni and nibud
-- negative and neutral
+-   V1 li and V2
+-   ni and nibud
+-   negative and neutral
 
 ```{r}
 c(levels(e1_df$verb), levels(e1_df$indef), levels(e1_df$context))
@@ -902,13 +1025,43 @@ e1.clmm <- clmm(rating1 ~ verb * indef * context +
 
 summary(e1.clmm)
 ```
+
+```{r}
+
+cols_to_factor = c("verb", "indef", "context", "rating1")
+e1_df[cols_to_factor] <- lapply(e1_df[cols_to_factor], as.factor)
+
+e1.clmm <- clmm(rating1 ~ verb * indef * context + 
+  (1 | participant) + (1 | item), 
+  contrasts = list(verb="contr.sum",
+                   indef="contr.sum", 
+                   context="contr.sum"), 
+  data=e1_df)
+
+summary(e1.clmm)
+```
+
+```{r}
+
+cols_to_factor = c("verb", "indef", "context", "rating1")
+e1_NCIs[cols_to_factor] <- lapply(e1_NCIs[cols_to_factor], as.factor)
+
+e1.clmm_ncis <- clmm(rating1 ~ verb + context +
+  (1 | participant) + (1 | item), 
+  contrasts = list(verb="contr.sum",
+                   context="contr.sum"), 
+  data=e1_NCIs)
+
+summary(e1.clmm_ncis)
+```
+
 This is the final model for my results, congrats!
 
-Once again, the coding is sum, so everything is compared to the GM. The first effect is a main effect of `verb` (z=-4.53, p<.001). It says there that `verb1` = `V1 li` worsens the rating by 0.1795 and `verb2` = `V2` makes the rating by 0.1795 better. And it works the same for two other independent variables. 
+Once again, the coding is sum, so everything is compared to the GM. The first effect is a main effect of `verb` (z=-4.53, p\<.001). It says there that `verb1` = `V1 li` worsens the rating by 0.1795 and `verb2` = `V2` makes the rating by 0.1795 better. And it works the same for two other independent variables.
 
-I also have two interactions. The combinations of `V1`+ `ni` and `V1`+ `negative` worsen the dependent variable. And since it is symmetrical (coding must be equal to 0, so -0.5 + 0.5), there is the same interaction for `V2` + `nibud` and `V2` + `neutral`. 
+I also have two interactions. The combinations of `V1`+ `ni` and `V1`+ `negative` worsen the dependent variable. And since it is symmetrical (coding must be equal to 0, so -0.5 + 0.5), there is the same interaction for `V2` + `nibud` and `V2` + `neutral`.
 
-The same plot as for CLM about predicted probabilities of rating1. 
+The same plot as for CLM about predicted probabilities of rating1.
 
 ```{r eval = FALSE}
 
@@ -941,7 +1094,6 @@ e1.clmm_treat <- clmm(rating1 ~ verb * indef * context +
 
 summary(e1.clmm_treat)
 ```
-
 
 ```{r}
 e1_df_LI <- e1_df %>%
@@ -977,6 +1129,7 @@ e1_V2.clmm <- clmm(rating1 ~ indef * context +
 
 summary(e1_V2.clmm)
 ```
+
 ## Summary
 
 In this notebook, I analyzed in detail the naturalness judgment experiment. with the fully crossed 2 x 2 x 2 design. First I looked at descriptive stat and then explored various models for inferential stat using the frequentist approach. The next step is to perform the Bayesian approach but this is going to be a different story.
